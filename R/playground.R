@@ -1,5 +1,5 @@
 run_local = function() {
-  DEBUG_FLAG = T
+  DEBUG_FLAG = F
   source("pre_bt.R")
   source("bt_conf.R")
   source("bt_learner_parsets.R")
@@ -7,7 +7,6 @@ run_local = function() {
   source("bt_problem.R")
   REG_FILE_DIR = "../output/geo"
   btDelInit(local = T, force = DEBUG_FLAG)
-
   mgconf = getGconf()
   reg_input = batchtools::getDefaultRegistry()
   reg_input$cluster.functions = makeClusterFunctionsMulticore(ncpus = 64)
@@ -38,7 +37,7 @@ function() {
   unwrap(getJobPars()[1:100, .(algo.pars)])
   submitJobs(597)
   showLog(597)
-  index = seq.int(from = 1, to = 600, by = 10)
+  index = seq.int(from = 1, to = 3600, by = 60)
   submitJobs(index)
   submitJobs(index + 1)
   submitJobs(index + 2)
