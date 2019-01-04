@@ -1,0 +1,93 @@
+
+
+\documentclass[]{article}
+
+%opening
+\title{}
+\author{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\section{Data}
+<<>>=
+source("bt_conf.R")
+@
+<<>>=
+ source("playground.R")
+  tuple = prepareData()
+  task = tuple$task
+  getTaskSize(task)
+  getTaskNFeats(task)
+  tn = getTaskTargetNames(task)
+  df = getTaskData(task)
+  cd = table(df$response)
+  cd[1] / cd[2]
+  ncol(df) / nrow(df)
+  lapply(1:5, function(i) table(df[tuple$list_dataset_index[[i]], 'response']))
+  print(xtable::xtable(temp))
+@
+
+
+
+<<>>=
+require(OpenML)
+require(mlr)
+tid = c(3891, 14966, 34536)
+list.info = lapply(tid, function(id) {
+ ot = OpenML::getOMLTask(id)
+ mt = OpenML::convertOMLTaskToMlr(ot)
+ task = mt$mlr.task
+ n = mlr::getTaskSize(task)
+ desc = getTaskDesc(task)
+ name = desc$id
+ cratio = desc$class.distribution[1] / desc$class.distribution[2]
+ p = mlr::getTaskNFeats(task)
+ id = id
+ type = ot$task.type
+ return(list(id = as.int(id), name = name, n = n, p = p, pnratio = p/n, type = type, cratio = cratio))
+})
+tb = rbindlist(list.info)
+print(xtable::xtable(tb))
+@
+
+\section{Evaluation}
+<<>>=
+df_conf = as.data.table(gconf)
+df_conf = t(df_conf)
+print(xtable::xtable(df_conf))
+@
+
+
+\section{HyperParameter Setting}
+<<>>=
+temp = algo_designs[["proposal_mbo"]]
+pslist = lapply(temp$lrn, function(lrn) {
+  print(lrn)
+  ps = GET_PARSET_CLASSIF(lrn)
+  print(ps$pars)
+  string = capture.output(print(ps$pars))
+  string = collapse(string, sep = '\n')
+  return(list(lrn.id = lrn, hyperpar = string))
+})
+df_par = rbindlist(pslist)
+print(xtable::xtable(df_par))
+@
+%Jobs
+%```{r, results='asis'}
+%library(BBmisc)
+%source("bt_conf.R")
+%library("batchtools")
+%REG_FILE_DIR =  "~/Dropbox/dfgStableCohort/result/stableCohortAndy/stableCohort/"
+%reg = loadRegistry(REG_FILE_DIR)
+%reg$writeable = TRUE  # never execute this line when the process is running.
+%ids = findDone(reg = reg)
+%df_job = unwrap(getJobPars()[, list(prob.pars, algo.pars)])
+%print(xtable::xtable(df_job))
+%```
+\end{document}
