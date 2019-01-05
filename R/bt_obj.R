@@ -158,7 +158,6 @@ fun_measure_obj_openbox2curator = function(task, model, pred, feats, extra.args)
   lrn.id = model$learner$id
   pvs = model$learner$par.vals  # it does not matter there to the local trained model to extract the hyper-parameter since the hyper-parameter is decided by the tunner, not the local model.
   newmodel = getModelFromTask(major_task = major_task, lrn.id = lrn.id, pvs = pvs)
-  
   fun_measure_obj_curator(task = task, model = newmodel, pred = pred, feats = feats, extra.args = extra.args)  # call the measure to update the environment, current context is bs2, only chagne is model here
   res = getCVPerf(major_task = major_task, lrn.id = lrn.id, pvs = pvs, measures = extra.args$measures2tune)
   return(res$aggr)
@@ -198,5 +197,3 @@ mkSingleDsMeasure = function(subset_ind) {
   }
   return(measure_fun)
 }
-
-
