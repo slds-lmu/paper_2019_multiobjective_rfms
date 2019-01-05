@@ -11,3 +11,9 @@
 - source test.R to test if the 1st job could be executed. 
 - pay attention to R/batchtools.conf.R, the budgets are set there. Each job need at least 3 hours to be finished. For openml dataset, it needs much much longer
 - first submit only 5 replications according to getJobTable()[, repl] 
+
+
+# Runing on lido cluster in Dortmund
+- read "how to run" above first
+- delete the batchtools.conf.R file since that file is for lrz
+- regenerate data/temp folder with pre_bt.R, note that this is to generate the RData file for several oml dataset. 
