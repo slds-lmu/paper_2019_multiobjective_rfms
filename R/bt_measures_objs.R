@@ -154,15 +154,32 @@ mkMultimeasuresList = function(subset_inds, dsnames, major_level, test_level) {
 
 
 mk_measure_auc_thout = function(extra.args) {
+  #
+  ##
+  #if(extra.args$perf_name2tune !="auc") stop("this function can only be used for auc!")
   makeMeasure(
     id = "thout.auc",
     name = "meas thout auc",
     properties = auc$properties,
+    minimize = auc$minimize,  ## !!!
+    aggr = mtrain.agg,
+    best = auc$best,        ## !!
+    worst = auc$worst,
+    fun = fun_obj_thresholdout,
+    extra.args = extra.args
+    )
+}
+
+mk_any_measure_thout = function(extra.args) {
+  makeMeasure(
+    id = sprintf("thout.%s", extra.args$perf_name2tune),
+    name = sprintf("measure thout.%s", extra.args$perf_name2tune),
+    properties = auc$properties,
     minimize = FALSE,  ## !!!
     aggr = mtrain.agg,
-    best = 1,        ## !!
+    best = 0,        ## !!
     worst = 0,
-    fun = fun_obj_thresholdout_auc,
+    fun = fun_obj_thresholdout,
     extra.args = extra.args
     )
 }

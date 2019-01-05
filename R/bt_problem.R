@@ -41,7 +41,7 @@ funGenProb = function(data, job, major_level, test_level, dataset_name) {
   tmf = mlr::subsetTask(task, subset = dataset_index[[mna]])
   tms = mlr::subsetTask(task, subset = Reduce(c, dataset_index[sna]))
   tge = mlr::subsetTask(task, subset = dataset_index[[tna]])
-  return(list(task = task, rins = rins, major_level = major_level, test_level = test_level, dataset_index = dataset_index, ns = ns, mna = mna, tna = tna, sna = sna, tmf = tmf, tms = tms, tge = tge, tname = tname, bname = bname, p = p))
+  return(list(task = task, rins = rins, major_level = major_level, test_level = test_level, dataset_index = dataset_index, ns = ns, mna = mna, tna = tna, sna = sna, tmf = tmf, tms = tms, tge = tge, tname = tname, bname = bname, p = p, curator_names = sna, openbox_name = mna, lockbox_name = tna))
 }
 
 

@@ -6,7 +6,7 @@ library(ggplot2)
 source("bt_measures_objs.R")
 source("bt_helpers.R")
 
-algo_mbo = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
+algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
   gperf_env$context =  context
   gperf_env$index = 1
   mgconf = getGconf()
@@ -33,20 +33,10 @@ algo = function(instance, lrn, alpha = 0.5) {
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
   mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time algorithm is run
-  extra.args_curator = list(instance = instance, gperf_env = gperf_env, alpha = alpha)  # alpha is used in fso
-  measure_curator = mk_measure_curator(extra.args = extra.args_curator)
+  extra.args = list(instance = instance, gperf_env = gperf_env, alpha = alpha, perf_name2tune = "auc", measures2tune = mlr::auc)  # alpha is used in fso
+  measure_curator = mk_measure_curator(extra.args = extra.args)
 
-  conf = list(n_adapt_rounds = 10
-  ,signif_level = 0.0001           # cutoff level used to determine which predictors to consider in each round based on their p-values. set small here for bigger parsimosmally for quick convergence
-  ,thresholdout_threshold = 0.02 # T in the Thresholdout algorithm
-  ,thresholdout_sigma = 0.03     # sigma in the Thresholdout algorithm
-  ,thresholdout_noise_distribution = "norm" # choose between "norm" and "laplace"
-  ,verbose = TRUE
-  ,sanity_checks = FALSE
-  ,train_begin_ratio = 0.5  # the ratio of n_train_begin compared to n_train_total
-  )
-
-  tune_res_fso_th_auc = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_auc_thout(extra.args = extra.args_curator)), gperf_env = gperf_env, context = "fso_th_auc")  # add mmce?
+  tune_res_fso_th_auc = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_auc_thout(extra.args = extra.args)), gperf_env = gperf_env, context = "fso_th_auc")  # add mmce?
   print("fso_th_auc tuning finished:")
   print(proc.time() - ptmi)
 
@@ -55,34 +45,45 @@ algo = function(instance, lrn, alpha = 0.5) {
   print("lso_openbox tuning finished:")
   print(proc.time() - ptmi)
 
-  tune_res_lso_curator = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = "lso_curator")  # add mmce?
+  tune_res_rso_curator = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = "rso_curator")  # add mmce?
 #  perf_side_bs1 = get(as.character(best_ind), envir = gperf_env)   # extract the side performance for the tuned result
-  print("lso_curator tuning finished:")
+  print("rso_curator tuning finished:")
   print(proc.time() - ptmi)
 
   tune_res_lso_openbox_nocv = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(openbox_nocv, measure_curator), gperf_env = gperf_env, context = "lso_openbo_nocv") # add mmce to prove result? 
   print("lso_openbox no cv tuning finished:")
   print(proc.time() - ptmi)
 
-  tune_res_fmo = algo_mbo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "fmo")
+  tune_res_fmo = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "fmo")
   #best_ind = tune_res_fmo$ind
   #perf_side_pr = get(as.character(best_ind), envir = gperf_env)  #FIXME: does it work for multicriteria?
   print("fmo finished:")
 
 
-  tune_res_fmo_nocv = algo_mbo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
+  tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
   print("fmo_nocv finished:")
 
-  tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_openbox_tr_curator_tune_alpha(extra.args_curator)), gperf_env = gperf_env, context = "fso")  # add mmce to double check result? 
+  tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_openbox_tr_curator_tune_alpha(extra.args)), gperf_env = gperf_env, context = "fso")  # add mmce to double check result? 
   print("fso finished:")
   print("algorithm finished")
   print(proc.time() - ptmi)
-  return(list(tune_res_fso = tune_res_fso, tune_res_lso_openbox = tune_res_lso_openbox, tune_res_lso_curator = tune_res_lso_curator, tune_res_lso_openbox_nocv = tune_res_lso_openbox_nocv, tune_res_fmo = tune_res_fmo, tune_res_fmo_nocv = tune_res_fmo_nocv, tune_res_fso_th_auc = tune_res_fso_th_auc, gperf_env = gperf_env, instance = instance))
+  return(list(tune_res_fso = tune_res_fso, tune_res_lso_openbox = tune_res_lso_openbox, tune_res_rso_curator = tune_res_rso_curator, tune_res_lso_openbox_nocv = tune_res_lso_openbox_nocv, tune_res_fmo = tune_res_fmo, tune_res_fmo_nocv = tune_res_fmo_nocv, tune_res_fso_th_auc = tune_res_fso_th_auc, gperf_env = gperf_env, instance = instance))
 }
 
 #major_level = instance$major_level, test_name = getTestName(ns = instance$ns, major_level = instance$major_level, test_level = instance$test_level), test_level = instance$test_level, perf_side_bs = perf_side_bs1, perf_side_pr = perf_side_pr, 
 #best_ind = tune_res_lso_openbox$mbo.result$best.ind #tune_res_lso$mbo.result$y
 
+#   conf = list(n_adapt_rounds = 10
+#   ,signif_level = 0.0001           # cutoff level used to determine which predictors to consider in each round based on their p-values. set small here for bigger parsimosmally for quick convergence
+#   ,thresholdout_threshold = 0.02 # T in the Thresholdout algorithm
+#   ,thresholdout_sigma = 0.03     # sigma in the Thresholdout algorithm
+#   ,thresholdout_noise_distribution = "norm" # choose between "norm" and "laplace"
+#   ,verbose = TRUE
+#   ,sanity_checks = FALSE
+#   ,train_begin_ratio = 0.5  # the ratio of n_train_begin compared to n_train_total
+#   )
+# 
+ 
   #thresholdoutauc = algo_thresholdoutauc(instance = instance, conf = conf)  # enough repetition is sufficient to get unbiased result of the random adding of instances
 
 #' @title
@@ -186,5 +187,3 @@ getOpenBox2CuratorBoxInd = function(instance) {
   # FIXME: indx has weird names
   return(list(local2remote_subset = indx))
 }
-
-

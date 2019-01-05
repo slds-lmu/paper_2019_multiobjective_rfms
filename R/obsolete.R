@@ -57,4 +57,15 @@ funGenProb = function(data, job, major_level, test_level, dataset_name) {
   return(list(task = task, rins = rins, major_level = major_level, test_level = test_level, dataset_index = dataset_index, ns = ns, mna = mna, tna = tna, sna = sna, tmf = tmf, tms = tms, tge = tge, tname = tname, bname = bname, p = p))
 }
 
-
+ auc = measureAUC(probabilities = getPredictionProbabilities(pred), truth = pred$data$truth, negative = pred$task.desc$negative, positive = pred$task.desc$positive)
+  cat(sprintf("--auc is %s -- ", auc))
+  brier = measureBrier(getPredictionProbabilities(pred), pred$data$truth, pred$task.desc$negative, pred$task.desc$positive)
+  cat(sprintf("--brier_score %s -- ", brier_score))
+  brier.scaled = measureBrierScaled(getPredictionProbabilities(pred), pred$data$truth, pred$task.desc$negative, pred$task.desc$positive)
+  cat(sprintf("--brier.scaled %s -- ", brier.scaled))
+  contingency_tb = table(getPredictionResponse(pred), getPredictionTruth(pred))
+  mmce = 1 - sum(diag(contingency_tb)) / sum(contingency_tb)
+  cat(sprintf("--mmce: %s --", mmce))
+  ber = measureBER(truth = getPredictionTruth(pred), response = getPredictionResponse(pred))
+  cat(sprintf("--ber: %s --", ber))
+  return(list(mmce = mmce, brier = brier, brier.scaled = brier.scaled, ber = ber, auc = auc))

@@ -1,75 +1,58 @@
+#' this function depends on the naming of extra.args
+funLogPerf2extra.argsEnv = function(list.perf, extra.args) {
+  env_gperf = extra.args$gperf_env   ## environment  use ls(env) or ls.str(env)
+  contextname = get("context", envir = env_gperf)  # we can only use one global variable
+  env_gperf[[as.character(env_gperf$index)]] = list.perf  # this redundancy is used to fetch the pareto optimal multi-objective candidate
+  env_gperf[[contextname]][[as.character(env_gperf$index)]] =  list.perf
+  env_gperf$index = env_gperf$index + 1L
+}
+
+getPerf4DataSites_Oracle = function(task, model, extra.args) {
+  pvs = model$learner$par.vals
+  list_dsname_insid = extra.args$instance$dataset_index
+  list.perf = lapply(list_dsname_insid, function(subset_ind) {
+    subtask = subsetTask(task, subset_ind)
+    getSingleDatasetPerf(model, subtask)
+  })
+  names(list.perf) = names(extra.args$instance$dataset_index)
+  funLogPerf2extra.argsEnv(list.perf, extra.args)
+  return(list.perf)
+}
+
 #' @title measure function calculating the model prediction performance on the remote dataset
-#' @description measure as objective function for mbo, given the hyper-parameter, model is fitted on open-box, returns mmce on curator-box. Additionally, measure for all datasets are calculated.
+#' @description measure as objective function for mbo, given the hyper-parameter, model is fitted on open-box, returns measure on curator-box. Additionally, measure for all datasets are calculated.
 #' @param task  mlr task which is combination of open-box, curator-box and lock-box
 #' @param model mlr model fitted on the open-box
 #' @param pred The prediction on the curator-box and lock-box
 #' @param feats features of the dataset
 #' @param extra.args additional arguments
-#' extra.args$subset_inds: holding the instance index for each dataset
-#' extra.args$major_level
-#' extra.args$test_level
-#' extra.args$gperf_side
-#' @return average mmce of all curator datasets
+#' @return average performance of all curator datasets
 fun_measure_obj_curator = function(task, model, pred, feats, extra.args) {
-pvs = model$learner$par.vals
-list_dsname_insid = extra.args$instance$dataset_index
-  list.res = lapply(list_dsname_insid, function(subset_ind) {
-    subtask = subsetTask(task, subset_ind)
-    getSingleDatasetPerf(model, subtask)$brier_score
-  })
-  names(list.res) = names(extra.args$instance$dataset_index)
-  res = fun4extra.args(list.res, extra.args)
-  cat(sprintf("\n curator: %f \n", res))
-  return(res)
-}
-
-getListRes = function(task, model, extra.args) {
-  pvs = model$learner$par.vals
-  list_dsname_insid = extra.args$instance$dataset_index
-  list.res = lapply(list_dsname_insid, function(subset_ind) {
-    subtask = subsetTask(task, subset_ind)
-    getSingleDatasetPerf(model, subtask)$auc
-  })
-  names(list.res) = names(extra.args$instance$dataset_index)
-  return(list.res)
-}
-
-#' this function depends on the naming of extra.args
-fun4extra.args = function(list.res, extra.args) {
-  env_gperf = extra.args$gperf_env   ## environment  use ls(env) or ls.str(env)
-  contextname = get("context", envir = env_gperf)  # we can only use one global variable
-  #' extra.args$ns[extra.args$major_level]
-  env_gperf[[as.character(env_gperf$index)]] = list.res  # this redundancy is used to fetch the pareto optimal multi-objective candidate
-  env_gperf[[contextname]][[as.character(env_gperf$index)]] =  list.res
-  env_gperf$index = env_gperf$index + 1L
-
-  major_name = extra.args$instance$mna
-  test_name = extra.args$instance$tna
-  curator_name = extra.args$instance$sna
-  res = unlist(list.res)[curator_name]
-  h = mean(res)
+  list.perf = getPerf4DataSites_Oracle(task, model, extra.args)
+  sublist_all_perf = list.perf[extra.args$instance$curator_names]
+  sublist = lapply(sublist_all_perf, function(x) x[extra.args$perf_name2tune])
+  vec = unlist(sublist)
+  h = mean(vec)
+  cat(sprintf("\n curator %s: %f \n", extra.args$perf_name, h))
   return(h)
 }
 
-fun_obj_thresholdout_auc = function(task, model, pred, feats, extra.args) {
+
+fun_obj_thresholdout = function(task, model, pred, feats, extra.args) {
   if (is.null(extra.args$th_para))
     extra.args$th_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0)
-  reslist = getListRes(task, model, extra.args)
-  perf.train = reslist[extra.args$instance$mna]
-  perf.train = unlist(perf.train)
-  perf.test = reslist[extra.args$instance$sna]
-  perf.test = unlist(perf.test)
-  # Compute train auc
-  #pred.train = predict(model, task, subset = setdiff(seq_len(task$task.desc$size), pred$data$id))
-  #perf.train = auc$fun(task, model, pred.train, feats, extra.args)
-  # Compute test auc
-  #perf.test  = auc$fun(task, model, pred, feats, extra.args)
-  # Compute threshold auc
-  fun4extra.args(reslist, extra.args)  # for log of results
-  threshout_auc(mean(perf.train), mean(perf.test), thresholdout_params = extra.args$th_para)
-  }
+  list.perf = getPerf4DataSites_Oracle(task, model, extra.args)
+  list.perf.train = list.perf[extra.args$instance$openbox_name]
+  list.perf.train = lapply(list.perf.train, function(x) x[[extra.args$perf_name2tune]])
+  perf.train = unlist(list.perf.train)
+  list.perf.test = list.perf[extra.args$instance$curator_names]
+  list.perf.test = lapply(list.perf.test, function(x) x[[extra.args$perf_name2tune]])
+  perf.test = unlist(list.perf.test)
+  cat(sprintf("\n %s : ", extra.args$perf_name2tune))
+  threshout(mean(perf.train), mean(perf.test), thresholdout_params = extra.args$th_para)
+}
 
-threshout_auc <- function(train_auc, holdout_auc, thresholdout_params) {
+threshout <- function(train_auc, holdout_auc, thresholdout_params) {
   if (thresholdout_params$noise_distribution == "norm") {
     xi <- rnorm(1, sd = thresholdout_params$sigma)
     eta <- rnorm(1, sd = 4*thresholdout_params$sigma)
@@ -92,14 +75,11 @@ threshout_auc <- function(train_auc, holdout_auc, thresholdout_params) {
   } else {
     out <- train_auc
   }
-  cat(sprintf("openbox-auc:%f, curator-auc:%f, thresauc:%f", train_auc, holdout_auc, out))
+  cat(sprintf("-openbox:%f, curator:%f, thres:%f", train_auc, holdout_auc, out))
   return(out)
 }
 
 
-
-# @description
-# given a hyper-parameter set, calculate the cross validation aggregated mmce on the major dataset
 
 fun_measure_obj_openbox_nocv = function(task, model, pred, feats, extra.args) {
   #'model$subset  # equivalent to which(df[, dataset_id] == dataset_names[2]) which get the row index for dataset 2
@@ -108,7 +88,7 @@ fun_measure_obj_openbox_nocv = function(task, model, pred, feats, extra.args) {
   pvs = getHyperParFromModel(model)
   model = getModelFromTask(major_task = major_task, lrn.id = lrn.id, pvs = pvs)
   pred = predict(model, major_task)
-  mlr::performance(pred, measures = list(brier))
+  mlr::performance(pred, measures = list(extra.args$perf_name2tune))
 }
 
 getLrnIDFromModel = function(model) {
@@ -149,7 +129,7 @@ fun_measure_obj_openbox = function(task, model, pred, feats, extra.args) {
   lrn.id = getLrnIDFromModel(model)
   #getHyperPars(model) only works for learner # no applicable getHyperPars' applied to an object of class "c('PreprocModel', 'BaseWrapperModel', 'WrappedModel')
   pvs = getHyperParFromModel(model)
-  res = getCVPerf(major_task = major_task, lrn.id = lrn.id, pvs)
+  res = getCVPerf(major_task = major_task, lrn.id = lrn.id, pvs = pvs, measures = extra.args$measures2tune)
   cat(sprintf("\n openbox: %f \n", res$aggr))
   return(res$aggr)
 }
@@ -158,10 +138,6 @@ fun_measure_obj_openbox = function(task, model, pred, feats, extra.args) {
 # extra.args should contain alpha and the extra.args needed for func_measure_obj_remote
 # @param extra.args additional arguments holding the instance index for each dataset, etc
 #' extra.args$alpha
-#' extra.args$subset_inds
-#' extra.args$major_level
-#' extra.args$gperf_side
-#' extra.args$test_level
 fun_measure_obj_openbox_tr_curator_tune = function(task, model, pred, feats, extra.args) {
   obj1 = fun_measure_obj_openbox(task, model, pred, feats, extra.args)  # no need for extra.args
   obj2 = fun_measure_obj_curator(task, model, pred, feats, extra.args)  # the performance for the current model is computed in this measure
@@ -184,8 +160,7 @@ fun_measure_obj_openbox2curator = function(task, model, pred, feats, extra.args)
   newmodel = getModelFromTask(major_task = major_task, lrn.id = lrn.id, pvs = pvs)
   
   fun_measure_obj_curator(task = task, model = newmodel, pred = pred, feats = feats, extra.args = extra.args)  # call the measure to update the environment, current context is bs2, only chagne is model here
-
-  res = getCVPerf(major_task = major_task, lrn.id = lrn.id, pvs)
+  res = getCVPerf(major_task = major_task, lrn.id = lrn.id, pvs = pvs, measures = extra.args$measures2tune)
   return(res$aggr)
 }
 
@@ -195,27 +170,22 @@ fun_measure_obj_openbox2curator = function(task, model, pred, feats, extra.args)
 #' @param lrn.id learner id in character
 #' @param pvs list of hyper-parameter
 #' @return resampling result
-getCVPerf = function(major_task, lrn.id, pvs) {
+getCVPerf = function(major_task, lrn.id, pvs, measures, iters = NULL) {
+  if (is.null(iters)) iters = getGconf()$CV_ITER
   lrn_obj = GET_LRN(lrn.id)
   #lrn_obj = setHyperPars(lrn_obj, par.vals = pvs$wraper_pvs)
   lrn_obj = setWraperHyperPars(lrn_obj, pvs)
-  rsd_out = makeResampleDesc("CV", iters = gconf$CV_ITER)
-  res = resample(learner = lrn_obj, task = major_task, resampling = rsd_out, measures = mlr::brier, show.info = FALSE)  # paramValueToString
+  rsd_out = makeResampleDesc("CV", iters = iters)
+  res = resample(learner = lrn_obj, task = major_task, resampling = rsd_out, measures = measures, show.info = FALSE)  # paramValueToString
   res # res$aggr give the test mean
 }
 
+
+# the measures here are according to mlr naming, so one could call get("brier")
 getSingleDatasetPerf = function(model, subtask) {
   pred = predict(model, subtask)
-  # getCVPerf(subtask, "classif.ksvm", pvs = model$learner$par.vals) when predict mmce is 1, the cv score can be 0.4, why is this phenomena?
-  # model = getModel(major_task = subtask, lrn.id = "classif.ksvm", pvs = model$learner$par.vals)
-  auc = measureAUC(probabilities = getPredictionProbabilities(pred), truth = pred$data$truth, negative = pred$task.desc$negative, positive = pred$task.desc$positive)
-  cat(sprintf("--auc is %s -- ", auc))
-  brier_score = measureBrier(getPredictionProbabilities(pred), pred$data$truth, pred$task.desc$negative, pred$task.desc$positive)
-  cat(sprintf("--brier_score %s -- ", brier_score))
-  tb = table(getPredictionResponse(pred), getPredictionTruth(pred))
-  mmce = 1 - sum(diag(tb)) / sum(tb)
-  cat(sprintf("--mmce: %s --", mmce))
-  return(list(mmce = mmce, brier_score = brier_score, auc = auc))
+  perf = mlr::performance(pred = pred, measures = list(auc, mmce, brier, brier.scaled, ber))
+  # brier.scaled sometimes is negative
+  print(perf)
+  return(perf)
 }
-
-
