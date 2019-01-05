@@ -17,3 +17,4 @@
 - read "how to run" above first
 - delete the batchtools.conf.R file since that file is for lrz
 - regenerate data/temp folder with pre_bt.R, note that this is to generate the RData file for several oml dataset. 
+- comment out list.data$oml14966 = prepareDataSite in bt_problem.R if only geo dataset needs to be run. 
