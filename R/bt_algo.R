@@ -28,11 +28,11 @@ algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context)
 
 
 
+# we can only have one global variable here since we need to share the measure, we need a context object to know which algorithm we are using
 algo = function(instance, lrn, alpha = 0.5) {
+  gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
-  mbo_design = getMBODesign(lrn, getGconf())
-  gperf_env = new.env()   # gperf_env is only being modified in side measure function! 
-
+  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time algorithm is run
   extra.args_curator = list(instance = instance, gperf_env = gperf_env, alpha = alpha)  # alpha is used in fso
   measure_curator = mk_measure_curator(extra.args = extra.args_curator)
 
@@ -46,21 +46,23 @@ algo = function(instance, lrn, alpha = 0.5) {
   ,train_begin_ratio = 0.5  # the ratio of n_train_begin compared to n_train_total
   )
 
-  #thresholdoutauc = algo_thresholdoutauc(instance = instance, conf = conf)  # enough repetition is sufficient to get unbiased result of the random adding of instances
-  tune_res_fso_th = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_auc_thout(extra.args = extra.args_curator)), gperf_env = gperf_env, context = "lso_openbox")  # add mmce?
-  print("fso_th_openbox tuning finished:")
+  tune_res_fso_th_auc = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_auc_thout(extra.args = extra.args_curator)), gperf_env = gperf_env, context = "fso_th_auc")  # add mmce?
+  print("fso_th_auc tuning finished:")
   print(proc.time() - ptmi)
 
-  # we can only have one global variable here since we need to share the measure, we need a context object to know which algorithm we are using
   tune_res_lso_openbox = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "lso_openbox")  # add mmce?
 #  perf_side_bs1 = get(as.character(best_ind), envir = gperf_env)   # extract the side performance for the tuned result
   print("lso_openbox tuning finished:")
   print(proc.time() - ptmi)
 
+  tune_res_lso_curator = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = "lso_curator")  # add mmce?
+#  perf_side_bs1 = get(as.character(best_ind), envir = gperf_env)   # extract the side performance for the tuned result
+  print("lso_curator tuning finished:")
+  print(proc.time() - ptmi)
+
   tune_res_lso_openbox_nocv = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(openbox_nocv, measure_curator), gperf_env = gperf_env, context = "lso_openbo_nocv") # add mmce to prove result? 
   print("lso_openbox no cv tuning finished:")
   print(proc.time() - ptmi)
-
 
   tune_res_fmo = algo_mbo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "fmo")
   #best_ind = tune_res_fmo$ind
@@ -75,10 +77,13 @@ algo = function(instance, lrn, alpha = 0.5) {
   print("fso finished:")
   print("algorithm finished")
   print(proc.time() - ptmi)
-  return(list(tune_res_fso = tune_res_fso, tune_res_lso_openbox = tune_res_lso_openbox, tune_res_lso_openbox_nocv = tune_res_lso_openbox_nocv, tune_res_fmo = tune_res_fmo, tune_res_fmo_nocv = tune_res_fmo_nocv, tune_res_fso_th, gperf_env = gperf_env, instance = instance))}
+  return(list(tune_res_fso = tune_res_fso, tune_res_lso_openbox = tune_res_lso_openbox, tune_res_lso_curator = tune_res_lso_curator, tune_res_lso_openbox_nocv = tune_res_lso_openbox_nocv, tune_res_fmo = tune_res_fmo, tune_res_fmo_nocv = tune_res_fmo_nocv, tune_res_fso_th_auc = tune_res_fso_th_auc, gperf_env = gperf_env, instance = instance))
+}
 
 #major_level = instance$major_level, test_name = getTestName(ns = instance$ns, major_level = instance$major_level, test_level = instance$test_level), test_level = instance$test_level, perf_side_bs = perf_side_bs1, perf_side_pr = perf_side_pr, 
 #best_ind = tune_res_lso_openbox$mbo.result$best.ind #tune_res_lso$mbo.result$y
+
+  #thresholdoutauc = algo_thresholdoutauc(instance = instance, conf = conf)  # enough repetition is sufficient to get unbiased result of the random adding of instances
 
 #' @title
 #' @description convert problem generator instance to thresholdoutauc input
