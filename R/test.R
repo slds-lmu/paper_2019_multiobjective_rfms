@@ -12,4 +12,3 @@
   reg_input$cluster.functions = makeClusterFunctionsMulticore(ncpus = 64)
   init(prob_names, prob_inputs, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
   testJob(1)
-

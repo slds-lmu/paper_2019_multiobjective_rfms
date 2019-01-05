@@ -33,10 +33,14 @@ algo = function(instance, lrn, alpha = 0.5) {
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
   mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time algorithm is run
-  extra.args = list(instance = instance, gperf_env = gperf_env, alpha = alpha, perf_name2tune = "auc", measures2tune = mlr::auc)  # alpha is used in fso
-  measure_curator = mk_measure_curator(extra.args = extra.args)
+  extra.args = list(instance = instance, gperf_env = gperf_env, alpha = alpha, perf_name2tune = "brier", measures2tune = mlr::brier)  # alpha is used in fso
 
-  tune_res_fso_th_auc = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_auc_thout(extra.args = extra.args)), gperf_env = gperf_env, context = "fso_th_auc")  # add mmce?
+  meas_openbox_cv = mk_measure(name = "meas_openbox_cv", extra.args, obj_fun = fun_measure_obj_openbox)
+  meas_openbox_nocv = mk_measure(name = "meas_openbox_nocv", extra.args, obj_fun = fun_measure_obj_openbox_nocv)
+  measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)
+  measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
+
+ tune_res_fso_th_auc = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = "fso_th_auc")  # add mmce?
   print("fso_th_auc tuning finished:")
   print(proc.time() - ptmi)
 
@@ -50,7 +54,7 @@ algo = function(instance, lrn, alpha = 0.5) {
   print("rso_curator tuning finished:")
   print(proc.time() - ptmi)
 
-  tune_res_lso_openbox_nocv = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(openbox_nocv, measure_curator), gperf_env = gperf_env, context = "lso_openbo_nocv") # add mmce to prove result? 
+  tune_res_lso_openbox_nocv = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "lso_openbo_nocv") # add mmce to prove result? 
   print("lso_openbox no cv tuning finished:")
   print(proc.time() - ptmi)
 
@@ -60,10 +64,11 @@ algo = function(instance, lrn, alpha = 0.5) {
   print("fmo finished:")
 
 
-  tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
+  tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
   print("fmo_nocv finished:")
+  meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
 
-  tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_openbox_tr_curator_tune_alpha(extra.args)), gperf_env = gperf_env, context = "fso")  # add mmce to double check result? 
+  tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso")  # add mmce to double check result? 
   print("fso finished:")
   print("algorithm finished")
   print(proc.time() - ptmi)

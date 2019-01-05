@@ -1,3 +1,174 @@
+mk_measure_auc_thout = function(extra.args) {
+  #
+  ##
+  #if(extra.args$perf_name2tune !="auc") stop("this function can only be used for auc!")
+  makeMeasure(
+    id = "thout.auc",
+    name = "meas thout auc",
+    properties = auc$properties,
+    minimize = auc$minimize,  ## !!!
+    aggr = mtrain.agg,
+    best = auc$best,        ## !!
+    worst = auc$worst,
+    fun = fun_obj_thresholdout,
+    extra.args = extra.args
+    )
+}
+
+mk_any_measure_thout = function(extra.args) {
+  makeMeasure(
+    id = sprintf("thout.%s", extra.args$perf_name2tune),
+    name = sprintf("measure thout.%s", extra.args$perf_name2tune),
+    properties = auc$properties,
+    minimize = FALSE,  ## !!!
+    aggr = mtrain.agg,
+    best = 0,        ## !!
+    worst = 0,
+    fun = fun_obj_thresholdout,
+    extra.args = extra.args
+    )
+}
+
+ncv_mmce_generalization = makeMeasure(
+  id = "ncv_mmce_major",
+  name = "Nested CV mmce on the main dataset",
+  properties = c("classif", "classif.multi", "req.pred", "req.truth"),
+  minimize = TRUE,
+  best = 0,
+  worst = 1,
+  fun = fun_measure_obj_ncv_local
+  )
+
+
+# openbox_nocv = makeMeasure(
+#   id = "openbox_nocv",
+#   name = "openbox no cv",
+#   properties = c("classif", "classif.multi", "req.pred", "req.truth"),
+#   minimize = TRUE,
+#   aggr = mtrain.agg,
+#   best = 0,
+#   worst = 1,
+#   fun = fun_measure_obj_openbox_nocv
+#   )
+# 
+# 
+
+# meas_openbox_cv = makeMeasure(
+#   id = "openbox_cv",
+#   name = "CV mmce on the openbox dataset",
+#   properties = c("classif", "classif.multi", "req.pred", "req.truth"),
+#   minimize = TRUE,
+#   aggr = mtrain.agg,
+#   best = 0,
+#   worst = 1,
+#   fun = fun_measure_obj_openbox
+#   )
+# 
+# 
+
+
+
+
+
+# mk_measure_curator = function(extra.args) {
+#   makeMeasure(
+#     id = "meas_curator",
+#     name = "meas curator",
+#     properties = c("classif", "classif.multi", "req.pred", "req.truth"),
+#     minimize = TRUE,
+#     aggr = mtrain.agg,
+#     best = 0,
+#     worst = 1,
+#     fun = fun_measure_obj_curator,
+#     extra.args = extra.args
+#     )
+# }
+# 
+# ' @title
+# ' @description
+# ' @param extra.args extra.args$local2remote_subset should contain the index of instances
+# ' @return customized measure
+# mk_measure_openbox_tr_curator_tune_alpha = function(extra.args) {
+#   checkmate::assert_numeric(extra.args$alpha)
+#   makeMeasure(
+#     id = "local_tr_tune_remote_tune_alpha",
+#     name = "alpha mixture of local and remote objective",
+#     properties = c("classif", "classif.multi", "req.pred", "req.truth"),
+#     minimize = TRUE,
+#     aggr = mtrain.agg, best = 0,
+#     worst = 1,
+#     fun = fun_measure_obj_openbox_tr_curator_tune,
+#     extra.args = extra.args
+#     )
+# }
+# 
+# mk_measure_local_tr_tune_remote_tune_nocv = function(extra.args) {
+#   checkmate::assert_numeric(extra.args$alpha)
+#   makeMeasure(
+#     id = "local_tr_tune_remote_tune_alpha_nocv",
+#     name = "alpha mixture of local and remote objective nocv",
+#     properties = c("classif", "classif.multi", "req.pred", "req.truth"),
+#     minimize = TRUE,
+#     aggr = mtrain.agg,
+#     best = 0,
+#     worst = 1,
+#     fun = fun_measure_obj_local_tr_tune_remote_tune_nocv,
+#     extra.args = extra.args
+#     )
+# }
+# 
+# 
+' @title
+' @description
+' @param extra.args extra.args$local2remote_subset should contain the index of instances
+' @return customized measure
+# mk_measure_local2remote = function(extra.args) {
+#   measure_cv_local2remote = makeMeasure(
+#     id = "cv_local2remote",
+#     name = "CV mmce on the main dataset and model selection dataset",
+#     properties = c("classif", "classif.multi", "req.pred", "req.truth"),
+#     minimize = TRUE,
+#     aggr = mtrain.agg,
+#     best = 0,
+#     worst = 1,
+#     fun = fun_measure_obj_openbox2curator,
+#     extra.args = extra.args
+#     )
+#   return(measure_cv_local2remote)
+# }
+
+# use fixed hyper-parameter to do cross validation with different training set and aggregate the generalization error
+fun_measure_obj_ncv_local = function(variables) {
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 createImBalancedDf = function(tid) {
   findInlist = function(i, listinst) {
     idx = which(sapply(listinst, function(inst) i %in% inst))  # R python difference

@@ -189,3 +189,14 @@ getSingleDatasetPerf = function(model, subtask) {
   print(perf)
   return(perf)
 }
+
+
+mkSingleDsMeasure = function(subset_ind) {
+  measure_fun = function(task, model, pred, feats, extra.args) {
+    subtask = subsetTask(task, subset_ind)
+    getSingleDatasetPerf(model, subtask)$mmce
+  }
+  return(measure_fun)
+}
+
+
