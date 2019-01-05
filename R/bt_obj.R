@@ -88,7 +88,7 @@ fun_measure_obj_openbox_nocv = function(task, model, pred, feats, extra.args) {
   pvs = getHyperParFromModel(model)
   model = getModelFromTask(major_task = major_task, lrn.id = lrn.id, pvs = pvs)
   pred = predict(model, major_task)
-  mlr::performance(pred, measures = list(extra.args$perf_name2tune))
+  mlr::performance(pred, measures = list(extra.args$measures2tune))
 }
 
 getLrnIDFromModel = function(model) {
