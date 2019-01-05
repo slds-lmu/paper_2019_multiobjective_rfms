@@ -21,7 +21,7 @@ run_cluster = function() {
   source("bt_learner_parsets.R")
   source("bt_main.R")
   source("bt_problem.R")
-  REG_FILE_DIR = "openml_gina_kmeans"
+  REG_FILE_DIR = "../output/geo"
   btDelInit(local = F)  # type "yEs" here
   ######################################
   mgconf = getGconf()
@@ -31,21 +31,22 @@ run_cluster = function() {
   submitJobs(597)
 }
 
-function() {
+submit_jobs = function() {
   submitJobs(1, resources = list(walltime = 100))
   getStatus()
   unwrap(getJobPars()[1:100, .(algo.pars)])
   submitJobs(597)
   showLog(597)
-  index = seq.int(from = 1, to = 3600, by = 60)
+  index = seq.int(from = 1, to = 1800, by = 30)  # 30 replications
   submitJobs(index)
   submitJobs(index + 1)
   submitJobs(index + 2)
 }
 
-post_rs = function(i) {
+post_rs_local = function(i) {
   require(batchtools)
-  reg = loadRegistry(REG_FILE_DIR)
+  REG_FILE_DIR = "../output/geo"
+  reg = loadRegistry(REG_FILE_DIR, conf.file = NA)
   reg$writeable = T
   submitJobs(1)
   res = loadResult(i)
