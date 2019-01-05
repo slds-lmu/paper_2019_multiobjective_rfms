@@ -240,3 +240,19 @@ funGenProb = function(data, job, major_level, test_level, dataset_name) {
   ber = measureBER(truth = getPredictionTruth(pred), response = getPredictionResponse(pred))
   cat(sprintf("--ber: %s --", ber))
   return(list(mmce = mmce, brier = brier, brier.scaled = brier.scaled, ber = ber, auc = auc))
+
+
+selectOMLDataSet = function() {
+  task.ids = OpenML::getOMLStudy("OpenML100")$tasks$task.id
+  OpenML::listOMLStudies()
+  require(OpenML)
+  idt = lapply(task.ids, function(id) {
+    ot = OpenML::getOMLTask(id)
+    mt = convertOMLTaskToMlr(ot)
+    sum(mt$mlr.task$task.desc$n.feat) >  0.2 * (mt$mlr.task$task.desc$size)
+   }
+   )
+  idt = which(unlist(idt))
+  idt = task.ids[idt]
+  print(idt)
+}
