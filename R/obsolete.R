@@ -1,3 +1,11 @@
+###### data
+# we will use data from 2 sources: a) datamicroarray b) OML
+DMA_PACKAGE_NAME = 'datamicroarray'
+DMA_DATA_NAMES = c("alon", "borovecki", "chiaretti", "chin", "chowdary", "gordon",
+  "gravier", "pomeroy", "shipp", "singh", "subramanian", "tian", "west")
+DMA_TARGET_NAME = "class"  # DMA has no name for y col
+
+
 genTable = function(onres) {
   res = onres$res$res
   # single obj

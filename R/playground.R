@@ -1,10 +1,7 @@
 run_local = function() {
   DEBUG_FLAG = F
-  source("pre_bt.R")
   source("bt_conf.R")
-  source("bt_learner_parsets.R")
   source("bt_main.R")
-  source("bt_problem.R")
   REG_FILE_DIR = "../output/geo"
   btDelInit(local = T, force = DEBUG_FLAG)
   mgconf = getGconf()
@@ -14,13 +11,24 @@ run_local = function() {
   testJob(1)
 }
 
-run_cluster = function() {
+debug_cluster = function() {
   DEBUG_FLAG = T # if true: use low budget (only 7 iterations of mbo)
-  source("pre_bt.R")
   source("bt_conf.R")
-  source("bt_learner_parsets.R")
   source("bt_main.R")
-  source("bt_problem.R")
+  REG_FILE_DIR = "../output/debug"
+  btDelInit(local = F)  # type "yEs" here
+  ######################################
+  mgconf = getGconf()
+  reg_input = batchtools::getDefaultRegistry()
+  reg_input$default.resources
+  init(prob_names, prob_inputs, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
+  submitJobs(597)
+}
+
+run_cluster = function() {
+  DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo)
+  source("bt_conf.R")
+  source("bt_main.R")
   REG_FILE_DIR = "../output/geo"
   btDelInit(local = F)  # type "yEs" here
   ######################################
@@ -30,6 +38,7 @@ run_cluster = function() {
   init(prob_names, prob_inputs, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
   submitJobs(597)
 }
+
 
 submit_jobs = function() {
   submitJobs(1, resources = list(walltime = 100))
