@@ -1,3 +1,26 @@
+prepareDataSite = function(path, dataset_id, targetname) {
+  require(BBmisc)
+  require(mlr)
+  df = load2(path)
+  dataset_names = unique(df[, dataset_id])
+  list_dataset_index = lapply(1:length(dataset_names), function(i) which(df[, dataset_id] == dataset_names[i]))
+  names(list_dataset_index) = dataset_names
+  which(colnames(df) == dataset_id)
+  df_dataset_accn = df[, dataset_id]
+  df[dataset_id] = NULL   # FIXME: add args to allow deletion of other columns
+  task = makeClassifTask(id = "holdoutHackTask", data = df, target = targetname)
+  return(list(task = task, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn))
+}
+
+
+list.data = list()
+list.data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData", dataset_id = "dataset_accn", targetname = "response")
+list.data$oml14966 = prepareDataSite(path = "../Data/temp/14966_balanced_clustered.RData",  dataset_id = "dataset_accn", targetname = "target")
+prob_inputs_data = list.data
+#prob_inputs = list(omlid = c(3891, 9950, 9981, 14966, 34536), list.data = list.data)  # prob_inputs will be called in addProblem, any data can be carried there.
+
+
+
 # run this file to create input data files to save time for
 dumpOMLTask = function(tid = 3891) {
   require(mlr)
