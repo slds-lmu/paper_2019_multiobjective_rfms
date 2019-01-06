@@ -13,6 +13,10 @@ prepareDataSite = function(path, dataset_id, targetname) {
 }
 
 
+
+source("utility_flor.R")
+create_rdata_cluster()
+
 list.data = list()
 list.data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData", dataset_id = "dataset_accn", targetname = "response")
 list.data$oml14966 = prepareDataSite(path = "../Data/temp/14966_balanced_clustered.RData",  dataset_id = "dataset_accn", targetname = "target")
