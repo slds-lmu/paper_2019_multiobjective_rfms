@@ -1,6 +1,6 @@
 # oml_task_id: 3891, 14966, 34536
 createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7) {
-
+  require(mlr)
   checkmate::assertIntegerish(n_datasets)
   checkmate::assertIntegerish(oml_task_id)
   checkmate::assertLogical(balanced)
@@ -35,7 +35,7 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
 }
 
 
-create_rdata_cluster = function(tids = c(3891, 14966, 34536), n_datasets = 5, balanced = T, pca_var_ratio) {
+create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_datasets = 5, balanced = T, prefix = "../Data/temp/oml_") {
   lapply(tids, function(x) {
       lst = createClassBalancedDfCluster(x, n_datasets, balanced, pca_var_ratio)
       dflst = lapply(seq_len(length(lst$list_dataset_index)),
@@ -46,7 +46,8 @@ create_rdata_cluster = function(tids = c(3891, 14966, 34536), n_datasets = 5, ba
           return(df)
       })
       data = do.call("rbind", dflst)
-      save(data,  file = paste0("../Data/", x, "_balanced_clustered.RData"))
+      filena = paste0(prefix, x, sprintf("_clustered_classbalanced_%s.RData", balanced))
+      save(data,  file = filena)
   })
 }
 

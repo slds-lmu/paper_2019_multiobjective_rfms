@@ -22,9 +22,9 @@ prepareDataSite = function(path, dataset_id, targetname) {
   return(list(task = task, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn))
 }
 
-source("utility_flor.R")
+source("utilities_datasite.R")
 # 3891, 9950, 9981, 14966, 34536
-create_rdata_cluster()
+create_rdata_cluster(pca_var_ratio = 0.5, tids = c(3891), n_datasets = 5, balanced = T)
 
 list.data = list()
 list.data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData", dataset_id = "dataset_accn", targetname = "response")  # this data comes with repository
