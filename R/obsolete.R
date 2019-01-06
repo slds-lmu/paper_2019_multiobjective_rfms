@@ -1,3 +1,52 @@
+genTable = function(onres) {
+  res = onres$res$res
+  # single obj
+  so = res$gperf_side$bs1
+  bs_ind = res$tune_res_bs$mbo.result$best.ind
+  sodt = data.table::rbindlist(so[bs_ind])
+  sodt$algo = "bs1"
+
+  so2 = res$gperf_side$bs2
+  bs_ind = res$tune_res_bs2$mbo.result$best.ind
+  sodt2 = data.table::rbindlist(so2[bs_ind])
+  sodt2$algo = "bs2"
+
+  so3 = res$gperf_side$bs3
+  bs_ind = res$tune_res_bs2$mbo.result$best.ind
+  sodt3 = data.table::rbindlist(so3[bs_ind])
+  sodt3$algo = "bs3"
+
+
+
+  #bs_mmce = res$res$tune_res_bs$mbo.result$y
+  lrn.id = res$tune_res_bs$learner$id
+  print(lrn.id)
+  ## multi obj
+  ind = res$tune_res_pr$ind
+  res$tune_res_pr$y
+  pareto.list = res$gperf_side$pr[ind]
+  list.dt = data.table::rbindlist(pareto.list)
+  list.dt$algo = "pr"
+  ns = names(pareto.list[[1]])
+  major_name = ns[res$major_level]
+  msns = setdiff(ns, c(major_name, res$test_name))
+  bspr = rbind(sodt, sodt2, sodt3, list.dt)
+  bspr = as.data.frame(bspr)
+  bspr$major_name = major_name
+  bspr$test_name = res$test_name
+  bspr$lrn.id = lrn.id
+  bspr$mf = bspr[, major_name]
+  bspr$ge = bspr[, res$test_name]
+  bspr$ms = rowMeans(bspr[, msns])
+  bspr$ds = onres$ds
+  bspr$repl = onres$repl
+  bspr
+}
+
+
+
+
+
 mk_measure_auc_thout = function(extra.args) {
   #
   ##

@@ -109,6 +109,7 @@ algo = function(instance, lrn, alpha = 0.5) {
     dt$lockbox = as.vector(as.matrix(as.data.frame(dt)[, instance$lockbox]))
     dt$lrn = lrn.id
     dt
+    #  listofrow = apply(dt,1,as.list)
   }
   tb = genTable(res)
   res$tb = tb
@@ -232,3 +233,17 @@ getOpenBox2CuratorBoxInd = function(instance) {
   # FIXME: indx has weird names
   return(list(local2remote_subset = indx))
 }
+
+
+reduceResult = function() {
+  reslist = reduceResultsList(ids = findDone(), fun = function(job, res) {
+    # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
+    dt = genTable(res$res)
+    dt$repl = job$repl
+    dt$dsna = job$prob.pars$dataset_name
+    dt$lrn = job$algo.pars$lrn
+    return(dt)})
+  rbindlist(reslist)
+}
+
+
