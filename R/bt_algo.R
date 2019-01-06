@@ -23,6 +23,7 @@ algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context)
   ctrl_bs = getTuneMethod("mbodefault", mgconf = mgconf)
   ctrl_bs$mbo.design = mbo_design
   tune_res_bs = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_bs, show.info = TRUE)  # first of the list_measures are being tuned
+  cat(sprintf("\n %s finished  \n", context))
   return(tune_res_bs = tune_res_bs)
 }
 
@@ -40,39 +41,78 @@ algo = function(instance, lrn, alpha = 0.5) {
   measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)
   measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
 
- tune_res_fso_th_auc = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = "fso_th_auc")  # add mmce?
-  print("fso_th_auc tuning finished:")
+ tune_res_fso_th_auc = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = "fso_th_auc")  
   print(proc.time() - ptmi)
 
   tune_res_lso_openbox = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "lso_openbox")  # add mmce?
-#  perf_side_bs1 = get(as.character(best_ind), envir = gperf_env)   # extract the side performance for the tuned result
-  print("lso_openbox tuning finished:")
   print(proc.time() - ptmi)
 
   tune_res_rso_curator = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = "rso_curator")  # add mmce?
-#  perf_side_bs1 = get(as.character(best_ind), envir = gperf_env)   # extract the side performance for the tuned result
-  print("rso_curator tuning finished:")
   print(proc.time() - ptmi)
 
   tune_res_lso_openbox_nocv = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "lso_openbo_nocv") # add mmce to prove result? 
-  print("lso_openbox no cv tuning finished:")
   print(proc.time() - ptmi)
 
-  tune_res_fmo = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "fmo")
-  #best_ind = tune_res_fmo$ind
-  #perf_side_pr = get(as.character(best_ind), envir = gperf_env)  #FIXME: does it work for multicriteria?
-  print("fmo finished:")
-
-
-  tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
-  print("fmo_nocv finished:")
   meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
 
   tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso")  # add mmce to double check result? 
-  print("fso finished:")
+
+  agg_so = function(res, meas_name = "mmce", algo_name = "fso") {
+    best_ind = res[[paste0("tune_res_", algo_name)]]$mbo.result$best.ind  # get the dob of the pareto optimal
+    so = res$gperf_env[[algo_name]][best_ind]
+    best.list = lapply(so, function(res_iter) {
+      lapply(res_iter, function(x) x[[meas_name]])})
+    sodt = data.table::rbindlist(best.list)
+    sodt$algo = algo_name
+    return(sodt)
+  }
+
+
+  ### MultiObj
+  tune_res_fmo = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "fmo")
+  print("fmo finished:")
+
+  tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
+  print("fmo_nocv finished:")
+
+  agg_mo = function(res, meas_name = "mmce", algo_name = "fmo_nocv") {
+    ind = res[[paste0("tune_res_", algo_name)]]$ind  # get the dob of the pareto optimal
+    pareto.list = res$gperf_env[[algo_name]][ind]
+    pareto.list = lapply(pareto.list, function(res_iter) {
+      lapply(res_iter, function(x) x[[meas_name]])})
+    list.dt = data.table::rbindlist(pareto.list)
+    list.dt$algo = algo_name
+    list.dt
+  }
+
   print("algorithm finished")
   print(proc.time() - ptmi)
-  return(list(tune_res_fso = tune_res_fso, tune_res_lso_openbox = tune_res_lso_openbox, tune_res_rso_curator = tune_res_rso_curator, tune_res_lso_openbox_nocv = tune_res_lso_openbox_nocv, tune_res_fmo = tune_res_fmo, tune_res_fmo_nocv = tune_res_fmo_nocv, tune_res_fso_th_auc = tune_res_fso_th_auc, gperf_env = gperf_env, instance = instance))
+  res = list(tune_res_fso = tune_res_fso, tune_res_lso_openbox = tune_res_lso_openbox, tune_res_rso_curator = tune_res_rso_curator, tune_res_lso_openbox_nocv = tune_res_lso_openbox_nocv, tune_res_fmo = tune_res_fmo, tune_res_fmo_nocv = tune_res_fmo_nocv, tune_res_fso_th_auc = tune_res_fso_th_auc, gperf_env = gperf_env, instance = instance)
+  genTable = function(res) {
+    agg = function(res) {
+      agglist = list()
+      agglist$fso = agg_so(res, algo_name = "fso")
+      agglist$lso_openbox = agg_so(res, algo_name = "lso_openbox")
+      agglist$rso_curator = agg_so(res, algo_name = "rso_curator")
+      agglist$fso_thauc = agg_so(res, algo_name = "fso_th_auc")
+      agglist$fmo = agg_mo(res, algo_name = "fmo")
+      agglist$fmo_nocv = agg_mo(res, algo_name = "fmo_nocv")
+      rbindlist(agglist)
+    }
+    lrn.id = res$tune_res_fso$learner$id
+    dt = agg(res)
+    instance = res$instance
+    dt$openbox_name = instance$openbox_name
+    dt$lockbox_name = instance$lockbox_name
+    dt$curator = apply(as.data.frame(dt)[, instance$curator_names], 1, FUN = mean)
+    dt$openbox = as.vector(as.matrix(as.data.frame(dt)[, instance$openbox_name]))
+    dt$lockbox = as.vector(as.matrix(as.data.frame(dt)[, instance$lockbox]))
+    dt$lrn = lrn.id
+    dt
+  }
+  tb = genTable(res)
+  res$tb = tb
+  return(res)
 }
 
 #major_level = instance$major_level, test_name = getTestName(ns = instance$ns, major_level = instance$major_level, test_level = instance$test_level), test_level = instance$test_level, perf_side_bs = perf_side_bs1, perf_side_pr = perf_side_pr, 

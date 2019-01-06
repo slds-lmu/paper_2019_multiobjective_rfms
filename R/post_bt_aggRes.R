@@ -1,8 +1,5 @@
 #' res2[1, result][[1]]$fig_front
 source("post_vis.R")
-
-res = BBmisc::load2("output/DortmundClusterResVonAndrea.RData")
-
 getTestLevelFromNa = function(ns, test_name, major_level) {
  which(ns[-major_level] == test_name)
 }
@@ -12,8 +9,7 @@ function() {
     list(repl = job$repl, prob.pars = job$prob.pars, algo.pars = job$algo.pars, res = res)
     })
   res = reduceResultsList(ids = 1:10, fun = function(job, res) {
-      job$repl  # the replication does not help us aggregate the pareto front!!
-      # it only make sense to aggregate the baseline model
+      job$repl  # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
       ind = res$res$tune_res_pr$ind
       #ind
       res$res
@@ -21,8 +17,6 @@ function() {
       pareto.list = res$res$gperf_side$pr[ind]
       ns = names(pareto.list[[1]])
       list.dt = data.table::rbindlist(pareto.list)
-      #library(rgl)
-      #library(magrittr)
       library(data.table)
       so = res$res$gperf_side$bs1
       bs_ind = res$res$tune_res_bs$mbo.result$best.ind
