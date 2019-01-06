@@ -4,7 +4,7 @@ library(mlrMBO)
 
 print("conf being sourced")
 ### dependencies
-pre.source = c("bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "pre_bt.R", "bt_measures_objs.R", "bt_helpers.R", "bt_obj.R")
+pre.source = c("utilities_datasite.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures_objs.R", "bt_helpers.R", "bt_obj.R")  # sequence being sourced can not be changed!
 lapply(pre.source, function(x) source(x))
 pre.source = c(pre.source, "bt_conf.R")
 pre.packages = c("mlr", "BBmisc", "mlrMBO")  ## OpenML removed

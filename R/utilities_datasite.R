@@ -1,3 +1,29 @@
+# run this file to dump oml tasks from web to prevent future server problem
+dumpOMLTask = function(tid = 3891) {
+  require(mlr)
+  mlr:::setMlrOption("show.info", TRUE)
+  ot = OpenML::getOMLTask(tid)
+  mt = OpenML::convertOMLTaskToMlr(ot)
+  task_mlr = mt$mlr.task
+  taskstr = sprintf("meta/oml%sMlrTask.RData", tid)
+  save(task_mlr, file = taskstr)
+}
+
+prepareDataSite = function(path, dataset_id, targetname) {
+  require(BBmisc)
+  require(mlr)
+  df = load2(path)
+  dataset_names = unique(df[, dataset_id])
+  list_dataset_index = lapply(1:length(dataset_names), function(i) which(df[, dataset_id] == dataset_names[i]))
+  names(list_dataset_index) = dataset_names
+  which(colnames(df) == dataset_id)
+  df_dataset_accn = df[, dataset_id]
+  df[dataset_id] = NULL   # FIXME: add args to allow deletion of other columns
+  task = makeClassifTask(id = "holdoutHackTask", data = df, target = targetname)
+  return(list(task = task, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn))
+}
+
+
 # oml_task_id: 3891, 14966, 34536
 createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7) {
   require(mlr)
@@ -36,7 +62,7 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
 
 
 create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_datasets = 5, balanced = T, prefix = "../Data/temp/oml_") {
-  lapply(tids, function(x) {
+  list.tname = lapply(tids, function(x) {
       lst = createClassBalancedDfCluster(x, n_datasets, balanced, pca_var_ratio)
       dflst = lapply(seq_len(length(lst$list_dataset_index)),
         function(i) {
@@ -48,7 +74,9 @@ create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_d
       data = do.call("rbind", dflst)
       filena = paste0(prefix, x, sprintf("_clustered_classbalanced_%s.RData", balanced))
       save(data,  file = filena)
+      getTaskTargetNames(lst$task)
   })
+  list.tname
 }
 
 # This function must be used inside the problem since this method is random, only running one time is not fair.

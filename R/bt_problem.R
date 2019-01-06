@@ -1,5 +1,16 @@
-if (!exists("prob_inputs_data") || is.null(prob_inputs_data) || length(prob_inputs_data) == 0) {
-  stop("please run pre_bt.R to generate the data before running batchtools")
+prob_inputs_data = list()  # used for addProblem
+# list.data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData", dataset_id = "dataset_accn", targetname = "response")  # this data comes with repository
+prob_inputs_data$oml3891 = prepareDataSite(path = "../Data/temp/oml_3891_clustered_classbalanced_TRUE.RData",  dataset_id = "dataset_accn", targetname = "label")
+dataset_names_input = c("oml3891")
+
+# if (!exists("prob_inputs_data") || is.null(prob_inputs_data) || length(prob_inputs_data) == 0) {
+#   stop("please run pre_bt.R to generate the data before running batchtools")
+# }
+
+test_funGenProb = function() {
+ instance = funGenProbOracle(data = prob_inputs_data, job = NULL, major_level = 1L, test_level = 1L, dataset_name = "geo")
+ source("bt_algo.R")
+ algo_thresholdout(instance)
 }
 funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   tuple = data[[dataset_name]]
@@ -27,14 +38,8 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
 
 
 
-test_funGenProb = function() {
- instance = funGenProbOracle(data = prob_inputs_data, job = NULL, major_level = 1L, test_level = 1L, dataset_name = "geo")
- source("bt_algo.R")
- algo_thresholdout(instance)
-}
-
 prob_names = c("prob")
 prob_funs = list()
 prob_funs[[prob_names[[1L]]]] = funGenProbOracle
 prob_designs = list()
-prob_designs[[prob_names[1L]]] = expand.grid(major_level = 1:5, test_level = 1:4, dataset_name = c("geo", "oml14966"), stringsAsFactors = FALSE)
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, dataset_name = dataset_names_input, stringsAsFactors = FALSE)

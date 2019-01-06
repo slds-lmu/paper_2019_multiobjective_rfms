@@ -1,3 +1,16 @@
+debug_local = function() {
+  DEBUG_FLAG = T
+  source("bt_conf.R")
+  source("bt_main.R")
+  REG_FILE_DIR = "../output/localDebug"
+  btDelInit(local = T, force = DEBUG_FLAG)
+  mgconf = getGconf()
+  reg_input = batchtools::getDefaultRegistry()
+  reg_input$cluster.functions = makeClusterFunctionsMulticore(ncpus = 64)
+  init(prob_names, prob_inputs_data, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
+  testJob(1)
+}
+
 run_local = function() {
   DEBUG_FLAG = F
   source("bt_conf.R")
