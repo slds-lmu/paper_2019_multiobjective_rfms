@@ -57,17 +57,6 @@ algo = function(instance, lrn, alpha = 0.5) {
 
   tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso")  # add mmce to double check result? 
 
-  agg_so = function(res, meas_name = "mmce", algo_name = "fso") {
-    best_ind = res[[paste0("tune_res_", algo_name)]]$mbo.result$best.ind  # get the dob of the pareto optimal
-    so = res$gperf_env[[algo_name]][best_ind]
-    best.list = lapply(so, function(res_iter) {
-      lapply(res_iter, function(x) x[[meas_name]])})
-    sodt = data.table::rbindlist(best.list)
-    sodt$algo = algo_name
-    return(sodt)
-  }
-
-
   ### MultiObj
   tune_res_fmo = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "fmo")
   print("fmo finished:")
@@ -75,42 +64,9 @@ algo = function(instance, lrn, alpha = 0.5) {
   tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
   print("fmo_nocv finished:")
 
-  agg_mo = function(res, meas_name = "mmce", algo_name = "fmo_nocv") {
-    ind = res[[paste0("tune_res_", algo_name)]]$ind  # get the dob of the pareto optimal
-    pareto.list = res$gperf_env[[algo_name]][ind]
-    pareto.list = lapply(pareto.list, function(res_iter) {
-      lapply(res_iter, function(x) x[[meas_name]])})
-    list.dt = data.table::rbindlist(pareto.list)
-    list.dt$algo = algo_name
-    list.dt
-  }
-
   print("algorithm finished")
   print(proc.time() - ptmi)
   res = list(tune_res_fso = tune_res_fso, tune_res_lso_openbox = tune_res_lso_openbox, tune_res_rso_curator = tune_res_rso_curator, tune_res_lso_openbox_nocv = tune_res_lso_openbox_nocv, tune_res_fmo = tune_res_fmo, tune_res_fmo_nocv = tune_res_fmo_nocv, tune_res_fso_th_auc = tune_res_fso_th_auc, gperf_env = gperf_env, instance = instance)
-  genTable = function(res) {
-    agg = function(res) {
-      agglist = list()
-      agglist$fso = agg_so(res, algo_name = "fso")
-      agglist$lso_openbox = agg_so(res, algo_name = "lso_openbox")
-      agglist$rso_curator = agg_so(res, algo_name = "rso_curator")
-      agglist$fso_thauc = agg_so(res, algo_name = "fso_th_auc")
-      agglist$fmo = agg_mo(res, algo_name = "fmo")
-      agglist$fmo_nocv = agg_mo(res, algo_name = "fmo_nocv")
-      rbindlist(agglist)
-    }
-    lrn.id = res$tune_res_fso$learner$id
-    dt = agg(res)
-    instance = res$instance
-    dt$openbox_name = instance$openbox_name
-    dt$lockbox_name = instance$lockbox_name
-    dt$curator = apply(as.data.frame(dt)[, instance$curator_names], 1, FUN = mean)
-    dt$openbox = as.vector(as.matrix(as.data.frame(dt)[, instance$openbox_name]))
-    dt$lockbox = as.vector(as.matrix(as.data.frame(dt)[, instance$lockbox]))
-    dt$lrn = lrn.id
-    dt
-    #  listofrow = apply(dt,1,as.list)
-  }
   tb = genTable(res)
   res$tb = tb
   return(res)
@@ -235,7 +191,55 @@ getOpenBox2CuratorBoxInd = function(instance) {
 }
 
 
+  genTable = function(res) {
+    agg = function(res) {
+      agglist = list()
+      agglist$fso = agg_so(res, algo_name = "fso")
+      agglist$lso_openbox = agg_so(res, algo_name = "lso_openbox")
+      agglist$rso_curator = agg_so(res, algo_name = "rso_curator")
+      agglist$fso_thauc = agg_so(res, algo_name = "fso_th_auc")
+      agglist$fmo = agg_mo(res, algo_name = "fmo")
+      agglist$fmo_nocv = agg_mo(res, algo_name = "fmo_nocv")
+      rbindlist(agglist)
+    }
+    lrn.id = res$tune_res_fso$learner$id
+    dt = agg(res)
+    instance = res$instance
+    dt$openbox_name = instance$openbox_name
+    dt$lockbox_name = instance$lockbox_name
+    dt$curator = apply(as.data.frame(dt)[, instance$curator_names], 1, FUN = mean)
+    dt$openbox = as.vector(as.matrix(as.data.frame(dt)[, instance$openbox_name]))
+    dt$lockbox = as.vector(as.matrix(as.data.frame(dt)[, instance$lockbox]))
+    dt$lrn = lrn.id
+    dt
+    #  listofrow = apply(dt,1,as.list)
+  }
+
+  agg_so = function(res, meas_name = "mmce", algo_name = "fso") {
+    best_ind = res[[paste0("tune_res_", algo_name)]]$mbo.result$best.ind  # get the dob of the pareto optimal
+    so = res$gperf_env[[algo_name]][best_ind]
+    best.list = lapply(so, function(res_iter) {
+      lapply(res_iter, function(x) x[[meas_name]])})
+    sodt = data.table::rbindlist(best.list)
+    sodt$algo = algo_name
+    return(sodt)
+  }
+
+  agg_mo = function(res, meas_name = "mmce", algo_name = "fmo_nocv") {
+    ind = res[[paste0("tune_res_", algo_name)]]$ind  # get the dob of the pareto optimal
+    pareto.list = res$gperf_env[[algo_name]][ind]
+    pareto.list = lapply(pareto.list, function(res_iter) {
+      lapply(res_iter, function(x) x[[meas_name]])})
+    list.dt = data.table::rbindlist(pareto.list)
+    list.dt$algo = algo_name
+    list.dt
+  }
+
+
+
 reduceResult = function() {
+
+
   reslist = reduceResultsList(ids = findDone(), fun = function(job, res) {
     # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
     dt = genTable(res$res)

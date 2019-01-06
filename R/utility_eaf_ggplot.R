@@ -69,7 +69,8 @@ example = function() {
 
   #   car::scatter3d(x = dtb$mf, y = dtb$ms, z = dtb$ge, groups = as.factor(dtb$algo), grid = F, surface = T, ellipsoid = F, surface.col = c("#999999", "#E69F00"))
   #   car::scatter3d(x = dtb$mf, y = dtb$ms, z = dtb$ge, groups = as.factor(dtb$algo), grid = F, surface = F, ellipsoid = T, surface.col = c("#999999", "#E69F00"))
-  #   car::scatter3d(x = dtb$mf, y = dtb$ms, z = dtb$ge, groups = as.factor(dtb$algo), grid = F, surface = F)
+  #   car::scatter3d(x = 
+  #   dtb$mf, y = dtb$ms, z = dtb$ge, groups = as.factor(dtb$algo), grid = F, surface = F)
   # 
   mcolors <- c("#00FF00", "#FF0000", "#0000FF")
   colors <- mcolors[as.integer(as.factor(dtb$lrn.id))]
