@@ -31,5 +31,5 @@ create_rdata_cluster(pca_var_ratio = 0.5, tids = c(3891), n_datasets = 5, balanc
 list.data = list()
 list.data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData", dataset_id = "dataset_accn", targetname = "response")  # this data comes with repository
 list.data$oml14966 = prepareDataSite(path = "../Data/temp/14966_balanced_clustered.RData",  dataset_id = "dataset_accn", targetname = "target")
-list.data$oml3891 = prepareDataSite(path = "../Data/temp/3891_balanced_clustered.RData",  dataset_id = "dataset_accn", targetname = "target")
+list.data$oml3891 = prepareDataSite(path = "../Data/temp/oml_3891_clustered_classbalanced_TRUE.RData",  dataset_id = "dataset_accn", targetname = "target")
 prob_inputs_data = list.data  # used for addProblem
