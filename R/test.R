@@ -1,11 +1,11 @@
-  DEBUG_FLAG = T
+  DEBUG_FLAG = TRUE
   source("pre_bt.R")
   source("bt_conf.R")
   source("bt_learner_parsets.R")
   source("bt_main.R")
   source("bt_problem.R")
   REG_FILE_DIR = "../output/testreg"
-  btDelInit(local = T, force = DEBUG_FLAG)
+  btDelInit(local = TRUE, force = DEBUG_FLAG)
 
   mgconf = getGconf()
   reg_input = batchtools::getDefaultRegistry()

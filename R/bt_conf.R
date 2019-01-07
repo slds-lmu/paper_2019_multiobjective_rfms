@@ -3,9 +3,10 @@ library(mlr)
 library(mlrMBO)
 source("pre_bt.R")
 
-print("conf being sourced")
+print("Sourcing Configuration!")
+
 ### dependencies
-pre.source = c("bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "pre_bt.R", "bt_measures_objs.R")
+pre.source = c("pre_bt.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures_objs.R")
 lapply(pre.source, function(x) source(x))
 pre.source = c(pre.source, "bt_conf.R")
 pre.packages = c("mlr", "BBmisc", "mlrMBO", "OpenML")

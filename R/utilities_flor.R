@@ -13,7 +13,7 @@ createBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced
     checkmate::assert(!"dataset_accn" %in% colnames(df))
     ctsk = makeClusterTask(id = "data_cluster", df$data)
     lrn = makeLearner("cluster.kmeans", centers = n_datasets)
-    lrn = makePreprocWrapperCaret(lrn, thresh = 0.9)
+    lrn = makePreprocWrapperCaret(lrn, thresh = 0.7)
     mod = train(lrn, ctsk)
     prds = predict(mod, ctsk)
     out = sapply(unique(prds$data$response), function(x) which(prds$data$response == x))
@@ -95,3 +95,22 @@ auc.thout = makeMeasure("thout.auc", properties = auc$properties,
   threshout_auc(mean(perf.train), mean(perf.test), thresholdout_params = extra.args)
   }
 )
+
+plot_clusters = function() {
+  library(Rtsne)
+  load("../Data/14966_balanced_clustered.RData")
+  data = data[!duplicated(data[, 1:1776]),]
+  tsne <- Rtsne(data[, 1:1776], dims = 2, perplexity=30, verbose=TRUE, max_iter = 500)
+  library(ggplot2)
+  ggplot(as.data.frame(tsne$Y), aes(x = V1, y = V2, color = data$dataset_accn)) + geom_point()
+}
+
+plot_geo = function() {
+  library(Rtsne)
+  load("../Data/data_cohorts_nonGerman.RData")
+  colnames(df)
+  data = df[!duplicated(df[, 3:779]),]
+  tsne <- Rtsne(data[, 3:779], dims = 2, perplexity=30, verbose=TRUE, max_iter = 500)
+  library(ggplot2)
+  ggplot(as.data.frame(tsne$Y), aes(x = V1, y = V2, color = df$dataset_accn)) + geom_point()
+}
