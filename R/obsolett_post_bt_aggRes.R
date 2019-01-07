@@ -1,59 +1,7 @@
-#' res2[1, result][[1]]$fig_front
 source("post_vis.R")
-
-res = BBmisc::load2("output/DortmundClusterResVonAndrea.RData")
-
 getTestLevelFromNa = function(ns, test_name, major_level) {
  which(ns[-major_level] == test_name)
 }
-
-function() {
-  res = reduceResultsList(ids = findDone(), fun = function(job, res) {
-    list(repl = job$repl, prob.pars = job$prob.pars, algo.pars = job$algo.pars, res = res)
-    })
-  res = reduceResultsList(ids = 1:10, fun = function(job, res) {
-      job$repl  # the replication does not help us aggregate the pareto front!!
-      # it only make sense to aggregate the baseline model
-      ind = res$res$tune_res_pr$ind
-      #ind
-      res$res
-      #names(res$res$gperf_side)
-      pareto.list = res$res$gperf_side$pr[ind]
-      ns = names(pareto.list[[1]])
-      list.dt = data.table::rbindlist(pareto.list)
-      #library(rgl)
-      #library(magrittr)
-      library(data.table)
-      so = res$res$gperf_side$bs1
-      bs_ind = res$res$tune_res_bs$mbo.result$best.ind
-      sodt = data.table::rbindlist(so[bs_ind])
-      #res$res$tune_res_bs2$mbo.result$y
-      lrn.id = res$res$tune_res_bs$learner$id
-      print(lrn.id)
-      sodt$algo = "bs1"
-      list.dt$algo = "pr"
-      bspr = rbind(sodt, list.dt)
-      bspr$major_name = ns[res$res$major_level]
-      bspr$test_name = res$res$test_name
-      bspr$lrn.id = lrn.id
-      #bspr
-      majorname = ns[res$res$major_level]
-      testname = res$res$test_name
-      msname = setdiff(ns, c(majorname, testname))
-      side = apply(as.data.frame(bspr)[, msname], 1, FUN = mean)
-      major = bspr[[majorname]]
-      test = bspr[[testname]]
-      bspr$algo = as.factor(bspr$algo)
-      bspr
-      listofrow = apply(bspr,1,as.list)
-      rbindlist(listofrow)
-    })
-  res.table = rbindlist(res)
-  res.table[,.(mean(arr_delay), mean(GSE32646)),by = .(major_name, test_name, lrn.id)]
-}
-
-
-
 
 
 
@@ -62,9 +10,6 @@ f1_lookSingleResult = function() {
   source("bt_conf.R")
   library("batchtools")
   REG_FILE_DIR = "testReg"
-  REG_FILE_DIR = "regOpenML"
-  REG_FILE_DIR = "dortmund"
-  REG_FILE_DIR = "openml_gina_kmeans_snicker"
   reg = loadRegistry(file.dir = REG_FILE_DIR, work.dir = getwd(), conf.file = NA)
   reg$writeable = TRUE  # never execute this line when the process is running.
   ids = findDone(reg = reg)
@@ -123,10 +68,6 @@ onerowresult = function(i) {
   return(list(dfhm = dfhm, dfhb = dfhb, dfhh = dfhh, fig_front = fig_front))
 }
 
-
-#formTable = function(res) {
-#  rbind(res$res$perf_side_pr, res$res$perf_side_bs)
-#}
 
 f2_optPlot = function() {
   jpar = getJobPars(reg = reg, ids = ids)

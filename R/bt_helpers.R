@@ -1,3 +1,22 @@
+getTestName = function(ns,  major_level, test_level) {
+  ns1 = setdiff(ns, ns[major_level])
+  ns1[test_level]
+}
+
+getOpenBox2CuratorBoxInd = function(instance) {
+  ns = instance$ns
+  major_level = instance$major_level
+  test_level = instance$test_level
+  tn = getTestName(ns = ns, major_level = major_level, test_level = test_level)
+  msnas = setdiff(ns, c(tn, ns[major_level]))  # model selection dataset names
+  indx = unlist(instance$dataset_index[c(msnas, ns[major_level])])
+  # FIXME: indx has weird names
+  return(list(local2remote_subset = indx))
+}
+
+
+
+
 require("mlrMBO")
 getModelFromTask = function(major_task, lrn.id, pvs) {
   lrn_basis = GET_LRN(lrn.id)

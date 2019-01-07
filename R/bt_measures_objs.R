@@ -9,7 +9,7 @@ mtrain.agg = makeAggregation(id = "mtrain.agg", name = "only calculate train", p
   }
   cat("\n aggregation of measures:")
   #if(any(is.na(c(perf.train, perf.test)))) browser()
-  cat(sprintf("--perf.test: %s--", perf.test))
+  #cat(sprintf("--perf.test: %s--", perf.test))
   cat(sprintf("--perf.train: %s-- \n", perf.train))
   perf.train
 })
