@@ -1,4 +1,6 @@
 # this file is for tmux+vim users
+if(!dir.exists("../Data/temp")) dir.create("../Data/temp")
+if(!dir.exists("../output")) dir.create("../output")
 function() {
   source("utilities_datasite.R")
   # 3891, 9950, 9981, 14966, 34536
