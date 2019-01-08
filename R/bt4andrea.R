@@ -1,4 +1,5 @@
-  DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo) set to F
+source("bt_pre.R")
+DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo) set to F
   source("bt_conf.R")
   source("bt_learner_parsets.R")
   source("bt_main.R")
