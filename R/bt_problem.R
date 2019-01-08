@@ -1,8 +1,3 @@
-prob_inputs_data = list()  # used for addProblem
-# list.data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData", dataset_id = "dataset_accn", targetname = "response")  # this data comes with repository
-prob_inputs_data$oml3891 = prepareDataSite(path = "../Data/temp/oml_3891_clustered_classbalanced_TRUE.RData",  dataset_id = "dataset_accn", targetname = "label")
-dataset_names_input = c("oml3891")
-
 # if (!exists("prob_inputs_data") || is.null(prob_inputs_data) || length(prob_inputs_data) == 0) {
 #   stop("please run pre_bt.R to generate the data before running batchtools")
 # }
