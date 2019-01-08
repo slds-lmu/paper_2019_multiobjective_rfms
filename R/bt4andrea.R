@@ -9,5 +9,5 @@ DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo) set to F
   mgconf = getGconf()
   reg_input = batchtools::getDefaultRegistry()
   reg_input$default.resources
-  init(prob_names, prob_inputs, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
+  init(prob_names, prob_inputs_data, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
   #submitJobs(597)
