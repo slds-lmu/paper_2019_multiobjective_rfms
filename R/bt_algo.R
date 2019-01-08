@@ -35,16 +35,22 @@ algo_mbo = function(instance, lrn, alpha = 0.5) {
   res = list()
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
-  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time algorithm is run
-  extra.args = list(instance = instance, gperf_env = gperf_env, alpha = alpha, perf_name2tune = "brier", measures2tune = mlr::brier)  # alpha is used in fso
+  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
+  gperf_env$current_best_loss_vec = rep(1, instance$curator_len)
+  gperf_env$current_best_meas = mlr::brier$worst
+
+  extra.args = list(instance = instance, gperf_env = gperf_env, alpha = alpha, perf_name2tune = "brier", measures2tune = mlr::brier, calMeasVec = calBrierVec)  # alpha is used in fso
 
   meas_openbox_cv = mk_measure(name = "meas_openbox_cv", extra.args, obj_fun = fun_measure_obj_openbox)
   meas_openbox_nocv = mk_measure(name = "meas_openbox_nocv", extra.args, obj_fun = fun_measure_obj_openbox_nocv)
   measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)
   measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
   meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
+  meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
 
- res$tune_res_fso_th = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = "fso_th")
+  res$tune_res_fso_ladder = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = "fso_ladder")
+
+  res$tune_res_fso_th = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = "fso_th")
   print(proc.time() - ptmi)
 
   res$tune_res_lso_openbox = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "lso_openbox")

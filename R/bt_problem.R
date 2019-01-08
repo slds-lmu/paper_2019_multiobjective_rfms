@@ -30,10 +30,11 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   secondlevel = sort(levels(dfpair$target))[2L]
   bname = mlr::getTaskDesc(task)$negative
   # it seems that secondlevel and bname are the same
+  curator_index = Reduce(c, dataset_index[sna])
   tmf = mlr::subsetTask(task, subset = dataset_index[[mna]])
-  tms = mlr::subsetTask(task, subset = Reduce(c, dataset_index[sna]))
+  tms = mlr::subsetTask(task, subset = curator_index)
   tge = mlr::subsetTask(task, subset = dataset_index[[tna]])
-  return(list(task = task, rins = rins, openbox_ind = openbox_ind, lockbox_ind = lockbox_ind, dataset_index = dataset_index, ns = ns, tmf = tmf, tms = tms, tge = tge, tname = tname, bname = bname, p = p, curator_names = sna, openbox_name = mna, lockbox_name = tna))
+  return(list(task = task, rins = rins, openbox_ind = openbox_ind, lockbox_ind = lockbox_ind, dataset_index = dataset_index, ns = ns, tmf = tmf, tms = tms, tge = tge, tname = tname, bname = bname, p = p, curator_names = sna, openbox_name = mna, lockbox_name = tna, curator_index = curator_index, curator_task = tms, curator_len = length(curator_index)))
 }
 
 

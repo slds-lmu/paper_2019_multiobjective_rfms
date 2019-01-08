@@ -37,6 +37,32 @@ fun_measure_obj_curator = function(task, model, pred, feats, extra.args) {
   return(h)
 }
 
+# parameter free version of the Ladder algorithm
+
+  calBrierVec = function(pred) {
+    truth = pred$data$truth
+    prob = getPredictionProbabilities(pred)
+    y = as.numeric(truth == pred$task.desc$positive)
+    newvec = (y - prob) ^ 2
+    return(newvec)
+  }
+
+fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
+  gperf_env = extra.args$gperf_env
+  pred = predict(model, extra.args$instance$curator_task)
+  newvec = extra.args$calMeasVec(pred)
+  oldvec = gperf_env$current_best_loss_vec
+  diffvec = newvec - oldvec
+  th = sd(diffvec) / (sqrt(extra.args$instance$curator_len))
+  new_meas = performance(pred, brier)
+  gap = gperf_env$current_best_meas - new_meas
+  if (gap > th) {
+    gperf_env$current_best_meas = new_meas
+    gperf_env$current_best_loss_vec = newvec
+    cat(sprintf("current best meas %f", gperf_env$current_best_meas))
+  }
+  return(gperf_env$current_best_meas)
+}
 
 fun_obj_thresholdout = function(task, model, pred, feats, extra.args) {
   if (is.null(extra.args$th_para))
@@ -183,7 +209,7 @@ getCVPerf = function(major_task, lrn.id, pvs, measures, iters = NULL) {
 # the measures here are according to mlr naming, so one could call get("brier")
 getSingleDatasetPerf = function(model, subtask) {
   pred = predict(model, subtask)
-  perf = mlr::performance(pred = pred, measures = list(auc, mmce, brier, brier.scaled, ber))
+  perf = mlr::performance(pred = pred, measures = list(auc, mmce, brier, brier.scaled, ber, logloss))
   # brier.scaled sometimes is negative
   cat("\n")
   print(perf)
