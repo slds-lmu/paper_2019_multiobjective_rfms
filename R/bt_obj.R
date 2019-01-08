@@ -48,6 +48,7 @@ fun_measure_obj_curator = function(task, model, pred, feats, extra.args) {
   }
 
 fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
+  list.perf = getPerf4DataSites_Oracle(task, model, extra.args)  # only for log
   gperf_env = extra.args$gperf_env
   pred = predict(model, extra.args$instance$curator_task)
   newvec = extra.args$calMeasVec(pred)
