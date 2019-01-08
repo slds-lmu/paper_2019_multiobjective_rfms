@@ -73,7 +73,6 @@ getMlrTuneCtrlSO = function(iters) {
   mlr::makeTuneControlMBO(learner = surrogate, mbo.control = control)
 }
 
-
 # this makes MBO_ITERS MACRO reconfigurable
 getTuneMethod = function(method.str, mgconf, n.objs = 2) {
   TUNE_METHODS = list(

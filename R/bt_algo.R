@@ -6,6 +6,17 @@ library(ggplot2)
 source("bt_measures_objs.R")
 source("bt_helpers.R")
 
+
+algo_rand = function(instance, lrn, list_measures, gperf_env, context) {
+  gperf_env$context =  context
+  gperf_env$index = 1
+  mgconf = getGconf()
+  ctrl_rand = mlr::makeTuneMultiCritControlRandom(maxit = mgconf$MBO_ITERS + mgconf$INIT_DES)
+  res = mlr::tuneParamsMultiCrit(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_rand, show.info = TRUE)
+  cat(sprintf("\n %s finished  \n", context))
+  res
+}
+
 algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
   gperf_env$context =  context
   gperf_env$index = 1
@@ -48,6 +59,8 @@ algo_mbo = function(instance, lrn, alpha = 0.5) {
   meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
   meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
 
+  res$tune_res_rand = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "rand")
+
   res$tune_res_fso_ladder = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = "fso_ladder")
 
   res$tune_res_fso_th = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = "fso_th")
@@ -64,6 +77,10 @@ algo_mbo = function(instance, lrn, alpha = 0.5) {
 
 
   res$tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso")
+
+  #res$tune_res_fso_10 = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so_10), gperf_env = gperf_env, context = "fso10")
+
+
 
   ### MultiObj
   res$tune_res_fmo = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "fmo")
@@ -191,7 +208,7 @@ agg_genTable = function(res) {
     agglist$fso = agg_so(res, algo_name = "fso")
     agglist$lso_openbox = agg_so(res, algo_name = "lso_openbox")
     agglist$rso_curator = agg_so(res, algo_name = "rso_curator")
-    agglist$fso_thauc = agg_so(res, algo_name = "fso")
+    agglist$fso_thauc = agg_so(res, algo_name = "fso_th")
     agglist$fmo = agg_mo(res, algo_name = "fmo")
     agglist$fmo_nocv = agg_mo(res, algo_name = "fmo_nocv")
     rbindlist(agglist)
