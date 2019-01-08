@@ -1,3 +1,7 @@
+if(!dir.exists("../Data/temp")) dir.create("../Data/temp")
+if(!dir.exists("../output")) dir.create("../output")
+
+
 library(batchtools)
 library(mlr)
 library(mlrMBO)
