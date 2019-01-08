@@ -1,10 +1,3 @@
-function() {
-  source("utilities_datasite.R")
-  # 3891, 9950, 9981, 14966, 34536
-  try({OpenML::populateOMLCache(task.ids = c(3891, 9950, 9981, 14966, 34536))})
-  list.tname = create_rdata_cluster(pca_var_ratio = 0.7, tids = c(3891, 9950, 9981, 14966, 34536), n_datasets = 5, balanced = T)
-  list.tname
-}
 # prob_Inputs_data depends on bt_prob.R
 prob_inputs_data = list()  # used for addProblem
 prob_inputs_data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData", dataset_id = "dataset_accn", targetname = "response")  # this data comes with repository

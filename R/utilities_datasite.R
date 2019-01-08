@@ -9,6 +9,17 @@ dumpOMLTask = function(tid = 3891) {
   save(task_mlr, file = taskstr)
 }
 
+getOMLTaskTargetName = function(tid = 3891) {
+  require(mlr)
+  mlr:::setMlrOption("show.info", TRUE)
+  ot = OpenML::getOMLTask(tid)
+  mt = OpenML::convertOMLTaskToMlr(ot)
+  task_mlr = mt$mlr.task
+  tname = getTaskTargetNames(task_mlr)
+  return(tname)
+}
+
+
 prepareDataSite = function(path, dataset_id, targetname) {
   require(BBmisc)
   require(mlr)
