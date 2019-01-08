@@ -221,7 +221,7 @@ agg_genTable = function(res) {
   dt$lockbox_name = instance$lockbox_name
   dt$curator = apply(as.data.frame(dt)[, instance$curator_names], 1, FUN = mean)
   dt$openbox = as.vector(as.matrix(as.data.frame(dt)[, instance$openbox_name]))
-  dt$lockbox = as.vector(as.matrix(as.data.frame(dt)[, instance$lockbox]))
+  dt$lockbox = as.vector(as.matrix(as.data.frame(dt)[, instance$lockbox_name]))
   dt$lrn = lrn.id
   dt
 #  listofrow = apply(dt,1,as.list)
