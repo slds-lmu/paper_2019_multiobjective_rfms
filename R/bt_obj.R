@@ -185,7 +185,9 @@ getSingleDatasetPerf = function(model, subtask) {
   pred = predict(model, subtask)
   perf = mlr::performance(pred = pred, measures = list(auc, mmce, brier, brier.scaled, ber))
   # brier.scaled sometimes is negative
+  cat("\n")
   print(perf)
+  cat("\n")
   return(perf)
 }
 

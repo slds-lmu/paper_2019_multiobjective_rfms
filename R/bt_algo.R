@@ -185,7 +185,7 @@ agg_genTable = function(res) {
     agglist$fso = agg_so(res, algo_name = "fso")
     agglist$lso_openbox = agg_so(res, algo_name = "lso_openbox")
     agglist$rso_curator = agg_so(res, algo_name = "rso_curator")
-    agglist$fso_thauc = agg_so(res, algo_name = "fso_th_auc")
+    agglist$fso_thauc = agg_so(res, algo_name = "fso")
     agglist$fmo = agg_mo(res, algo_name = "fmo")
     agglist$fmo_nocv = agg_mo(res, algo_name = "fmo_nocv")
     rbindlist(agglist)
