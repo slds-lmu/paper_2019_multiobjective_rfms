@@ -4,9 +4,9 @@ source("utilities_datasite.R")
   # 3891, 9950, 9981, 14966, 34536
   #task.ids = c(3891, 9950, 9981, 14966, 34536)
 
+task.ids = c(14966) # input
+dataset_names_input = paste0("oml", task.ids)
 
-dataset_names_input = c("oml3891")
-task.ids = c(3891)
 
 createInput = function(task.ids = c(3891), pca_var_ratio = 0.7, class_balance = T, recluster = T, n_datasets = 5, path_regx = "../Data/temp/oml_%s_clustered_classbalanced_TRUE.RData") {
 
@@ -22,7 +22,7 @@ createInput = function(task.ids = c(3891), pca_var_ratio = 0.7, class_balance = 
     prepareDataSite(path = sprintf(path_regx, taskid))
   })
   names(prob_inputs_data) = paste0("oml", task.ids)
-  prob_inputs_data$oml9950 = NULL
+  # prob_inputs_data$oml9950 = NULL
   return(prob_inputs_data)
 }
 

@@ -38,23 +38,17 @@ prepareDataSite = function(path) {
 }
 
 
-# oml_task_id: 3891, 14966, 34536
-
+# oml_task_id: 3891, 14966, 
 getMlrTaskFromOML = function(oml_task_id) {
+  require(OpenML)
   ot = OpenML::getOMLTask(oml_task_id)
   mt = OpenML::convertOMLTaskToMlr(ot)
   mlr_task = mt$mlr.task
 }
 
-#FIXME: remove OML dependencies to arbitrary mlr task
-createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7, getTaskFun = getMlrTaskFromOML) {
-  require(mlr)
-  checkmate::assertIntegerish(n_datasets)
-  checkmate::assertIntegerish(oml_task_id)
-  checkmate::assertLogical(balanced)
-  mlr_task = getTaskFun(oml_task_id)
-  df = getTaskData(mlr_task, target.extra = TRUE)
 
+clusterMlrTask = function(mlr_task, n_datasets = 5, balanced = T, pca_var_ratio = 0.7) {
+  df = getTaskData(mlr_task, target.extra = TRUE)
   if (!balanced) {
     checkmate::assert(!"dataset_accn" %in% colnames(df))
     ctsk = makeClusterTask(id = "data_cluster", df$data)
@@ -62,7 +56,7 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
     lrn = makePreprocWrapperCaret(lrn, thresh = pca_var_ratio)
     mod = train(lrn, ctsk)
     prds = predict(mod, ctsk)
-    out = sapply(unique(prds$data$response), function(x) which(prds$data$response == x))
+    list_dataset_index = sapply(unique(prds$data$response), function(x) which(prds$data$response == x))
   } else {
     desc = mlr_task$task.desc
     pt = lapply(unique(df$target), function(x) {
@@ -74,11 +68,22 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
       prds = predict(mod, ctsk)
       sapply(unique(prds$data$response), function(x) which(prds$data$response == x))
     })
-    out = lapply(seq_len(length(pt[[1]])), function(x) c(pt[[1]][[x]], pt[[2]][[x]]))
+    list_dataset_index = lapply(seq_len(length(pt[[1]])), function(x) c(pt[[1]][[x]], pt[[2]][[x]]))
   }
   # Out is a list of indices for each dataset
-  names(out) = paste0("ds", 1:n_datasets)
-  return(list(task = mlr_task, list_dataset_index = out, df_dataset_accn = out))
+  names(list_dataset_index) = paste0("ds", 1:n_datasets)
+  return(list_dataset_index)
+}
+
+#FIXME: remove OML dependencies to arbitrary mlr task
+createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7, getTaskFun = getMlrTaskFromOML) {
+  require(mlr)
+  checkmate::assertIntegerish(n_datasets)
+  checkmate::assertIntegerish(oml_task_id)
+  checkmate::assertLogical(balanced)
+  mlr_task = getTaskFun(oml_task_id)
+  list_dataset_index = clusterMlrTask(mlr_task, n_datasets = 5, balanced = balanced, pca_var_ratio = pca_var_ratio)
+  return(list(task = mlr_task, list_dataset_index = list_dataset_index))
 }
 
 
