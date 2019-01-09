@@ -54,11 +54,15 @@ f2 = function(x) {
   iter = x$iter
   z = x[, -"iter"]
   dhvs = lapply(1:length(iter), function(i) {
-    mco::dominatedHypervolume(as.matrix(z[1:i, , drop = FALSE]), rep(1, 5))
+    pf = mco::paretoFilter(as.matrix(z[1:i, , drop = FALSE]))
+    pf = unique(pf)
+    mco::dominatedHypervolume(pf, rep(1, 5))
   })
   return(data.table(iter = iter, cdhv = dhvs))
 }
-res2 = res1[, f2(.SD), .SDcols = c("iter", paste0("mmce.ds", 1:5)),
+
+mmce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
+res2 = res1[, f2(.SD), .SDcols = c("iter", mmce.cols),
   by = c("algo", jobinfo.cols)]
 res2$cdhv = unlist(res2$cdhv)
 
