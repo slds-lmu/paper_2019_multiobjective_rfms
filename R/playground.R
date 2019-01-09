@@ -1,3 +1,4 @@
+source("bt_pre.R")
 debug_local = function() {
   DEBUG_FLAG = T
   source("bt_conf.R")
@@ -39,7 +40,7 @@ debug_cluster = function() {
 }
 
 run_cluster = function() {
-  regname = "../output/oml_9981_14966_34536"
+  regname = "../output/oml_14966_pca10"
   DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo)
   source("bt_conf.R")
   source("bt_main.R")
