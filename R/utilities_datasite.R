@@ -39,17 +39,20 @@ prepareDataSite = function(path) {
 
 
 # oml_task_id: 3891, 14966, 34536
-createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7) {
+
+getMlrTaskFromOML = function(oml_task_id) {
+  ot = OpenML::getOMLTask(oml_task_id)
+  mt = OpenML::convertOMLTaskToMlr(ot)
+  mlr_task = mt$mlr.task
+}
+
+#FIXME: remove OML dependencies to arbitrary mlr task
+createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7, getTaskFun = getMlrTaskFromOML) {
   require(mlr)
   checkmate::assertIntegerish(n_datasets)
   checkmate::assertIntegerish(oml_task_id)
   checkmate::assertLogical(balanced)
-
-  #FIXME: remove this OML dependencies!
-  ot = OpenML::getOMLTask(oml_task_id)
-  mt = OpenML::convertOMLTaskToMlr(ot)
-  mlr_task = mt$mlr.task
-
+  mlr_task = getTaskFun(oml_task_id)
   df = getTaskData(mlr_task, target.extra = TRUE)
 
   if (!balanced) {
