@@ -1,7 +1,7 @@
 library(batchtools)
 library(mlr)
 library(mlrMBO)
-
+if (!dir.exists("../output")) dir.create("../output")
 print("conf being sourced")
 ### dependencies
 pre.source = c("utilities_datasite.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures_objs.R", "bt_helpers.R", "bt_obj.R")  # sequence being sourced can not be changed!
