@@ -7,8 +7,11 @@ test_funGenProb = function() {
  source("bt_algo.R")
  algo_thresholdout(instance)
 }
+
 funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   tuple = data[[dataset_name]]
+  #tid = as.integer(stringi::stri_replace(str = dataset_name, regex = "oml", replacement = ""))
+  #tuple = createClassBalancedDfCluster(oml_task_id = tid, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7)
   task = tuple$task
   dataset_index = tuple$list_dataset_index  # list of instance index for each dataset
   ns = names(dataset_index)

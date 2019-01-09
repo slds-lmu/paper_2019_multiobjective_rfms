@@ -20,10 +20,13 @@ getOMLTaskTargetName = function(tid = 3891) {
 }
 
 
-prepareDataSite = function(path, dataset_id, targetname) {
+prepareDataSite = function(path) {
   require(BBmisc)
   require(mlr)
-  df = load2(path)
+  tuple = load2(path)
+  df = tuple$df
+  targetname = tuple$targetname
+  dataset_id = tuple$dataset_id
   dataset_names = unique(df[, dataset_id])
   list_dataset_index = lapply(1:length(dataset_names), function(i) which(df[, dataset_id] == dataset_names[i]))
   names(list_dataset_index) = dataset_names
@@ -68,6 +71,7 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
     out = lapply(seq_len(length(pt[[1]])), function(x) c(pt[[1]][[x]], pt[[2]][[x]]))
   }
   # Out is a list of indices for each dataset
+  names(out) = paste0("ds", 1:n_datasets)
   return(list(task = mt$mlr.task, list_dataset_index = out, df_dataset_accn = out))
 }
 
@@ -84,8 +88,10 @@ create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_d
       })
       data = do.call("rbind", dflst)
       filena = paste0(prefix, x, sprintf("_clustered_classbalanced_%s.RData", balanced))
-      save(data,  file = filena)
-      getTaskTargetNames(lst$task)
+      tname = getTaskTargetNames(lst$task)
+      tuple = list(df = data, targetname = tname, dataset_id = "dataset_accn")
+      save(tuple,  file = filena)
+      return(tname)
   })
   list.tname
 }
