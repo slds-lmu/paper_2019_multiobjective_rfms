@@ -8,6 +8,7 @@ source("bt_helpers.R")
 
 
 algo_rand = function(instance, lrn, list_measures, gperf_env, context) {
+  cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
   gperf_env$index = 1
   mgconf = getGconf()
@@ -18,6 +19,7 @@ algo_rand = function(instance, lrn, list_measures, gperf_env, context) {
 }
 
 algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
+  cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
   gperf_env$index = 1
   mgconf = getGconf()
@@ -29,13 +31,14 @@ algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context)
 }
 
 algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
+  cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   mgconf = getGconf()
   gperf_env$context =  context
   gperf_env$index = 1
   ctrl_bs = getTuneMethod("mbodefault", mgconf = mgconf)
   ctrl_bs$mbo.design = mbo_design
   tune_res_bs = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_bs, show.info = TRUE)  # only the first of the list_measures are being tuned
-  cat(sprintf("\n %s finished  \n", context))
+  cat(sprintf("\n\n\n %s finished  \n\n\n", context))
   return(tune_res_bs = tune_res_bs)
 }
 
@@ -66,6 +69,14 @@ algo_mbo = function(instance, lrn, alpha = 0.5) {
   meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
   meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
 
+  res$tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso")
+  extra.args$alpha = 0.2
+  meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
+  res$tune_res_fso_2 = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso2")
+  extra.args$alpha = 0.8
+  meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
+  res$tune_res_fso_8 = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso8")
+
   res$tune_res_rand = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "rand")
   res$tune_res_fso_ladder = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = "fso_ladder")
 
@@ -83,27 +94,14 @@ algo_mbo = function(instance, lrn, alpha = 0.5) {
   print(proc.time() - ptmi)
 
 
-  res$tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso")
-
-  #res$tune_res_fso_10 = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so_10), gperf_env = gperf_env, context = "fso10")
-
-
-
+ 
   ### MultiObj
   res$tune_res_fmo = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "fmo")
 
   res$tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
   print("algorithm finished")
   print(proc.time() - ptmi)
-  inst = instance
-  inst$task = NULL
-  inst$tmf = NULL
-  inst$tms = NULL
-  inst$tna = NULL
-  inst$tge = NULL
-  inst$dataset_index = NULL
-  inst$rin = NULL
-  res = c(res, list(gperf_env = gperf_env, instance = inst))
+  res = c(res, list(gperf_env = gperf_env, instance = instance))
   return(res)
 }
 
