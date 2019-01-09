@@ -48,8 +48,9 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
   #FIXME: remove this OML dependencies!
   ot = OpenML::getOMLTask(oml_task_id)
   mt = OpenML::convertOMLTaskToMlr(ot)
+  mlr_task = mt$mlr.task
 
-  df = getTaskData(mt$mlr.task, target.extra = TRUE)
+  df = getTaskData(mlr_task, target.extra = TRUE)
 
   if (!balanced) {
     checkmate::assert(!"dataset_accn" %in% colnames(df))
@@ -60,7 +61,7 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
     prds = predict(mod, ctsk)
     out = sapply(unique(prds$data$response), function(x) which(prds$data$response == x))
   } else {
-    desc = mt$mlr.task$task.desc
+    desc = mlr_task$task.desc
     pt = lapply(unique(df$target), function(x) {
       data = df$data[df$target == x, ]
       ctsk = makeClusterTask(id = "data_cluster", data)
@@ -74,7 +75,7 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
   }
   # Out is a list of indices for each dataset
   names(out) = paste0("ds", 1:n_datasets)
-  return(list(task = mt$mlr.task, list_dataset_index = out, df_dataset_accn = out))
+  return(list(task = mlr_task, list_dataset_index = out, df_dataset_accn = out))
 }
 
 
