@@ -5,7 +5,7 @@ dumpOMLTask = function(tid = 3891) {
   ot = OpenML::getOMLTask(tid)
   mt = OpenML::convertOMLTaskToMlr(ot)
   task_mlr = mt$mlr.task
-  taskstr = sprintf("meta/oml%sMlrTask.RData", tid)
+  taskstr = sprintf("../Data/temp/oml%sMlrTask.RData", tid)
   save(task_mlr, file = taskstr)
 }
 
@@ -45,8 +45,10 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
   checkmate::assertIntegerish(oml_task_id)
   checkmate::assertLogical(balanced)
 
+  #FIXME: remove this OML dependencies!
   ot = OpenML::getOMLTask(oml_task_id)
   mt = OpenML::convertOMLTaskToMlr(ot)
+
   df = getTaskData(mt$mlr.task, target.extra = TRUE)
 
   if (!balanced) {
