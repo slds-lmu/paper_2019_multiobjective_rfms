@@ -68,10 +68,10 @@ res2$cdhv = unlist(res2$cdhv)
 
 ###################################################################
 # Plots
-# Plot the development over time: each job is on a separate page
 
 library(ggplot2)
 
+# Plot the development over time: each job is on a separate page
 pdf(file = "mmce_over_time.pdf", height = 7, width  = 10)
 lapply(split(res, res$job.id), function(dat) {
   ggplot(data = dat, mapping = aes(x = iter, y = mmce, group = dataset, color = dataset)) +
@@ -93,4 +93,60 @@ lapply(split(res2, res2$job.id), function(dat) {
       ", repl: ", dat$repl[1], ", algorithm: ", dat$algorithm[1]))
 })
 dev.off()
+
+
+# Aggregate over repls
+pdf("hypervolume_over_time_aggr_quartiles.pdf", height = 7, width = 10)
+lapply(split(res2, paste(res2$lrn, res2$dataset_name, res2$algorithm)), function(dat) {
+  ggplot(data = dat, mapping = aes(x = iter, y = cdhv, group = algo, color = algo)) +
+    stat_summary(geom = "ribbon",
+      fun.ymin = function(x) quantile(x, 0.25, type = 2),
+      fun.ymax = function(x) quantile(x, 0.75, type = 2),
+      fun.y = function(x) median(x),
+      aes(fill = algo), alpha = 0.3) +
+    ylab("Quartiles of currently dominated hypervolume (based on all datasets)") +
+    facet_grid(openbox_name ~ lockbox_name, scales = "free_y") +
+    ggtitle(paste0("lrn: ", dat$lrn[1], ", dataset_name: ", dat$dataset_name[1],
+      ", algorithm: ", dat$algorithm[1]))
+})
+dev.off()
+
+res2m = res2[, list(mean.cdhv = mean(cdhv)),
+  by = c("lrn", "dataset_name", "algorithm", "openbox_name", "lockbox_name", "iter", "algo")]
+
+pdf("hypervolume_over_time_aggr_mean.pdf", height = 7, width = 10)
+lapply(split(res2m, paste(res2m$lrn, res2m$dataset_name, res2m$algorithm)), function(dat) {
+  ggplot(data = dat, mapping = aes(x = iter, y = mean.cdhv, group = algo, color = algo)) +
+    geom_line() +
+    ylab("Mean currently dominated hypervolume (based on all datasets)") +
+    facet_grid(openbox_name ~ lockbox_name, scales = "free_y") +
+    ggtitle(paste0("lrn: ", dat$lrn[1], ", dataset_name: ", dat$dataset_name[1],
+      ", algorithm: ", dat$algorithm[1]))
+})
+dev.off()
+
+
+# Aggregate over repls, openbox_name and lockbox_name
+pdf("hypervolume_over_time_aggr_quartiles2.pdf", height = 7, width = 7)
+ggplot(data = res2, mapping = aes(x = iter, y = cdhv, group = algo, color = algo)) +
+  stat_summary(geom = "ribbon",
+    fun.ymin = function(x) quantile(x, 0.25, type = 2),
+    fun.ymax = function(x) quantile(x, 0.75, type = 2),
+    fun.y = function(x) median(x),
+    aes(fill = algo), alpha = 0.3) +
+  ylab("Quartiles of currently dominated hypervolume (based on all datasets)") +
+  facet_grid(lrn ~ dataset_name + algorithm, scales = "free_y")
+dev.off()
+
+res2ma = res2[, list(mean.cdhv = mean(cdhv)),
+  by = c("lrn", "dataset_name", "algorithm", "iter", "algo")]
+
+pdf("hypervolume_over_time_aggr_mean2.pdf", height = 7, width = 7)
+ggplot(data = res2ma, mapping = aes(x = iter, y = mean.cdhv, group = algo, color = algo)) +
+  geom_line() +
+  ylab("Mean currently dominated hypervolume (based on all datasets)") +
+  facet_grid(lrn ~ dataset_name + algorithm, scales = "free_y")
+dev.off()
+
+
 
