@@ -52,19 +52,43 @@ res1 = res[, f1(mmce, dataset), by = c("iter", "algo", jobinfo.cols)]
 
 f2 = function(x) {
   iter = x$iter
-  z = x[, -"iter"]
+  o.index = unique(x$openbox.index)
+  nc = ncol(x)
+  z = as.matrix(x[, -c(nc, nc - 1, o.index), with = FALSE])
+
   dhvs = lapply(1:length(iter), function(i) {
-    pf = mco::paretoFilter(as.matrix(z[1:i, , drop = FALSE]))
+    pf = mco::paretoFilter(z[1:i, , drop = FALSE])
     pf = unique(pf)
-    mco::dominatedHypervolume(pf, rep(1, 5))
+    mco::dominatedHypervolume(pf, rep(1, 4))
   })
   return(data.table(iter = iter, cdhv = dhvs))
 }
 
 mmce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
-res2 = res1[, f2(.SD), .SDcols = c("iter", mmce.cols),
+openbox.ind = sapply(res1$openbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
+res1 = cbind(res1, openbox.index = openbox.ind)
+
+res2 = res1[, f2(.SD), .SDcols = c(mmce.cols, "iter", "openbox.index"),
   by = c("algo", jobinfo.cols)]
 res2$cdhv = unlist(res2$cdhv)
+
+
+#####################################################################
+# current best performance on lockbox dataset
+
+lockbox.ind = sapply(res1$lockbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
+tmp = subset(res1, select = mmce.cols)
+lockbox.perf = unlist(sapply(1:length(lockbox.ind), function(i) tmp[i, lockbox.ind[i], with = FALSE]))
+res1 = cbind(res1, mmce.lockbox = lockbox.perf)
+
+f3 = function(mmces, iter) {
+  best = lapply(1:length(iter), function(i) {
+    min(mmces[1:i])
+  })
+  return(data.table(iter = iter, lockbox.best = best))
+}
+res3 = res1[, f3(mmce.lockbox, iter), by = c("algo", jobinfo.cols)]
+res3$lockbox.best = unlist(res3$lockbox.best)
 
 ###################################################################
 # Plots
@@ -87,7 +111,7 @@ pdf(file = "hypervolume_over_time.pdf", height = 7, width  = 10)
 lapply(split(res2, res2$job.id), function(dat) {
   ggplot(data = dat, mapping = aes(x = iter, y = cdhv, group = algo, color = algo)) +
     geom_line() + geom_point() +
-    ylab("Currently dominated hypervolume (based on all datasets)") +
+    ylab("Currently dominated hypervolume (based on all datasets except openbox)") +
     ggtitle(paste0("lrn: ", dat$lrn[1], ", dataset_name: ", dat$dataset_name[1],
       ", openbox_name: ", dat$openbox_name[1], ", lockbox_name: ", dat$lockbox_name[1],
       ", repl: ", dat$repl[1], ", algorithm: ", dat$algorithm[1]))
@@ -104,7 +128,7 @@ lapply(split(res2, paste(res2$lrn, res2$dataset_name, res2$algorithm)), function
       fun.ymax = function(x) quantile(x, 0.75, type = 2),
       fun.y = function(x) median(x),
       aes(fill = algo), alpha = 0.3) +
-    ylab("Quartiles of currently dominated hypervolume (based on all datasets)") +
+    ylab("Quartiles of currently dominated hypervolume (based on all datasets except openbox)") +
     facet_grid(openbox_name ~ lockbox_name, scales = "free_y") +
     ggtitle(paste0("lrn: ", dat$lrn[1], ", dataset_name: ", dat$dataset_name[1],
       ", algorithm: ", dat$algorithm[1]))
@@ -121,11 +145,13 @@ res2m = res2[, list(
 res2m$lower[res2m$iter %% 5 != 0] = NA
 res2m$upper[res2m$iter %% 5 != 0] = NA
 
+res2m.part = res2m[iter >= 20, ]
+
 pdf("hypervolume_over_time_aggr_mean.pdf", height = 7, width = 10)
-lapply(split(res2m, paste(res2m$lrn, res2m$dataset_name, res2m$algorithm)), function(dat) {
+lapply(split(res2m.part, paste(res2m.part$lrn, res2m.part$dataset_name, res2m.part$algorithm)), function(dat) {
   ggplot(data = dat, mapping = aes(x = iter, y = mean.cdhv, group = algo, color = algo)) +
     geom_line() +
-    ylab("Mean currently dominated hypervolume (based on all datasets)") +
+    ylab("Mean currently dominated hypervolume (based on all datasets except openbox)") +
     facet_grid(openbox_name ~ lockbox_name, scales = "free_y") +
     ggtitle(paste0("lrn: ", dat$lrn[1], ", dataset_name: ", dat$dataset_name[1],
       ", algorithm: ", dat$algorithm[1]))
@@ -137,7 +163,22 @@ lapply(split(res2m, paste(res2m$lrn, res2m$dataset_name, res2m$algorithm)), func
   ggplot(data = dat, mapping = aes(x = iter, y = median.cdhv, group = algo, color = algo)) +
     geom_line() +
     geom_errorbar(mapping = aes(ymin = lower, ymax = upper), position = position_dodge(width = 1)) +
-    ylab("Median currently dominated hypervolume (based on all datasets)") +
+    ylab("Median currently dominated hypervolume (based on all datasets except openbox)") +
+    facet_grid(openbox_name ~ lockbox_name, scales = "free_y") +
+    ggtitle(paste0("lrn: ", dat$lrn[1], ", dataset_name: ", dat$dataset_name[1],
+      ", algorithm: ", dat$algorithm[1]))
+})
+dev.off()
+
+res3m = res3[, list(mean.lb = mean(lockbox.best)),
+  by = c("lrn", "dataset_name", "algorithm", "openbox_name", "lockbox_name", "iter", "algo")]
+res3m.part = res3m[iter >= 20, ]
+
+pdf("lockbox_over_time_aggr_mean.pdf", height = 7, width = 10)
+lapply(split(res3m.part, paste(res3m.part$lrn, res3m.part$dataset_name, res3m.part$algorithm)), function(dat) {
+  ggplot(data = dat, mapping = aes(x = iter, y = mean.lb, group = algo, color = algo)) +
+    geom_line() +
+    ylab("Mean current best mmce on lockbox") +
     facet_grid(openbox_name ~ lockbox_name, scales = "free_y") +
     ggtitle(paste0("lrn: ", dat$lrn[1], ", dataset_name: ", dat$dataset_name[1],
       ", algorithm: ", dat$algorithm[1]))
@@ -153,7 +194,7 @@ ggplot(data = res2, mapping = aes(x = iter, y = cdhv, color = algo)) +
     fun.ymax = function(x) quantile(x, 0.75, type = 2),
     fun.y = function(x) median(x),
     aes(fill = algo), alpha = 0.3) +
-  ylab("Quartiles of currently dominated hypervolume (based on all datasets)") +
+  ylab("Quartiles of currently dominated hypervolume (based on all datasets except openbox)") +
   facet_grid(lrn ~ algo + dataset_name + algorithm, scales = "free_y")
 dev.off()
 
@@ -167,10 +208,12 @@ res2ma = res2[, list(
 res2ma$lower[res2ma$iter %% 5 != 0] = NA
 res2ma$upper[res2ma$iter %% 5 != 0] = NA
 
+res2ma.part = res2ma[iter >= 20, ]
+
 pdf("hypervolume_over_time_aggr_mean2.pdf", height = 7, width = 7)
-ggplot(data = res2ma, mapping = aes(x = iter, y = mean.cdhv, group = algo, color = algo)) +
+ggplot(data = res2ma.part, mapping = aes(x = iter, y = mean.cdhv, group = algo, color = algo)) +
   geom_line() +
-  ylab("Mean currently dominated hypervolume (based on all datasets)") +
+  ylab("Mean currently dominated hypervolume (based on all datasets except openbox)") +
   facet_grid(lrn ~ dataset_name + algorithm, scales = "free_y")
 dev.off()
 
@@ -178,9 +221,19 @@ pdf("hypervolume_over_time_aggr_median2.pdf", height = 7, width = 7)
 ggplot(data = res2ma, mapping = aes(x = iter, y = median.cdhv, group = algo, color = algo)) +
   geom_line() +
   geom_errorbar(mapping = aes(ymin = lower, ymax = upper), position = position_dodge(width = 1)) +
-  ylab("Median currently dominated hypervolume (based on all datasets)") +
+  ylab("Median currently dominated hypervolume (based on all datasets except openbox)") +
   facet_grid(lrn ~ dataset_name + algorithm, scales = "free_y")
 dev.off()
 
 
+res3ma = res3[, list(mean.lb = mean(lockbox.best)),
+  by = c("lrn", "dataset_name", "algorithm", "iter", "algo")]
+res3ma.part = res3ma[iter >= 20, ]
+
+pdf("lockbox_over_time_aggr_mean2.pdf", height = 7, width = 10)
+ggplot(data = res3ma.part, mapping = aes(x = iter, y = mean.lb, group = algo, color = algo)) +
+  geom_line() +
+  ylab("Mean current best mmce on lockbox") +
+  facet_grid(lrn ~ dataset_name + algorithm, scales = "free_y")
+dev.off()
 
