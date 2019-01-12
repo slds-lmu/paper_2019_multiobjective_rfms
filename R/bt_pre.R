@@ -21,6 +21,3 @@ createInput = function(task.ids = c(3891), pca_var_ratio = 0.1, class_balance = 
 
   # 3891, 9950, 9981, 14966, 34536
   #task.ids = c(3891, 9950, 9981, 14966, 34536)
-task.ids = c(14966) # input
-prob_inputs_data = createInput(task.ids = task.ids, pca_var_ratio = 0.7, class_balance = T, recluster = T, n_datasets = 5, path_regx = "../Data/temp/oml_%s_clustered_classbalanced_TRUE.RData")
-dataset_names_input = paste0("oml", task.ids)

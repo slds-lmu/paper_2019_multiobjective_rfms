@@ -42,17 +42,13 @@ algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context)
   return(tune_res_bs = tune_res_bs)
 }
 
-
-
-# we can only have one global variable here: we need a context object to know which algorithm we are using
-
 algo_rand2 = function(instance, lrn) {
   res = list()
   res$tune_res_rand = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "rand")
 }
 
 
-algo_mbo = function(instance, lrn, alpha = 0.5) {
+algo_mbo = function(instance, lrn) {
   res = list()
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
@@ -60,54 +56,61 @@ algo_mbo = function(instance, lrn, alpha = 0.5) {
   gperf_env$current_best_loss_vec = rep(1, instance$curator_len)
   gperf_env$current_best_meas = mlr::brier$worst
 
-  extra.args = list(instance = instance, gperf_env = gperf_env, alpha = alpha, perf_name2tune = "brier", measures2tune = mlr::brier, calMeasVec = calBrierVec)  # alpha is used in fso
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = "brier", measures2tune = mlr::brier, calMeasVec = calBrierVec)
 
   meas_openbox_cv = mk_measure(name = "meas_openbox_cv", extra.args, obj_fun = fun_measure_obj_openbox)
-  meas_openbox_nocv = mk_measure(name = "meas_openbox_nocv", extra.args, obj_fun = fun_measure_obj_openbox_nocv)
+  #meas_openbox_nocv = mk_measure(name = "meas_openbox_nocv", extra.args, obj_fun = fun_measure_obj_openbox_nocv)
   measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)
   measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
-  meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
   meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
 
-  res$tune_res_fso = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso")
+  # we can only have one global variable here: we need a context object to know which algorithm we are using
+  context = "fso_th"
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = context)
+  print(proc.time() - ptmi)
+
+  context = "fso5"
+  extra.args$alpha = 0.5
+  meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = context)
+
+  context = "fso2"
   extra.args$alpha = 0.2
   meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
-  res$tune_res_fso_2 = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso2")
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = context)
+
+  context = "fso8"
   extra.args$alpha = 0.8
   meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
-  res$tune_res_fso_8 = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = "fso8")
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = context)
 
-  res$tune_res_rand = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "rand")
-  res$tune_res_fso_ladder = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = "fso_ladder")
+  context = "rand"
+  res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
 
+  context = "fso_ladder"
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = context)
 
-  res$tune_res_fso_th = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = "fso_th")
+  context = "lso_openbox"
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
   print(proc.time() - ptmi)
+  
+  #context = "rso_curator"
+  #res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = context)
+  #print(proc.time() - ptmi)
 
-  res$tune_res_lso_openbox = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "lso_openbox")
-  print(proc.time() - ptmi)
+  #res$tune_res_lso_openbox_nocv = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "lso_openbox_nocv")
+  #print(proc.time() - ptmi)
 
-  res$tune_res_rso_curator = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = "rso_curator")
-  print(proc.time() - ptmi)
-
-  res$tune_res_lso_openbox_nocv = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "lso_openbox_nocv")
-  print(proc.time() - ptmi)
-
-
- 
   ### MultiObj
-  res$tune_res_fmo = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "fmo")
+  context = "fmo"
+  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
 
-  res$tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
+  #res$tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
   print("algorithm finished")
   print(proc.time() - ptmi)
-  res = c(res, list(gperf_env = gperf_env, instance = instance))
+  res = list(tune_res = res, gperf_env = gperf_env, instance = instance)
   return(res)
 }
-
-#major_level = instance$major_level, test_name = getTestName(ns = instance$ns, major_level = instance$major_level, test_level = instance$test_level), test_level = instance$test_level, perf_side_bs = perf_side_bs1, perf_side_pr = perf_side_pr, 
-#best_ind = tune_res_lso_openbox$mbo.result$best.ind #tune_res_lso$mbo.result$y
-
 #   conf = list(n_adapt_rounds = 10
 #   ,signif_level = 0.0001           # cutoff level used to determine which predictors to consider in each round based on their p-values. set small here for bigger parsimosmally for quick convergence
 #   ,thresholdout_threshold = 0.02 # T in the Thresholdout algorithm
@@ -209,46 +212,96 @@ algo_proposal_5 = function(instance, lrn = "classif.rpart", mbo_design) {
 
 agg_genTable = function(res) {
   agg = function(res) {
-    agglist = list()
-    agglist$fso = agg_so(res, algo_name = "fso")
-    agglist$lso_openbox = agg_so(res, algo_name = "lso_openbox")
-    agglist$rso_curator = agg_so(res, algo_name = "rso_curator")
-    agglist$fso_thauc = agg_so(res, algo_name = "fso_th")
-    agglist$fmo = agg_mo(res, algo_name = "fmo")
-    agglist$fmo_nocv = agg_mo(res, algo_name = "fmo_nocv")
-    rbindlist(agglist)
+    agglist = lapply(names(res$tune_res), function(algo_name) {
+      cat(sprintf("\n algorithm name: %s \n", algo_name))
+      if (stringi::stri_detect(algo_name, regex = "mo")) return(agg_mo(res, algo_name = algo_name))
+      if (stringi::stri_detect(algo_name, regex = "so")) return(agg_so(res, algo_name = algo_name))
+      if (stringi::stri_detect(algo_name, regex = "rand")) return(agg_rand(res, algo_name = algo_name))
+      stop("algorithm names wrong!")
+    })
+    names(agglist) = names(res$tune_res)
+    rbindlist(agglist, use.names = TRUE)
   }
-  lrn.id = res$tune_res_fso$learner$id
+  lrn.id = res$tune_res[[names(res$tune_res)[1L]]]$learner$id
   dt = agg(res)
   instance = res$instance
   dt$openbox_name = instance$openbox_name
   dt$lockbox_name = instance$lockbox_name
-  dt$curator = apply(as.data.frame(dt)[, instance$curator_names], 1, FUN = mean)
-  dt$openbox = as.vector(as.matrix(as.data.frame(dt)[, instance$openbox_name]))
-  dt$lockbox = as.vector(as.matrix(as.data.frame(dt)[, instance$lockbox_name]))
+  #dt$curator_outbag = apply(as.data.frame(dt[bag=="outbag"])[, instance$curator_names], 1, FUN = mean)
+  #dt$openbox_outbag = as.vector(as.matrix(as.data.frame(dt[bag=="outbag"])[, instance$openbox_name]))
+  #dt$lockbox_outbag = as.vector(as.matrix(as.data.frame(dt[bag=="outbag"])[, instance$lockbox_name]))
   dt$lrn = lrn.id
   dt
 #  listofrow = apply(dt,1,as.list)
 }
 
-agg_so = function(res, meas_name = "mmce", algo_name = "fso") {
-  best_ind = res[[paste0("tune_res_", algo_name)]]$mbo.result$best.ind  # get the dob of the pareto optimal
-  so = res$gperf_env[[algo_name]][best_ind]
-  best.list = lapply(so, function(res_iter) {
-    lapply(res_iter, function(x) x[[meas_name]])})
-  sodt = data.table::rbindlist(best.list)
+agg_rand = function(res_all, meas_name = "mmce", algo_name) {
+  res = res_all$tune_res
+  best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
+  pareto.list = res_all$gperf_env[[algo_name]][best_inds]
+
+  pareto.list_inbag = lapply(pareto.list, function(res_iter) {
+    hh = res_iter[["inbox"]]
+    lapply(hh, function(x) x[[meas_name]])})
+  dt_inbag = data.table::rbindlist(pareto.list_inbag)
+  dt_inbag$bag = "inbag"
+  dt_inbag$best_ind = best_inds
+
+  pareto.list_outbag = lapply(pareto.list, function(res_iter) {
+    hh = res_iter[["outbox"]]
+    lapply(hh, function(x) x[[meas_name]])})
+  dt_outbag = data.table::rbindlist(pareto.list_outbag)
+  dt_outbag$bag = "outbag"
+  dt_outbag$best_ind = best_inds
+  dt = rbindlist(list(dt_inbag, dt_outbag))
+  dt$algo = algo_name
+  dt
+}
+
+
+
+
+agg_so = function(res_all, meas_name = "mmce", algo_name) {
+  res = res_all$tune_res
+  best_ind = res[[algo_name]]$mbo.result$best.ind  # get the dob of the pareto optimal
+
+  so_inbag = res_all$gperf_env[[algo_name]][[best_ind]][["inbox"]]
+  best.list_inbag = lapply(so_inbag, function(x) x[meas_name])
+  sodt_inbag = data.table::as.data.table(best.list_inbag)
+  sodt_inbag$bag = "inbag"
+
+  so_outbag = res_all$gperf_env[[algo_name]][[best_ind]][["outbox"]]
+  best.list_outbag = lapply(so_outbag, function(x) x[meas_name])
+  sodt_outbag = data.table::as.data.table(best.list_outbag)
+  sodt_outbag$bag = "outbag"
+
+  sodt = rbindlist(list(sodt_inbag, sodt_outbag))
+  sodt$best_ind = best_ind
   sodt$algo = algo_name
   return(sodt)
 }
 
-agg_mo = function(res, meas_name = "mmce", algo_name = "fmo_nocv") {
-  ind = res[[paste0("tune_res_", algo_name)]]$ind  # get the dob of the pareto optimal
-  pareto.list = res$gperf_env[[algo_name]][ind]
-  pareto.list = lapply(pareto.list, function(res_iter) {
-    lapply(res_iter, function(x) x[[meas_name]])})
-  list.dt = data.table::rbindlist(pareto.list)
-  list.dt$algo = algo_name
-  list.dt
+agg_mo = function(res_all, meas_name = "mmce", algo_name = "fmo_nocv") {
+  res = res_all$tune_res
+  best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
+  pareto.list = res_all$gperf_env[[algo_name]][best_inds]
+
+  pareto.list_inbag = lapply(pareto.list, function(res_iter) {
+    hh = res_iter[["inbox"]]
+    lapply(hh, function(x) x[[meas_name]])})
+  dt_inbag = data.table::rbindlist(pareto.list_inbag)
+  dt_inbag$bag = "inbag"
+  dt_inbag$best_ind = best_inds
+
+  pareto.list_outbag = lapply(pareto.list, function(res_iter) {
+    hh = res_iter[["outbox"]]
+    lapply(hh, function(x) x[[meas_name]])})
+  dt_outbag = data.table::rbindlist(pareto.list_outbag)
+  dt_outbag$bag = "outbag"
+  dt_outbag$best_ind = best_inds
+  dt = rbindlist(list(dt_inbag, dt_outbag))
+  dt$algo = algo_name
+  dt
 }
 
 reduceResult = function() {

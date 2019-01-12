@@ -1,22 +1,31 @@
 #' this function depends on the naming of extra.args
-funLogPerf2extra.argsEnv = function(list.perf, extra.args) {
+funLogPerf2extra.argsEnv = function(list_perf_inbox, list_perf_outbox, extra.args) {
   env_gperf = extra.args$gperf_env   ## environment  use ls(env) or ls.str(env)
   contextname = get("context", envir = env_gperf)  # we can only use one global variable
-  env_gperf[[as.character(env_gperf$index)]] = list.perf  # this redundancy is used to fetch the pareto optimal multi-objective candidate
-  env_gperf[[contextname]][[as.character(env_gperf$index)]] =  list.perf
+  env_gperf[[as.character(env_gperf$index)]] = list_perf_inbox  # this redundancy is used to fetch the pareto optimal multi-objective candidate
+  env_gperf[[contextname]][[as.character(env_gperf$index)]][["inbox"]] =  list_perf_inbox
+  env_gperf[[contextname]][[as.character(env_gperf$index)]][["outbox"]] =  list_perf_outbox
   env_gperf$index = env_gperf$index + 1L
 }
 
 getPerf4DataSites_Oracle = function(task, model, extra.args) {
   pvs = model$learner$par.vals
-  list_dsname_insid = extra.args$instance$dataset_index
-  list.perf = lapply(list_dsname_insid, function(subset_ind) {
+  cat("\n inbox: \n")
+  list_perf_inbox = lapply(extra.args$instance$dataset_index_inbox, function(subset_ind) {
     subtask = subsetTask(task, subset_ind)
     getSingleDatasetPerf(model, subtask)
   })
-  names(list.perf) = names(extra.args$instance$dataset_index)
-  funLogPerf2extra.argsEnv(list.perf, extra.args)
-  return(list.perf)
+  names(list_perf_inbox) = names(extra.args$instance$dataset_index_inbox)
+
+  cat("\n outbox: \n")
+  list_perf_outbox = lapply(extra.args$instance$dataset_index_outbox, function(subset_ind) {
+    subtask = subsetTask(task, subset_ind)
+    getSingleDatasetPerf(model, subtask)
+  })
+  names(list_perf_outbox) = names(extra.args$instance$dataset_index_outbox)
+
+  funLogPerf2extra.argsEnv(list_perf_inbox, list_perf_outbox, extra.args)
+  return(list_perf_inbox)
 }
 
 #' @title measure function calculating the model prediction performance on the remote dataset
@@ -89,7 +98,6 @@ threshout <- function(train_auc, holdout_auc, thresholdout_params) {
   }
 
   noisy_threshold <- thresholdout_params$threshold + thresholdout_params$gamma
-
   if (abs(holdout_auc - train_auc) > noisy_threshold + eta) {
     out <- holdout_auc + xi
     # thresholdout_params$budget_utilized <- thresholdout_params$budget_utilized + 1
