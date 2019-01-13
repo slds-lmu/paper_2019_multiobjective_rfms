@@ -46,7 +46,8 @@ getTestSetPerf = function(instance, lrn.id, pvs) {
   mlr::performance(pred_test)
 }
 
-surrogate = mlr::makeLearner("regr.km", predict.type = "se", config = list(show.learner.output = FALSE, on.learner.error = "warn", on.par.out.of.bounds = "warn"), jitter = TRUE, nugget = 1e-6)
+
+
 init_mbo_ctrl_so = function(iters) {
   control = makeMBOControl()
   control = setMBOControlTermination(control, iters = iters)
@@ -63,12 +64,16 @@ init_mbo_ctrl_mo = function(n.obj, iters) {
 }
 
 
-getMlrTuneCtrlMO = function(iters, n.obj = 2) {
+# ?DiceKriging::km for nugget
+# mlr learner: The extra parameter `jitter` (default is `FALSE`) enables adding a very small jitter (order 1e-12) to the x-values before prediction,
+getMlrTuneCtrlMO = function(iters, n.obj = 2, nugget = 1e-6, jitter = TRUE) {
+  surrogate = mlr::makeLearner("regr.km", predict.type = "se", config = list(show.learner.output = FALSE, on.learner.error = "warn", on.par.out.of.bounds = "warn"), jitter = jitter, nugget = nugget)
   control = init_mbo_ctrl_mo(n.obj = n.obj, iters = iters)
   mlr::makeTuneMultiCritControlMBO(learner = surrogate, mbo.control = control)
 }
 
-getMlrTuneCtrlSO = function(iters) {
+getMlrTuneCtrlSO = function(iters, nugget = 1e-6, jitter = TRUE) {
+  surrogate = mlr::makeLearner("regr.km", predict.type = "se", config = list(show.learner.output = FALSE, on.learner.error = "warn", on.par.out.of.bounds = "warn"), jitter = jitter, nugget = nugget)
   control = init_mbo_ctrl_so(iters)
   mlr::makeTuneControlMBO(learner = surrogate, mbo.control = control)
 }

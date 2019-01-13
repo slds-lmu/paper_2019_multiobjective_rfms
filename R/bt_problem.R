@@ -2,6 +2,8 @@
 #   stop("please run pre_bt.R to generate the data before running batchtools")
 # }
 
+dataset_names_input = c("geo")
+
 test_funGenProb = function() {
  instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_name = 1L, lockbox_name = 1L, dataset_name = "geo")
  source("bt_algo.R")

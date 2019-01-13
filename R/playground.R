@@ -1,4 +1,9 @@
 source("bt_pre.R")
+source("utilities_datasite.R")
+prob_inputs_data = list()  # used for addProblem
+prob_inputs_data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData")  # this data comes with repository
+
+
 debug_local = function() {
   DEBUG_FLAG = T
   source("bt_conf.R")
@@ -40,7 +45,7 @@ debug_cluster = function() {
 }
 
 run_cluster = function() {
-  regname = "../output/oml_14966_pca10"
+  regname = "../output/geo"
   DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo)
   source("bt_conf.R")
   source("bt_main.R")
