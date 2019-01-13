@@ -61,7 +61,6 @@ calBrierVec = function(pred) {
 
 #FIXME: weight loss by task
 fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
-  browser()
   nothing = getPerf4DataSites_Oracle(task, model, extra.args)  # only for log
   gperf_env = extra.args$gperf_env
   pred = predict(model, extra.args$instance$task_curator_inbag)
@@ -80,6 +79,8 @@ fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
 }
 
 fun_obj_thresholdout = function(task, model, pred, feats, extra.args) {
+  weight = unlist(extra.args$instance$curator_len_list)
+  weight = weight / sum(weight)
   if (is.null(extra.args$th_para))
     extra.args$th_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0)
   list.perf = getPerf4DataSites_Oracle(task, model, extra.args)
@@ -90,7 +91,9 @@ fun_obj_thresholdout = function(task, model, pred, feats, extra.args) {
   list.perf.test = lapply(list.perf.test, function(x) x[[extra.args$perf_name2tune]])
   perf.test = unlist(list.perf.test)
   cat(sprintf("\n %s : ", extra.args$perf_name2tune))
-  threshout(mean(perf.train), mean(perf.test), thresholdout_params = extra.args$th_para)
+  tr = perf.train  # without weight
+  te = sum(weight * perf.test)
+  threshout(tr, te, thresholdout_params = extra.args$th_para)
 }
 
 threshout <- function(train_auc, holdout_auc, thresholdout_params) {
