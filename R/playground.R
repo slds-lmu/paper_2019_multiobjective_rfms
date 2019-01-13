@@ -67,6 +67,10 @@ submit_jobs = function() {
   submitJobs(597)
   showLog(597)
   index = seq.int(from = 1, to = 1800, by = 30)  # 30 replications
+  repl = 1:10
+  tosub = c()
+  for (i in seq_along(repl)) tosub = c(tosub, index + i)
+  submitJobs(tosub)
   submitJobs(index)
   submitJobs(index + 1)
   submitJobs(index + 2)
