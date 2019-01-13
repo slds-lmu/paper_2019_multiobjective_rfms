@@ -74,8 +74,10 @@ fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
     gperf_env$current_best_meas = new_meas
     gperf_env$current_best_loss_vec = newvec
     cat(sprintf("current best meas %f", gperf_env$current_best_meas))
+    return(gperf_env$current_best_meas)
   }
-  return(gperf_env$current_best_meas)
+  rn = rnorm(1, sd = 1e-6)
+  return(gperf_env$current_best_meas + rn)
 }
 
 fun_obj_thresholdout = function(task, model, pred, feats, extra.args) {
