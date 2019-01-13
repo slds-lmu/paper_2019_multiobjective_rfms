@@ -66,8 +66,7 @@ algo_mbo = function(instance, lrn) {
 
   # we can only have one global variable here: we need a context object to know which algorithm we are using
   context = "fso_ladder"
-  ctrl_bs = getTuneMethod("mbodefault", mgconf = mgconf, nugget = 1e-6)
-  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = context, ctrl_bs = ctrl_bs)
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = context)
 
 
   context = "fso_th"
