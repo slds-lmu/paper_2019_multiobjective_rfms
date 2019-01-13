@@ -30,12 +30,12 @@ algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context)
   res
 }
 
-algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
+algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context, ctrl_bs = NULL) {
   cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   mgconf = getGconf()
   gperf_env$context =  context
   gperf_env$index = 1
-  ctrl_bs = getTuneMethod("mbodefault", mgconf = mgconf)
+  if (is.null(ctrl_bs)) ctrl_bs = getTuneMethod("mbodefault", mgconf = mgconf)
   ctrl_bs$mbo.design = mbo_design
   tune_res_bs = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_bs, show.info = TRUE)  # only the first of the list_measures are being tuned
   cat(sprintf("\n\n\n %s finished  \n\n\n", context))
@@ -65,6 +65,11 @@ algo_mbo = function(instance, lrn) {
   meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
 
   # we can only have one global variable here: we need a context object to know which algorithm we are using
+  context = "fso_ladder"
+  ctrl_bs = getTuneMethod("mbodefault", mgconf = mgconf, nugget = 1e-1)
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = context, ctrl_bs = ctrl_bs)
+
+
   context = "fso_th"
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = context)
   print(proc.time() - ptmi)
@@ -86,9 +91,6 @@ algo_mbo = function(instance, lrn) {
 
   context = "rand"
   res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
-
-  context = "fso_ladder"
-  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = context)
 
   context = "lso_openbox"
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
