@@ -9,6 +9,7 @@ test_funGenProb = function() {
 }
 
 funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
+  res = list()
   ratio = 0.8  # when ratio = 1,  it went back to the original
   tuple = data[[dataset_name]]
   #tid = as.integer(stringi::stri_replace(str = dataset_name, regex = "oml", replacement = ""))
@@ -57,10 +58,14 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   bname = mlr::getTaskDesc(task_oracle)$negative
   # it seems that secondlevel and bname are the same
   curator_index = Reduce(c, dataset_index[curator_names])
-  tmf = mlr::subsetTask(task_oracle, subset = dataset_index[[openbox_name]])
-  tms = mlr::subsetTask(task_oracle, subset = curator_index)
+  task_openbox_all = mlr::subsetTask(task_oracle, subset = dataset_index[[openbox_name]])
+
+  res$task_curator_inbag = mlr::subsetTask(task_oracle, subset = unlist(dataset_index_inbox[curator_names]))
+  res$curator_inbag_len = getTaskSize(res$task_curator_inbag)
   tge = mlr::subsetTask(task_oracle, subset = dataset_index[[lockbox_name]])
-  return(list(task = task_oracle, rins = rins, openbox_ind = openbox_ind, lockbox_ind = lockbox_ind, dataset_index = dataset_index, ns = ns, tmf = tmf, tms = tms, tge = tge, tname = tname, bname = bname, p = p, curator_names = curator_names, openbox_name = openbox_name, lockbox_name = lockbox_name, curator_index = curator_index, curator_task = tms, curator_len = length(curator_index), dataset_index_outbox = dataset_index_outbox, dataset_index_inbox = dataset_index_inbox))
+  curator_len_list = lapply(curator_list, function(x) x$len)
+  res = c(res, list(task = task_oracle, rins = rins, openbox_ind = openbox_ind, lockbox_ind = lockbox_ind, dataset_index = dataset_index, ns = ns, task_openbox_all = task_openbox_all, tge = tge, tname = tname, bname = bname, p = p, curator_names = curator_names, openbox_name = openbox_name, lockbox_name = lockbox_name, curator_index = curator_index, curator_len = length(curator_index), dataset_index_outbox = dataset_index_outbox, dataset_index_inbox = dataset_index_inbox, curator_len_list = curator_len_list))
+  return(res)
 }
 
 

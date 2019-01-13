@@ -53,7 +53,7 @@ algo_mbo = function(instance, lrn) {
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
   mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
-  gperf_env$current_best_loss_vec = rep(1, instance$curator_len)
+  gperf_env$current_best_loss_vec = rep(1, instance$curator_inbag_len)
   gperf_env$current_best_meas = mlr::brier$worst
 
   extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = "brier", measures2tune = mlr::brier, calMeasVec = calBrierVec)

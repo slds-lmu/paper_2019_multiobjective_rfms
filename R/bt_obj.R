@@ -11,21 +11,21 @@ funLogPerf2extra.argsEnv = function(list_perf_inbox, list_perf_outbox, extra.arg
 getPerf4DataSites_Oracle = function(task, model, extra.args) {
   pvs = model$learner$par.vals
   cat("\n inbox: \n")
-  list_perf_inbox = lapply(extra.args$instance$dataset_index_inbox, function(subset_ind) {
+  list_perf_inbag = lapply(extra.args$instance$dataset_index_inbox, function(subset_ind) {
     subtask = subsetTask(task, subset_ind)
     getSingleDatasetPerf(model, subtask)
   })
-  names(list_perf_inbox) = names(extra.args$instance$dataset_index_inbox)
+  names(list_perf_inbag) = names(extra.args$instance$dataset_index_inbox)
 
   cat("\n outbox: \n")
-  list_perf_outbox = lapply(extra.args$instance$dataset_index_outbox, function(subset_ind) {
+  list_perf_outbag = lapply(extra.args$instance$dataset_index_outbox, function(subset_ind) {
     subtask = subsetTask(task, subset_ind)
     getSingleDatasetPerf(model, subtask)
   })
-  names(list_perf_outbox) = names(extra.args$instance$dataset_index_outbox)
+  names(list_perf_outbag) = names(extra.args$instance$dataset_index_outbox)
 
-  funLogPerf2extra.argsEnv(list_perf_inbox, list_perf_outbox, extra.args)
-  return(list_perf_inbox)
+  funLogPerf2extra.argsEnv(list_perf_inbag, list_perf_outbag, extra.args)
+  return(list_perf_inbag)  ## only need to return in-bag performance
 }
 
 #' @title measure function calculating the model prediction performance on the remote dataset
@@ -39,32 +39,37 @@ getPerf4DataSites_Oracle = function(task, model, extra.args) {
 fun_measure_obj_curator = function(task, model, pred, feats, extra.args) {
   list.perf = getPerf4DataSites_Oracle(task, model, extra.args)
   sublist_all_perf = list.perf[extra.args$instance$curator_names]
+  weight = unlist(extra.args$instance$curator_len_list)
+  weight = weight / sum(weight)
   sublist = lapply(sublist_all_perf, function(x) x[extra.args$perf_name2tune])
   vec = unlist(sublist)
-  h = mean(vec)
+  h = sum(vec * weight)
   cat(sprintf("\n curator %s: %f \n", extra.args$perf_name, h))
   return(h)
 }
 
 # parameter free version of the Ladder algorithm
 
-  calBrierVec = function(pred) {
-    truth = pred$data$truth
-    prob = getPredictionProbabilities(pred)
-    y = as.numeric(truth == pred$task.desc$positive)
-    newvec = (y - prob) ^ 2
-    return(newvec)
-  }
+calBrierVec = function(pred) {
+  truth = pred$data$truth
+  prob = getPredictionProbabilities(pred)
+  y = as.numeric(truth == pred$task.desc$positive)
+  newvec = (y - prob) ^ 2
+  return(newvec)
+}
 
+
+#FIXME: weight loss by task
 fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
-  list.perf = getPerf4DataSites_Oracle(task, model, extra.args)  # only for log
+  browser()
+  nothing = getPerf4DataSites_Oracle(task, model, extra.args)  # only for log
   gperf_env = extra.args$gperf_env
-  pred = predict(model, extra.args$instance$curator_task)
+  pred = predict(model, extra.args$instance$task_curator_inbag)
   newvec = extra.args$calMeasVec(pred)
   oldvec = gperf_env$current_best_loss_vec
   diffvec = newvec - oldvec
   th = sd(diffvec) / (sqrt(extra.args$instance$curator_len))
-  new_meas = performance(pred, brier)
+  new_meas = performance(pred, brier)   # FIXME: weight by datasize?
   gap = gperf_env$current_best_meas - new_meas
   if (gap > th) {
     gperf_env$current_best_meas = new_meas
@@ -116,14 +121,14 @@ threshout <- function(train_auc, holdout_auc, thresholdout_params) {
 
 
 
-fun_measure_obj_openbox_nocv = function(task, model, pred, feats, extra.args) {
-  #'model$subset  # equivalent to which(df[, dataset_id] == dataset_names[2]) which get the row index for dataset 2
-  major_task = subsetTask(task, model$subset)
-  lrn.id = getLrnIDFromModel(model)
-  pvs = getHyperParFromModel(model)
-  model = getModelFromTask(major_task = major_task, lrn.id = lrn.id, pvs = pvs)
-  pred = predict(model, major_task)
-  mlr::performance(pred, measures = list(extra.args$measures2tune))
+# obj = alpha * cv(local) +  (1-alpha) error(remote)
+# extra.args should contain alpha and the extra.args needed for func_measure_obj_remote
+# @param extra.args additional arguments holding the instance index for each dataset, etc
+#' extra.args$alpha
+fun_measure_obj_openbox_tr_curator_tune = function(task, model, pred, feats, extra.args) {
+  obj1 = fun_measure_obj_openbox(task, model, pred, feats, extra.args)  # no need for extra.args
+  obj2 = fun_measure_obj_curator(task, model, pred, feats, extra.args)  # the performance for the current model is computed in this measure
+  return(extra.args$alpha * obj1 + (1 - extra.args$alpha * obj2))
 }
 
 getLrnIDFromModel = function(model) {
@@ -169,35 +174,6 @@ fun_measure_obj_openbox = function(task, model, pred, feats, extra.args) {
   return(res$aggr)
 }
 
-# obj = alpha * cv(local) +  (1-alpha) error(remote)
-# extra.args should contain alpha and the extra.args needed for func_measure_obj_remote
-# @param extra.args additional arguments holding the instance index for each dataset, etc
-#' extra.args$alpha
-fun_measure_obj_openbox_tr_curator_tune = function(task, model, pred, feats, extra.args) {
-  obj1 = fun_measure_obj_openbox(task, model, pred, feats, extra.args)  # no need for extra.args
-  obj2 = fun_measure_obj_curator(task, model, pred, feats, extra.args)  # the performance for the current model is computed in this measure
-  return(extra.args$alpha * obj1 + (1 - extra.args$alpha * obj2))
-}
-
-fun_measure_obj_local_tr_tune_remote_tune_nocv = function(task, model, pred, feats, extra.args) {
-  obj1 = fun_measure_obj_openbox_nocv(task, model, pred, feats, extra.args)  # no need for extra.args
-  obj2 = fun_measure_obj_curator(task, model, pred, feats, extra.args)  # the performance for the current model is computed in this measure
-  return(extra.args$alpha * obj1 + (1 - extra.args$alpha * obj2))
-}
-
-
-
-# model is from training only on the major dataset
-fun_measure_obj_openbox2curator = function(task, model, pred, feats, extra.args) {
-  major_task = subsetTask(task, extra.args$local2remote_subset)   # pool the local and remote dataset together
-  lrn.id = model$learner$id
-  pvs = model$learner$par.vals  # it does not matter there to the local trained model to extract the hyper-parameter since the hyper-parameter is decided by the tunner, not the local model.
-  newmodel = getModelFromTask(major_task = major_task, lrn.id = lrn.id, pvs = pvs)
-  fun_measure_obj_curator(task = task, model = newmodel, pred = pred, feats = feats, extra.args = extra.args)  # call the measure to update the environment, current context is bs2, only chagne is model here
-  res = getCVPerf(major_task = major_task, lrn.id = lrn.id, pvs = pvs, measures = extra.args$measures2tune)
-  return(res$aggr)
-}
-
 #' @title
 #' @description
 #' @param major_task The mlr Task to carry CV
@@ -224,13 +200,4 @@ getSingleDatasetPerf = function(model, subtask) {
   print(perf)
   cat("\n")
   return(perf)
-}
-
-
-mkSingleDsMeasure = function(subset_ind) {
-  measure_fun = function(task, model, pred, feats, extra.args) {
-    subtask = subsetTask(task, subset_ind)
-    getSingleDatasetPerf(model, subtask)$mmce
-  }
-  return(measure_fun)
 }
