@@ -70,7 +70,8 @@ submit_jobs = function() {
   repl = 1:10
   tosub = c()
   for (i in seq_along(repl)) tosub = c(tosub, index + i)
-  submitJobs(tosub)
+  tosub2 = intersect(tosub, findNotSubmitted()$job.id)
+  submitJobs(tosub2)
   submitJobs(index)
   submitJobs(index + 1)
   submitJobs(index + 2)
