@@ -80,10 +80,10 @@ getMlrTuneCtrlSO = function(iters, nugget = 1e-6, jitter = TRUE) {
 
 # this makes MBO_ITERS MACRO reconfigurable
 getTuneMethod = function(method.str, mgconf, n.objs = 2, nugget = 1e-6, jitter = T) {
-  TUNE_METHODS = list(
+  TUNE_METHODS = switch(EXPR = method.str, 
     mbodefault = getMlrTuneCtrlSO(iters = mgconf$MBO_ITERS, nugget = nugget, jitter = jitter),
     mbomulticritdefault = getMlrTuneCtrlMO(iters = mgconf$MBO_ITERS, n.obj = 2L, nugget = nugget, jitter = jitter),
     mbo5critdefault = getMlrTuneCtrlMO(iters = mgconf$MBO_ITERS, n.obj = n.objs, nugget = nugget, jitter = jitter)
     )
-  return(TUNE_METHODS[[method.str]])
+  return(TUNE_METHODS)
 }
