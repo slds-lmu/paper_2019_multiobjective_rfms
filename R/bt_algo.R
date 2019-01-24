@@ -131,14 +131,14 @@ algo_mbo = function(instance, lrn) {
 convertInst2ThresholdoutAUC = function(instance, conf) {
   tmf = instance$tmf
   tms = instance$tms
-  tge = instance$tge
+  task_lockbox = instance$task_lockbox
   pair = getTaskData(tmf, target.extra = T)
   x_train_total = pair$data
   y_train_total = pair$target
   pair = getTaskData(tms, target.extra = T)
   x_holdout = pair$data
   y_holdout = pair$target
-  pair = getTaskData(tge, target.extra = T)
+  pair = getTaskData(task_lockbox, target.extra = T)
   x_test = pair$data
   y_test = pair$target
   n_train_begin = nrow(x_train_total) * conf$train_begin_ratio
