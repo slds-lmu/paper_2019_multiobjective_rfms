@@ -1,28 +1,28 @@
 #' this function depends on the naming of extra.args
-funLogPerf2extra.argsEnv = function(list_perf_inbox, list_perf_outbox, extra.args) {
+funLogPerf2extra.argsEnv = function(list_perf_inbag, list_perf_outbag, extra.args) {
   env_gperf = extra.args$gperf_env   ## environment  use ls(env) or ls.str(env)
   contextname = get("context", envir = env_gperf)  # we can only use one global variable
-  env_gperf[[as.character(env_gperf$index)]] = list_perf_inbox  # this redundancy is used to fetch the pareto optimal multi-objective candidate
-  env_gperf[[contextname]][[as.character(env_gperf$index)]][["inbox"]] =  list_perf_inbox
-  env_gperf[[contextname]][[as.character(env_gperf$index)]][["outbox"]] =  list_perf_outbox
+  env_gperf[[as.character(env_gperf$index)]] = list_perf_inbag  # this redundancy is used to fetch the pareto optimal multi-objective candidate
+  env_gperf[[contextname]][[as.character(env_gperf$index)]][["inbag"]] =  list_perf_inbag
+  env_gperf[[contextname]][[as.character(env_gperf$index)]][["outbag"]] =  list_perf_outbag
   env_gperf$index = env_gperf$index + 1L
 }
 
 getPerf4DataSites_Oracle = function(task, model, extra.args) {
   pvs = model$learner$par.vals
-  cat("\n inbox: \n")
-  list_perf_inbag = lapply(extra.args$instance$dataset_index_inbox, function(subset_ind) {
+  cat("\n inbag: \n")
+  list_perf_inbag = lapply(extra.args$instance$dataset_index_inbag, function(subset_ind) {
     subtask = subsetTask(task, subset_ind)
     getSingleDatasetPerf(model, subtask)
   })
-  names(list_perf_inbag) = names(extra.args$instance$dataset_index_inbox)
+  names(list_perf_inbag) = names(extra.args$instance$dataset_index_inbag)
 
-  cat("\n outbox: \n")
-  list_perf_outbag = lapply(extra.args$instance$dataset_index_outbox, function(subset_ind) {
+  cat("\n outbag: \n")
+  list_perf_outbag = lapply(extra.args$instance$dataset_index_outbag, function(subset_ind) {
     subtask = subsetTask(task, subset_ind)
     getSingleDatasetPerf(model, subtask)
   })
-  names(list_perf_outbag) = names(extra.args$instance$dataset_index_outbox)
+  names(list_perf_outbag) = names(extra.args$instance$dataset_index_outbag)
 
   funLogPerf2extra.argsEnv(list_perf_inbag, list_perf_outbag, extra.args)
   return(list_perf_inbag)  ## only need to return in-bag performance
@@ -58,8 +58,6 @@ calBrierVec = function(pred) {
   return(newvec)
 }
 
-
-#FIXME: weight loss by task
 fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
   nothing = getPerf4DataSites_Oracle(task, model, extra.args)  # only for log
   gperf_env = extra.args$gperf_env
@@ -170,28 +168,29 @@ setWraperHyperPars = function(lrn_obj, pvs) {
 
 fun_measure_obj_openbox = function(task, model, pred, feats, extra.args) {
   #'model$subset  # equivalent to which(df[, dataset_id] == dataset_names[2]) which get the row index for dataset 2
-  major_task = subsetTask(task, model$subset)
+  openbox_task = subsetTask(task, model$subset)
+  assert(all(model$subset == extra.args$instance$openbox_inbag_ind))
   lrn.id = getLrnIDFromModel(model)
   #getHyperPars(model) only works for learner # no applicable getHyperPars' applied to an object of class "c('PreprocModel', 'BaseWrapperModel', 'WrappedModel')
   pvs = getHyperParFromModel(model)
-  res = getCVPerf(major_task = major_task, lrn.id = lrn.id, pvs = pvs, measures = extra.args$measures2tune)
+  res = getCVPerf(openbox_task = openbox_task, lrn.id = lrn.id, pvs = pvs, measures = extra.args$measures2tune)
   cat(sprintf("\n openbox: %f \n", res$aggr))
   return(res$aggr)
 }
 
 #' @title
 #' @description
-#' @param major_task The mlr Task to carry CV
+#' @param openbox_task The mlr Task to carry CV
 #' @param lrn.id learner id in character
 #' @param pvs list of hyper-parameter
 #' @return resampling result
-getCVPerf = function(major_task, lrn.id, pvs, measures, iters = NULL) {
+getCVPerf = function(openbox_task, lrn.id, pvs, measures, iters = NULL) {
   if (is.null(iters)) iters = getGconf()$CV_ITER
   lrn_obj = GET_LRN(lrn.id)
   #lrn_obj = setHyperPars(lrn_obj, par.vals = pvs$wraper_pvs)
   lrn_obj = setWraperHyperPars(lrn_obj, pvs)
   rsd_out = makeResampleDesc("CV", iters = iters)
-  res = resample(learner = lrn_obj, task = major_task, resampling = rsd_out, measures = measures, show.info = FALSE)  # paramValueToString
+  res = resample(learner = lrn_obj, task = openbox_task, resampling = rsd_out, measures = measures, show.info = FALSE)  # paramValueToString
   res # res$aggr give the test mean
 }
 
