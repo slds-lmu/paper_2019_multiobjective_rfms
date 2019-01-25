@@ -12,61 +12,72 @@ test_funGenProb = function() {
 
 funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   res = list()
+  res$openbox_ind = openbox_ind
+  res$lockbox_ind = lockbox_ind
+  #FIXME: change this to global configuration
   ratio = 0.8  # when ratio = 1,  it went back to the original
   tuple = data[[dataset_name]]
-  #tid = as.integer(stringi::stri_replace(str = dataset_name, regex = "oml", replacement = ""))
-  #tuple = createClassBalancedDfCluster(oml_task_id = tid, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7)
   task_oracle = tuple$task
+  res$task = task_oracle
   dataset_index = tuple$list_dataset_index  # list of instance index for each dataset
   ns = names(dataset_index)
+  res$ns = ns
+  res$dataset_index = dataset_index
   openbox_name = ns[openbox_ind]
+  res$openbox_name = openbox_name
   lockbox_name = setdiff(ns, openbox_name)[lockbox_ind]
+  res$lockbox_name = lockbox_name
   curator_names = setdiff(ns, c(openbox_name, lockbox_name))
+  res$curator_names = curator_names 
 
   openbox_oracle_ids = which(tuple$df_dataset_accn == openbox_name)
-  openbox_inbox_ind = sample(length(openbox_oracle_ids), size = length(openbox_oracle_ids) * ratio)
-  train.inds = openbox_oracle_ids[openbox_inbox_ind]
-  openbox_outbox_ind =  openbox_oracle_ids[-openbox_inbox_ind]
+  openbox_inbag_ind_rel = sample(length(openbox_oracle_ids), size = length(openbox_oracle_ids) * ratio)
+  openbox_inbag_ind = openbox_oracle_ids[openbox_inbag_ind_rel]
+  res$openbox_inbag_ind = openbox_inbag_ind
+  openbox_outbag_ind =  openbox_oracle_ids[-openbox_inbag_ind_rel]
+  test.inds = setdiff(1:getTaskSize(task_oracle), openbox_inbag_ind)  # test ind does not matter
+  rins = makeFixedHoldoutInstance(openbox_inbag_ind, test.inds, getTaskSize(task_oracle))
+  rins$desc$predict = "train" # must be both since some measure aggregation is test
+  res$rins = rins
+
 
   curator_list = lapply(curator_names, function(x) {
     inds = which(tuple$df_dataset_accn == x)
     len = length(inds)
-    inbox_inds = sample(len, size = len * ratio)
-    inbox = inds[inbox_inds]
-    outbox = inds[-inbox_inds]
-    list(inbox = inbox, outbox = outbox, len = len)
+    inbag_inds_rel = sample(len, size = len * ratio)
+    inbag = inds[inbag_inds_rel]
+    outbag = inds[-inbag_inds_rel]
+    list(inbag = inbag, outbag = outbag, len = len)
   })
 
-  curator_inboxs_oracle_inds = Reduce(c, lapply(curator_list, function(x) x$inbox))
+  curator_inbags_oracle_inds = Reduce(c, lapply(curator_list, function(x) x$inbag))
   lockbox_oracle_inds = which(tuple$df_dataset_accn == lockbox_name)
 
-  dataset_index_outbox = lapply(curator_list, function(x) x$outbox)
-  names(dataset_index_outbox) = curator_names
-  dataset_index_outbox[[openbox_name]] =  openbox_outbox_ind
-  dataset_index_outbox[[lockbox_name]] =  lockbox_oracle_inds
+  dataset_index_outbag = lapply(curator_list, function(x) x$outbag)
+  names(dataset_index_outbag) = curator_names
+  dataset_index_outbag[[openbox_name]] =  openbox_outbag_ind
+  dataset_index_outbag[[lockbox_name]] =  lockbox_oracle_inds
+  res$dataset_index_outbag = dataset_index_outbag
 
-  dataset_index_inbox = lapply(curator_list, function(x) x$inbox)
-  names(dataset_index_inbox) = curator_names
-  dataset_index_inbox[[openbox_name]] = openbox_inbox_ind
-  dataset_index_inbox[[lockbox_name]] = lockbox_oracle_inds
+  dataset_index_inbag = lapply(curator_list, function(x) x$inbag)
+  names(dataset_index_inbag) = curator_names
+  dataset_index_inbag[[openbox_name]] = openbox_inbag_ind
+  dataset_index_inbag[[lockbox_name]] = lockbox_oracle_inds
+  res$dataset_index_inbag =  dataset_index_inbag
 
-  test.inds = setdiff(1:getTaskSize(task_oracle), train.inds)
-  rins = makeFixedHoldoutInstance(train.inds, test.inds, getTaskSize(task_oracle))
-  rins$desc$predict = "train" # must be both since some measure aggregation is test
-  tname = mlr::getTaskTargetNames(task_oracle)
-  p = getTaskNFeats(task_oracle)
+  res$tname = mlr::getTaskTargetNames(task_oracle)
+  res$p = getTaskNFeats(task_oracle)
   dfpair = mlr::getTaskData(task_oracle, target.extra = T) # dfpair$target, higher level(defined by sort) correspond to negative class of mlr, but positive class in ROCR::prediction function, for more refer to ROCR::prediction documentation
   secondlevel = sort(levels(dfpair$target))[2L]
-  bname = mlr::getTaskDesc(task_oracle)$negative
-  # it seems that secondlevel and bname are the same
-  curator_index = Reduce(c, dataset_index[curator_names])
-  task_openbox_all = mlr::subsetTask(task_oracle, subset = dataset_index[[openbox_name]])
-
-  res$task_curator_inbag = mlr::subsetTask(task_oracle, subset = unlist(dataset_index_inbox[curator_names]))
+  res$bname = mlr::getTaskDesc(task_oracle)$negative
+  #FIXME: add assert to check secondlevel and bname must be the same
+  res$curator_index = Reduce(c, dataset_index[curator_names])
+  res$curator_len = length(res$curator_index)
+  res$task_openbox_all = mlr::subsetTask(task_oracle, subset = dataset_index[[openbox_name]])
+  res$task_curator_inbag = mlr::subsetTask(task_oracle, subset = unlist(dataset_index_inbag[curator_names]))
   res$curator_inbag_len = getTaskSize(res$task_curator_inbag)
-  tge = mlr::subsetTask(task_oracle, subset = dataset_index[[lockbox_name]])
-  curator_len_list = lapply(curator_list, function(x) x$len)
-  res = c(res, list(task = task_oracle, rins = rins, openbox_ind = openbox_ind, lockbox_ind = lockbox_ind, dataset_index = dataset_index, ns = ns, task_openbox_all = task_openbox_all, tge = tge, tname = tname, bname = bname, p = p, curator_names = curator_names, openbox_name = openbox_name, lockbox_name = lockbox_name, curator_index = curator_index, curator_len = length(curator_index), dataset_index_outbox = dataset_index_outbox, dataset_index_inbox = dataset_index_inbox, curator_len_list = curator_len_list))
+  res$task_lockbox = mlr::subsetTask(task_oracle, subset = dataset_index[[lockbox_name]])
+  res$curator_len_list = lapply(curator_list, function(x) x$len)
   return(res)
 }
 
