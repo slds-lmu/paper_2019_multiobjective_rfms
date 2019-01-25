@@ -15,7 +15,6 @@ mtrain.agg = makeAggregation(id = "mtrain.agg", name = "only calculate train", p
   pred = mlr:::predict.WrappedModel(model, task = subtask)
   performance(pred)
   rsd_out = makeResampleDesc("CV", iters = 10)
-  #res = resample(learner = lrn_wrap, task = subtask, resampling = rsd_out, measures = mlr::mmce, show.info = T)  # paramValueToString
 
 
 
@@ -59,8 +58,22 @@ fun_measure_obj_openbox = function(task, model, pred, feats, extra.args) {
   pred = predict(model, task = subtask)
   perf = performance(pred)
   print(perf)
-  perf
+
   browser()
+  lrn_obj = makeLearner("classif.ksvm", kernel = "rbfdot", predict.type = "prob")
+  lrn_obj2 = mlr::setHyperPars(lrn_obj, par.vals = model$learner$next.learner$par.vals)
+  lrn_wrap2 = makeRemoveConstantFeaturesWrapper(lrn_obj2)
+
+  res = resample(learner = lrn_wrap2, task = subtask, resampling = rsd_out, measures = mlr::mmce, show.info = T)  # paramValueToString
+  res2 = resample(learner = lrn_obj2, task = subtask, resampling = rsd_out, measures = mlr::mmce, show.info = T)  # paramValueToString
+  model2 = train(lrn_wrap2, subtask)
+  pred2 = predict(model2, subtask)
+  performance(pred2)
+
+  model3 = train(lrn_obj2, subtask)
+  pred3 = predict(model3, subtask)
+  performance(pred3)
+  perf
 }
 
 
