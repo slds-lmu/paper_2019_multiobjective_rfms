@@ -90,7 +90,7 @@ algo_mbo = function(instance, lrn) {
   context = "rand"
   res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
 
-  context = "lso_openbox"
+  context = "lso"
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
   print(proc.time() - ptmi)
   

@@ -1,26 +1,26 @@
 library(data.table)
-dt = readRDS("geo_ladder.rds")
+library(ggplot2)
+library(tidyr)
+dt = readRDS("resultJan25.rds")
 
 dtoutbag = dt[bag == "outbag"]
-dtoutbag = dt[bag == "inbag"]
-function(dtoutbag) {
-
-dtoutbag$openbox = apply(as.data.frame(dtoutbag), 1, FUN = function(x) {
-  x[x["openbox_name"]]})
-
-dtoutbag$lockbox = apply(as.data.frame(dtoutbag), 1, FUN = function(x) {
-  x[x["lockbox_name"]]})
+dtinbag = dt[bag == "inbag"]
 
 
-library(tidyr)
+showp = function(dtg) {
 
-dttemp = dtoutbag[, .(openbox_name, lockbox_name, openbox, lockbox, algo, lrn)]
+dtg$openbox = apply(as.data.frame(dtg), 1, FUN = function(x) {
+  as.numeric(x[x["openbox_name"]])})
 
-library(ggplot2)
-dttemp$openbox = as.numeric(dttemp$openbox)
-dttemp$lockbox = as.numeric(dttemp$lockbox)
+dtg$lockbox = apply(as.data.frame(dtg), 1, FUN = function(x) {
+  as.numeric(x[x["lockbox_name"]])})
 
-ggplot2::ggplot(dttemp, aes(x = algo, y = lockbox)) + geom_boxplot() + facet_grid(cols = vars(lrn))
+dtg = dtg[, .(openbox_name, lockbox_name, openbox, lockbox, algo, lrn)]
 
-ggplot2::ggplot(dttemp, aes(x = algo, y = openbox)) + geom_boxplot() + facet_grid(cols = vars(lrn))
+
+ggplot2::ggplot(dtg, aes(x = algo, y = openbox)) + geom_boxplot() + facet_grid(cols = vars(lrn))
 }
+
+showp(dtoutbag)
+dev.new()
+showp(dtinbag)
