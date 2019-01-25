@@ -81,7 +81,7 @@ processLrnName = function(lrn.id) {
 }
 
 GET_LRN = function(lrn_id) {
-  lrnobj = switch(lrn_id,
+  lrn_obj = switch(lrn_id,
     "classif.ksvm" =  makeLearner("classif.ksvm", kernel = "rbfdot", predict.type = "prob"), # vanilladot is a special case of rbf kernel
     "classif.glmnet" = makeLearner("classif.glmnet", predict.type = "prob"),
     "classif.ranger" = makeLearner("classif.ranger", predict.type = "prob")

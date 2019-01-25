@@ -38,7 +38,6 @@ getPerf4DataSites_Oracle = function(task, model, extra.args) {
     getSingleDatasetPerf(model, subtask)
   })
 
-  browser()
   names(list_perf_outbag) = names(extra.args$instance$dataset_index_outbag)
 
   funLogPerf2extra.argsEnv(list_perf_inbag, list_perf_outbag, extra.args)
