@@ -4,7 +4,7 @@ prob_inputs_data = list()  # used for addProblem
 prob_inputs_data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData")  # this data comes with repository
 dataset_names_input = c("geo")
 
-  DEBUG_FLAG = F
+  DEBUG_FLAG = T
   source("bt_conf.R")
   source("bt_main.R")
   REG_FILE_DIR = "../output/only4testreg"

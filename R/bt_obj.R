@@ -8,20 +8,37 @@ funLogPerf2extra.argsEnv = function(list_perf_inbag, list_perf_outbag, extra.arg
   env_gperf$index = env_gperf$index + 1L
 }
 
+debug_getPerf4DATAsITES_ORCAL = function() {
+  subtask = subsetTask(task, model$subset)
+  pred = mlr:::predict.WrappedModel(model, task = subtask)
+  performance(pred)
+  rsd_out = makeResampleDesc("CV", iters = 10)
+  res = resample(learner = "classif.ksvm", task = subtask, resampling = rsd_out, measures = mlr::mmce, show.info = T)  # paramValueToString
+
+  getSingleDatasetPerf(model, subtask)
+  extra.args$instance$ns
+  extra.args_temp = extra.args
+  extra.args_temp$measures2tune = mlr::mmce
+  fun_measure_obj_openbox(task = task, model = model, pred = NULL, feats = NULL, extra.args = extra.args_temp) 
+}
+
 getPerf4DataSites_Oracle = function(task, model, extra.args) {
   pvs = model$learner$par.vals
-  cat("\n inbag: \n")
+  cat(sprintf("\n openbox:%d,%s, lockbox:%d,%s \n", extra.args$instance$openbox_ind, extra.args$instance$openbox_name, extra.args$instance$lockbox_ind, extra.args$instance$lockbox_name))
+  cat(sprintf("\n inbag: %s\n", names(extra.args$instance$dataset_index_inbag)))
   list_perf_inbag = lapply(extra.args$instance$dataset_index_inbag, function(subset_ind) {
     subtask = subsetTask(task, subset_ind)
     getSingleDatasetPerf(model, subtask)
   })
   names(list_perf_inbag) = names(extra.args$instance$dataset_index_inbag)
 
-  cat("\n outbag: \n")
+  cat(sprintf("\n outbag: %s\n", names(extra.args$instance$dataset_index_outbag)))
   list_perf_outbag = lapply(extra.args$instance$dataset_index_outbag, function(subset_ind) {
     subtask = subsetTask(task, subset_ind)
     getSingleDatasetPerf(model, subtask)
   })
+
+  browser()
   names(list_perf_outbag) = names(extra.args$instance$dataset_index_outbag)
 
   funLogPerf2extra.argsEnv(list_perf_inbag, list_perf_outbag, extra.args)

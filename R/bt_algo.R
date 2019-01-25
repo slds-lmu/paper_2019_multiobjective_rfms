@@ -74,17 +74,17 @@ algo_mbo = function(instance, lrn) {
 
   context = "fso5"
   extra.args$alpha = 0.5
-  meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
+  meas_alpha_so = mk_measure(name = "meas_alpha_so5", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = context)
 
   context = "fso2"
   extra.args$alpha = 0.2
-  meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
+  meas_alpha_so = mk_measure(name = "meas_alpha_so2", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = context)
 
   context = "fso8"
   extra.args$alpha = 0.8
-  meas_alpha_so = mk_measure(name = "meas_alpha_so", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
+  meas_alpha_so = mk_measure(name = "meas_alpha_so8", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = context)
 
   context = "rand"
