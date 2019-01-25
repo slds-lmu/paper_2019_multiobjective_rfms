@@ -81,10 +81,11 @@ processLrnName = function(lrn.id) {
 }
 
 GET_LRN = function(lrn_id) {
+  predict_type = getGconf()$predict.type
   lrn_obj = switch(lrn_id,
-    "classif.ksvm" =  makeLearner("classif.ksvm", kernel = "rbfdot", predict.type = "prob"), # vanilladot is a special case of rbf kernel
-    "classif.glmnet" = makeLearner("classif.glmnet", predict.type = "prob"),
-    "classif.ranger" = makeLearner("classif.ranger", predict.type = "prob")
+    "classif.ksvm" =  makeLearner("classif.ksvm", kernel = "rbfdot", predict.type = predict_type), # vanilladot is a special case of rbf kernel
+    "classif.glmnet" = makeLearner("classif.glmnet", predict.type = predict_type),
+    "classif.ranger" = makeLearner("classif.ranger", predict.type = predict_type)
     )
   lrn_wrap = makeRemoveConstantFeaturesWrapper(lrn_obj)
   return(lrn_wrap)

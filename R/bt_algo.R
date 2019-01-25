@@ -3,7 +3,7 @@ library(mlr)
 library(mlrMBO)
 library(magrittr)
 library(ggplot2)
-source("bt_measures_objs.R")
+source("bt_measures.R")
 source("bt_helpers.R")
 
 
@@ -56,7 +56,7 @@ algo_mbo = function(instance, lrn) {
   gperf_env$current_best_loss_vec = rep(1, instance$curator_inbag_len)
   gperf_env$current_best_meas = mlr::brier$worst
 
-  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = "brier", measures2tune = mlr::brier, calMeasVec = calBrierVec)
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune, calMeasVec = calBrierVec)
 
   meas_openbox_cv = mk_measure(name = "meas_openbox_cv", extra.args, obj_fun = fun_measure_obj_openbox)
   measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)

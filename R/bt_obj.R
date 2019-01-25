@@ -147,7 +147,7 @@ threshout <- function(train_auc, holdout_auc, thresholdout_params) {
 fun_measure_obj_openbox_tr_curator_tune = function(task, model, pred, feats, extra.args) {
   obj1 = fun_measure_obj_openbox(task, model, pred, feats, extra.args)  # no need for extra.args
   obj2 = fun_measure_obj_curator(task, model, pred, feats, extra.args)  # the performance for the current model is computed in this measure
-  return(extra.args$alpha * obj1 + (1 - extra.args$alpha * obj2))
+  return(extra.args$alpha * obj1 + (1 - extra.args$alpha) * obj2)
 }
 
 getLrnIDFromModel = function(model) {
@@ -214,7 +214,8 @@ getCVPerf = function(openbox_task, lrn.id, pvs, measures, iters = NULL) {
 # the measures here are according to mlr naming, so one could call get("brier")
 getSingleDatasetPerf = function(model, subtask) {
   pred = predict(model, subtask)
-  perf = mlr::performance(pred = pred, measures = list(auc, mmce, brier, brier.scaled, ber, logloss))
+  list_meas = getGconf()$list_meas
+  perf = mlr::performance(pred = pred, measures = list_meas)
   # brier.scaled sometimes is negative
   cat("\n")
   print(perf)
