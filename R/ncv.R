@@ -2,7 +2,7 @@ getNCVPerf = function(major_task, lrn.id, meas = mlr::brier) {
   lrn_basis = GET_LRN(lrn.id)
   ps = GET_PARSET_CLASSIF(lrn.id)
   #ctrl = makeTuneControlMBO(maxit = gconf$MBO_ITERS)
-  ctrl_bs = getTuneMethod("mbodefault", mgconf = getGconf(), n.objs = 1, nugget = 1e-5)
+  ctrl_bs = getTuneMethod("mbodefault", mgconf = getGconf(), n.objs = 1, nugget = 1e-4)
   ctrl_bs$mbo.design = getMBODesign(lrn.id, mgconf = getGconf())
   rsd_in = makeResampleDesc("CV", iters = gconf$CV_ITER)
   rsd_out = makeResampleDesc("CV", iters = gconf$CV_ITER_OUTER)
