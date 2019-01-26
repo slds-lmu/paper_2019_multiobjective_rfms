@@ -2,7 +2,7 @@
 funLogPerf2extra.argsEnv = function(list_perf_inbag, list_perf_outbag, extra.args) {
   env_gperf = extra.args$gperf_env   ## environment  use ls(env) or ls.str(env)
   contextname = get("context", envir = env_gperf)  # we can only use one global variable
-  env_gperf[[as.character(env_gperf$index)]] = list_perf_inbag  # this redundancy is used to fetch the pareto optimal multi-objective candidate
+  #env_gperf[[as.character(env_gperf$index)]] = list_perf_inbag  # this redundancy is used to fetch the pareto optimal multi-objective candidate
   env_gperf[[contextname]][[as.character(env_gperf$index)]][["inbag"]] =  list_perf_inbag
   env_gperf[[contextname]][[as.character(env_gperf$index)]][["outbag"]] =  list_perf_outbag
   env_gperf$index = env_gperf$index + 1L
