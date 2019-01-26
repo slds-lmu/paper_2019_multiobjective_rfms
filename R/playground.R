@@ -45,7 +45,7 @@ debug_cluster = function() {
 }
 
 run_cluster = function() {
-  regname = "../output/geoladder"
+  regname = "../output/georesponse"
   DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo)
   source("bt_conf.R")
   source("bt_main.R")
