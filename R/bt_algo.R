@@ -281,7 +281,7 @@ agg_so = function(res_all, meas_name = "mmce", algo_name) {
   return(sodt)
 }
 
-agg_mo = function(res_all, meas_name = "mmce", algo_name = "fmo_nocv") {
+agg_mo = function(res_all, meas_name = "mmce", algo_name) {
   res = res_all$tune_res
   best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
   pareto.list = res_all$gperf_env[[algo_name]][best_inds]

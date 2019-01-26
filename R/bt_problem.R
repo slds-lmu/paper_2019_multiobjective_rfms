@@ -5,7 +5,7 @@
 dataset_names_input = c("geo")
 
 test_funGenProb = function() {
- instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_name = 1L, lockbox_name = 1L, dataset_name = "geo")
+ instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
  source("bt_algo.R")
  algo_thresholdout(instance)
 }
