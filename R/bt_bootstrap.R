@@ -1,5 +1,28 @@
 source("bt_problem.R")
- instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
+instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
 
 
-sample(
+genBootstrapPool = function(alpha = 0.7, rep = 3L) {
+  res = list()
+  lockbox_ind_oracle = instance$dataset_index_outbag[[instance$lockbox_name]]
+  openbox_outbag_ind_oracle = instance$dataset_index_outbag[[instance$openbox_name]]
+  curator_outbag_ind_oracle = Reduce(c, instance$dataset_index_outbag[instance$curator_names])
+  ob_pool_cu = c(openbox_outbag_ind_oracle, curator_outbag_ind_oracle)
+  res$ob_pool_cu = ob_pool_cu
+  ob_pool_lb = c(openbox_outbag_ind_oracle, lockbox_ind_oracle)
+  res$ob_pool_lb = ob_pool_lb
+
+  prob_ob = rep(alpha, length(openbox_outbag_ind_oracle))
+  prob_lb = rep(1.0 - alpha, length(lockbox_ind_oracle))
+  prob_cu = rep(1.0 - alpha, length(curator_outbag_ind_oracle))
+  list_boot = lapply(1:rep, function(i) {
+    rst = list()
+    rst$ob_vs_cu = sample(ob_pool_cu, size = length(ob_pool_cu), replace = T, prob = c(prob_ob, prob_cu))
+    rst$ob_vs_lb = sample(ob_pool_lb, size = length(ob_pool_lb), replace = T, prob = c(prob_ob, prob_lb))
+    rst
+  })
+  res$list_boot = list_boot
+  return(res)
+}
+
+genBootstrapPool()
