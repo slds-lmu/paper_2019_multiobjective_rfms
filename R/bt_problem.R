@@ -1,5 +1,5 @@
 dataset_names_input = c("geo")
-
+source("bt_bootstrap.R")
 test_funGenProb = function() {
  instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
  source("bt_algo.R")
@@ -11,8 +11,7 @@ genProb_inputs_data = function() {
   prob_inputs_data[[dataset_name]] = prepareDataSite(path = data$path[[dataset_name]])  # prob_inputs_data could be a global variable in the next refactoring
 }
 
-
-funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, ratio_inbag = 0.8) {
+funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, ratio_inbag = 0.8, bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10), bootstrap_rep = 10L) {
   if (!exists("prob_inputs_data") || is.null(prob_inputs_data) || length(prob_inputs_data) == 0) {
     tuple = prepareDataSite(path = data$path[[dataset_name]])
   } else {
@@ -33,7 +32,7 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, r
   lockbox_name = setdiff(ns, openbox_name)[lockbox_ind]
   res$lockbox_name = lockbox_name
   curator_names = setdiff(ns, c(openbox_name, lockbox_name))
-  res$curator_names = curator_names 
+  res$curator_names = curator_names
 
   openbox_oracle_ids = which(tuple$df_dataset_accn == openbox_name)
   openbox_inbag_ind_rel = sample(length(openbox_oracle_ids), size = length(openbox_oracle_ids) * ratio_inbag)
@@ -83,6 +82,8 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, r
   res$curator_inbag_len = getTaskSize(res$task_curator_inbag)
   res$task_lockbox = mlr::subsetTask(task_oracle, subset = dataset_index[[lockbox_name]])
   res$curator_len_list = lapply(curator_list, function(x) x$len)
+  res$list_alpha_bootstrap_index = lapply(bootstrap_alphas, function(alpha) genBootstrapPool(res, alpha = alpha, rep = bootstrap_rep))
+  names(res$list_alpha_bootstrap_index) = bootstrap_alphas
   return(res)
 }
 

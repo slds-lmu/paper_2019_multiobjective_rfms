@@ -1,10 +1,11 @@
 #' this function depends on the naming of extra.args
-funLogPerf2extra.argsEnv = function(list_perf_inbag, list_perf_outbag, extra.args) {
+funLogPerf2extra.argsEnv = function(list_perf_inbag, list_perf_outbag, list_perf_mixbag, extra.args) {
   env_gperf = extra.args$gperf_env   ## environment  use ls(env) or ls.str(env)
   contextname = get("context", envir = env_gperf)  # we can only use one global variable
   #env_gperf[[as.character(env_gperf$index)]] = list_perf_inbag  # this redundancy is used to fetch the pareto optimal multi-objective candidate
   env_gperf[[contextname]][[as.character(env_gperf$index)]][["inbag"]] =  list_perf_inbag
   env_gperf[[contextname]][[as.character(env_gperf$index)]][["outbag"]] =  list_perf_outbag
+  env_gperf[[contextname]][[as.character(env_gperf$index)]][["mixbag"]] =  list_perf_outbag
   env_gperf$index = env_gperf$index + 1L
 }
 
@@ -40,7 +41,23 @@ getPerf4DataSites_Oracle = function(task, model, extra.args) {
 
   names(list_perf_outbag) = names(extra.args$instance$dataset_index_outbag)
 
-  funLogPerf2extra.argsEnv(list_perf_inbag, list_perf_outbag, extra.args)
+  list_perf_mixbag = lapply(extra.args$instance$list_alpha_bootstrap_index, function(alpha_bootstrap_index) {
+    list_ob_vs_cu = lapply(alpha_bootstrap_index$list_boot, function(culb) {
+      subtask = subsetTask(task, culb$ob_vs_cu)
+      perfs = getSingleDatasetPerf(model, subtask, F)
+      #FIXME: change to name mmce instead of [1L]
+      perfs[1L]
+    })
+
+    list_ob_vs_lb = lapply(alpha_bootstrap_index$list_boot, function(culb) {
+      subtask = subsetTask(task, culb$ob_vs_lb)
+      perfs = getSingleDatasetPerf(model, subtask, F)
+      perfs[1L]
+    })
+    return(list(ob_vs_lb = list_ob_vs_lb, ob_vs_cu = list_ob_vs_cu))
+  })
+
+  funLogPerf2extra.argsEnv(list_perf_inbag, list_perf_outbag, list_perf_mixbag, extra.args)
   return(list_perf_inbag)  ## only need to return in-bag performance
 }
 
@@ -150,7 +167,7 @@ fun_measure_obj_openbox_tr_curator_tune = function(task, model, pred, feats, ext
   return(extra.args$alpha * obj1 + (1 - extra.args$alpha) * obj2)
 }
 
-getLrnIDFromModel = function(model) {
+getBaseLrnNameFromModel = function(model) {
   lrn.id = model$learner$id
   lrn.id = processLrnName(lrn.id)   # remove .preprocess
 }
@@ -172,6 +189,11 @@ getHyperParFromModel = function(model) {
 
 setWraperHyperPars = function(lrn_obj, pvs) {
   # mlr:::setHyperPars2.BaseWrapper
+  ### pvs$all contains hyperpars from learner and wrapper in one single list
+  ### pvs$wrapper_pvs is the par for wrapper
+  ### pvs$baselrn_pvs is the par for base learner
+  ### pvs$feats is the features
+  #FIXME: add check to pvs$feats
   if (!is.null(pvs$all)) {
     lrn_obj$features = pvs$feats
     lrn_obj = setHyperPars(lrn_obj, par.vals = pvs$baselrn_pvs)
@@ -186,7 +208,7 @@ fun_measure_obj_openbox = function(task, model, pred, feats, extra.args) {
   #'model$subset  # equivalent to which(df[, dataset_id] == dataset_names[2]) which get the row index for dataset 2
   openbox_task = subsetTask(task, model$subset)
   assert(all(model$subset == extra.args$instance$openbox_inbag_ind))
-  lrn.id = getLrnIDFromModel(model)
+  lrn.id = getBaseLrnNameFromModel(model)
   #getHyperPars(model) only works for learner # no applicable getHyperPars' applied to an object of class "c('PreprocModel', 'BaseWrapperModel', 'WrappedModel')
   pvs = getHyperParFromModel(model)
   res = getCVPerf(openbox_task = openbox_task, lrn.id = lrn.id, pvs = pvs, measures = extra.args$measures2tune)
@@ -212,13 +234,15 @@ getCVPerf = function(openbox_task, lrn.id, pvs, measures, iters = NULL) {
 
 
 # the measures here are according to mlr naming, so one could call get("brier")
-getSingleDatasetPerf = function(model, subtask) {
+getSingleDatasetPerf = function(model, subtask, verbose = T) {
   pred = predict(model, subtask)
   list_meas = getGconf()$list_meas
   perf = mlr::performance(pred = pred, measures = list_meas)
   # brier.scaled sometimes is negative
-  cat("\n")
-  print(perf)
-  cat("\n")
+  if (verbose) {
+    cat("\n")
+    print(perf)
+    cat("\n")
+  }
   return(perf)
 }

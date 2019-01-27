@@ -39,14 +39,10 @@ algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context,
   ctrl_bs$mbo.design = mbo_design
   tune_res_bs = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_bs, show.info = TRUE)  # only the first of the list_measures are being tuned
   cat(sprintf("\n\n\n %s finished  \n\n\n", context))
-  return(tune_res_bs = tune_res_bs)
+  # task_openbox_inbag = subsetTask(instance$task, instance$openbox_inbag_ind)
+  # getModelFromTask(task_openbox_inbag, lrn.id = processLrnName(tune_res_bs$learner$id), pvs = tune_res_bs$x)
+  tune_res_bs
 }
-
-algo_rand2 = function(instance, lrn) {
-  res = list()
-  res$tune_res_rand = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = "rand")
-}
-
 
 algo_mbo = function(instance, lrn) {
   res = list()
@@ -111,18 +107,8 @@ algo_mbo = function(instance, lrn) {
   res = list(tune_res = res, gperf_env = gperf_env, instance = instance)
   return(res)
 }
-#   conf = list(n_adapt_rounds = 10
-#   ,signif_level = 0.0001           # cutoff level used to determine which predictors to consider in each round based on their p-values. set small here for bigger parsimosmally for quick convergence
-#   ,thresholdout_threshold = 0.02 # T in the Thresholdout algorithm
-#   ,thresholdout_sigma = 0.03     # sigma in the Thresholdout algorithm
-#   ,thresholdout_noise_distribution = "norm" # choose between "norm" and "laplace"
-#   ,verbose = TRUE
-#   ,sanity_checks = FALSE
-#   ,train_begin_ratio = 0.5  # the ratio of n_train_begin compared to n_train_total
-#   )
-# 
- 
-  #thresholdoutauc = algo_thresholdoutauc(instance = instance, conf = conf)  # enough repetition is sufficient to get unbiased result of the random adding of instances
+
+
 
 #' @title
 #' @description convert problem generator instance to thresholdoutauc input
@@ -147,6 +133,19 @@ convertInst2ThresholdoutAUC = function(instance, conf) {
 
 
 algo_thresholdoutauc = function(instance, conf) {
+#   conf = list(n_adapt_rounds = 10
+#   ,signif_level = 0.0001           # cutoff level used to determine which predictors to consider in each round based on their p-values. set small here for bigger parsimosmally for quick convergence
+#   ,thresholdout_threshold = 0.02 # T in the Thresholdout algorithm
+#   ,thresholdout_sigma = 0.03     # sigma in the Thresholdout algorithm
+#   ,thresholdout_noise_distribution = "norm" # choose between "norm" and "laplace"
+#   ,verbose = TRUE
+#   ,sanity_checks = FALSE
+#   ,train_begin_ratio = 0.5  # the ratio of n_train_begin compared to n_train_total
+#   )
+# 
+ 
+  #thresholdoutauc = algo_thresholdoutauc(instance = instance, conf = conf)  # enough repetition is sufficient to get unbiased result of the random adding of instances
+
   source("thresholdout4real_data/refactor_general_simulation.R", chdir = T)
   results = run_sim(data_fun = convertInst2ThresholdoutAUC, instance = instance, conf = conf)
   rowind_test = which((results$dataset == "test_auc") & (results$round == 10))  # the last round
@@ -154,8 +153,6 @@ algo_thresholdoutauc = function(instance, conf) {
   results[rowind_test, ]  # test set
   results[rowind_holdout, ]  # test set
 }
-
-
 
 
 # only depend on the lockbox

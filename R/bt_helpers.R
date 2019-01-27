@@ -1,22 +1,3 @@
-getTestName = function(ns,  major_level, test_level) {
-  ns1 = setdiff(ns, ns[major_level])
-  ns1[test_level]
-}
-
-getOpenBox2CuratorBoxInd = function(instance) {
-  ns = instance$ns
-  major_level = instance$major_level
-  test_level = instance$test_level
-  tn = getTestName(ns = ns, major_level = major_level, test_level = test_level)
-  msnas = setdiff(ns, c(tn, ns[major_level]))  # model selection dataset names
-  indx = unlist(instance$dataset_index[c(msnas, ns[major_level])])
-  # FIXME: indx has weird names
-  return(list(local2remote_subset = indx))
-}
-
-
-
-
 require("mlrMBO")
 getModelFromTask = function(major_task, lrn.id, pvs) {
   lrn_basis = GET_LRN(lrn.id)
@@ -24,29 +5,6 @@ getModelFromTask = function(major_task, lrn.id, pvs) {
   model = mlr::train(learner = lrn_basis, task = major_task)
   model
 }
-
-getMajorSet2TestSet = function(instance) {
-  testName = getTestName(instance$ns, major_level = instance$major_level, test_level = instance$test_level)
-  testTask = mlr::subsetTask(instance$task, instance$dataset_index[[testName]])
-  majorname = instance$ns[[instance$major_level]]
-  majorTask =  mlr::subsetTask(instance$task, instance$dataset_index[[majorname]])
-  return(list(majorTask = majorTask, testTask = testTask))
-}
-
-getModelFromInstance = function(instance, lrn.id, pvs) {
-  pair = getMajorSet2TestSet(instance)
-  model = getModelFromTask(pair$majorTask, lrn.id = lrn.id, pvs = pvs)
-  return(model)
-}
-
-getTestSetPerf = function(instance, lrn.id, pvs) {
-  pair = getMajorSet2TestSet(instance)
-  model = getModelFromTask(pair$majorTask, lrn.id = lrn.id, pvs = pvs)
-  pred_test =  predict(model, pair$testTask)
-  mlr::performance(pred_test)
-}
-
-
 
 init_mbo_ctrl_so = function(iters) {
   control = makeMBOControl()

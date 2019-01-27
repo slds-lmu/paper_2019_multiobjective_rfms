@@ -24,6 +24,7 @@ genBootstrapPool = function(instance, alpha = 0.7, rep = 3L) {
     rst
   })
   res$list_boot = list_boot
+  # res$list_boot$$ob_vs_cu
+  # res$list_boot$$ob_vs_lb
   return(res)
 }
-
