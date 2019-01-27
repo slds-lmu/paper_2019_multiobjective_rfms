@@ -1,8 +1,10 @@
-source("bt_problem.R")
-instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
+test_genBootstrapPool = function() {
+  source("bt_conf.R")
+  instance = funGenProbOracle(data = prob_inputs, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
+  genBootstrapPool(instance)
+}
 
-
-genBootstrapPool = function(alpha = 0.7, rep = 3L) {
+genBootstrapPool = function(instance, alpha = 0.7, rep = 3L) {
   res = list()
   lockbox_ind_oracle = instance$dataset_index_outbag[[instance$lockbox_name]]
   openbox_outbag_ind_oracle = instance$dataset_index_outbag[[instance$openbox_name]]
@@ -25,4 +27,3 @@ genBootstrapPool = function(alpha = 0.7, rep = 3L) {
   return(res)
 }
 
-genBootstrapPool()

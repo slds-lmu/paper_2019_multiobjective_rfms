@@ -3,8 +3,10 @@ library(mlr)
 library(mlrMBO)
 if (!dir.exists("../output")) dir.create("../output")
 print("conf being sourced")
+
 ### dependencies
-pre.source = c("utilities_datasite.R",  "bt_pre.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures.R", "bt_helpers.R", "bt_obj.R")  # sequence being sourced can not be changed!
+pre.source = c("utilities_datasite.R",  "bt_pre.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures.R", "bt_helpers.R", "bt_obj.R")  # order of the sequence being sourced can not be changed!
+
 lapply(pre.source, function(x) source(x))
 pre.source = c(pre.source, "bt_conf.R")
 pre.packages = c("mlr", "BBmisc", "mlrMBO")  ## OpenML removed
@@ -12,6 +14,11 @@ pre.packages = c("mlr", "BBmisc", "mlrMBO")  ## OpenML removed
 ### General
 SEED_REGISTRY = 1273L
 ###
+
+
+path = list()
+path$geo = "../Data/data_cohorts_nonGerman.RData"
+prob_inputs = list(path = path)
 
 
   gconf = list(

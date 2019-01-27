@@ -1,7 +1,3 @@
-# if (!exists("prob_inputs_data") || is.null(prob_inputs_data) || length(prob_inputs_data) == 0) {
-#   stop("please run pre_bt.R to generate the data before running batchtools")
-# }
-
 dataset_names_input = c("geo")
 
 test_funGenProb = function() {
@@ -10,13 +6,22 @@ test_funGenProb = function() {
  algo_thresholdout(instance)
 }
 
-funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
+genProb_inputs_data = function() {
+  prob_inputs_data = list()  # used for addProblem
+  prob_inputs_data[[dataset_name]] = prepareDataSite(path = data$path[[dataset_name]])  # prob_inputs_data could be a global variable in the next refactoring
+}
+
+
+funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, ratio_inbag = 0.8) {
+  if (!exists("prob_inputs_data") || is.null(prob_inputs_data) || length(prob_inputs_data) == 0) {
+    tuple = prepareDataSite(path = data$path[[dataset_name]])
+  } else {
+    tuple = prob_inputs_data[[dataset_name]]
+  }
+
   res = list()
   res$openbox_ind = openbox_ind
   res$lockbox_ind = lockbox_ind
-  #FIXME: change this to global configuration
-  ratio = 0.8  # when ratio = 1,  it went back to the original
-  tuple = data[[dataset_name]]
   task_oracle = tuple$task
   res$task = task_oracle
   dataset_index = tuple$list_dataset_index  # list of instance index for each dataset
@@ -31,7 +36,7 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   res$curator_names = curator_names 
 
   openbox_oracle_ids = which(tuple$df_dataset_accn == openbox_name)
-  openbox_inbag_ind_rel = sample(length(openbox_oracle_ids), size = length(openbox_oracle_ids) * ratio)
+  openbox_inbag_ind_rel = sample(length(openbox_oracle_ids), size = length(openbox_oracle_ids) * ratio_inbag)
   openbox_inbag_ind = openbox_oracle_ids[openbox_inbag_ind_rel]
   res$openbox_inbag_ind = openbox_inbag_ind
   openbox_outbag_ind =  openbox_oracle_ids[-openbox_inbag_ind_rel]
@@ -44,7 +49,7 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   curator_list = lapply(curator_names, function(x) {
     inds = which(tuple$df_dataset_accn == x)
     len = length(inds)
-    inbag_inds_rel = sample(len, size = len * ratio)
+    inbag_inds_rel = sample(len, size = len * ratio_inbag)
     inbag = inds[inbag_inds_rel]
     outbag = inds[-inbag_inds_rel]
     list(inbag = inbag, outbag = outbag, len = len)
