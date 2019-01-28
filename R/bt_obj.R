@@ -41,21 +41,24 @@ getPerf4DataSites_Oracle = function(task, model, extra.args) {
 
   names(list_perf_outbag) = names(extra.args$instance$dataset_index_outbag)
 
-  list_perf_mixbag = lapply(extra.args$instance$list_alpha_bootstrap_index, function(alpha_bootstrap_index) {
-    list_ob_vs_cu = lapply(alpha_bootstrap_index$list_boot, function(culb) {
-      subtask = subsetTask(task, culb$ob_vs_cu)
-      perfs = getSingleDatasetPerf(model, subtask, F)
-      #FIXME: change to name mmce instead of [1L]
-      perfs[1L]
-    })
-
-    list_ob_vs_lb = lapply(alpha_bootstrap_index$list_boot, function(culb) {
-      subtask = subsetTask(task, culb$ob_vs_lb)
-      perfs = getSingleDatasetPerf(model, subtask, F)
-      perfs[1L]
-    })
-    return(list(ob_vs_lb = list_ob_vs_lb, ob_vs_cu = list_ob_vs_cu))
-  })
+  ##if (extra.args$gperf_env$index > getGconf()$MBO_ITERS + getGconf()$INIT_DES - 1L) {
+  # FIXME: this can be removed if log is not done for every step
+  #   list_perf_mixbag = lapply(extra.args$instance$list_alpha_bootstrap_index, function(alpha_bootstrap_index) {
+  #     list_ob_vs_cu = lapply(alpha_bootstrap_index$list_boot, function(culb) {
+  #       subtask = subsetTask(task, culb$ob_vs_cu)
+  #       perfs = getSingleDatasetPerf(model, subtask, F)
+  ### FIXME: change to name mmce instead of [1L]
+  #       perfs[1L]
+  #     })
+  # 
+  #     list_ob_vs_lb = lapply(alpha_bootstrap_index$list_boot, function(culb) {
+  #       subtask = subsetTask(task, culb$ob_vs_lb)
+  #       perfs = getSingleDatasetPerf(model, subtask, F)
+  #       perfs[1L]
+  #     })
+  #     return(list(ob_vs_lb = list_ob_vs_lb, ob_vs_cu = list_ob_vs_cu))
+  #   })
+  list_perf_mixbag  = NULL
 
   funLogPerf2extra.argsEnv(list_perf_inbag, list_perf_outbag, list_perf_mixbag, extra.args)
   return(list_perf_inbag)  ## only need to return in-bag performance
