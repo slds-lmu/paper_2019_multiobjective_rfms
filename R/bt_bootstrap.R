@@ -28,3 +28,10 @@ genBootstrapPool = function(instance, alpha = 0.7, rep = 3L) {
   # res$list_boot$$ob_vs_lb
   return(res)
 }
+
+plotBoot = function() {
+  res = loadResult(findDone())
+  names(res$res$gperf_env$fso8[['7']]$mixbag)
+  res$res$gperf_env$fso8[['7']]$mixbag$GSE16446
+  res$res$gperf_env$fso8[['7']]$inbag$GSE16446
+}

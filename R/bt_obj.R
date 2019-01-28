@@ -5,7 +5,7 @@ funLogPerf2extra.argsEnv = function(list_perf_inbag, list_perf_outbag, list_perf
   #env_gperf[[as.character(env_gperf$index)]] = list_perf_inbag  # this redundancy is used to fetch the pareto optimal multi-objective candidate
   env_gperf[[contextname]][[as.character(env_gperf$index)]][["inbag"]] =  list_perf_inbag
   env_gperf[[contextname]][[as.character(env_gperf$index)]][["outbag"]] =  list_perf_outbag
-  env_gperf[[contextname]][[as.character(env_gperf$index)]][["mixbag"]] =  list_perf_outbag
+  env_gperf[[contextname]][[as.character(env_gperf$index)]][["mixbag"]] =  list_perf_mixbag
   env_gperf$index = env_gperf$index + 1L
 }
 
