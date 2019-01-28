@@ -36,3 +36,22 @@ plotBoot = function() {
   res$res$gperf_env$fmo[['7']]$mixbag[['0.9']]$ob_vs_cu
   unlist(res$res$gperf_env$fmo[['7']]$mixbag[['0.9']]$ob_vs_cu)
 }
+
+fun = function(res) {
+  bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10)
+  bootstrap_rep = 10L
+  res$list_alpha_bootstrap_index = lapply(bootstrap_alphas, function(alpha) genBootstrapPool(res$res$instance, alpha = alpha, rep = bootstrap_rep))
+  list_perf_mixbag = lapply(res$res$instance$list_alpha_bootstrap_index, function(alpha_bootstrap_index) {
+    list_ob_vs_cu = lapply(alpha_bootstrap_index$list_boot, function(culb) {
+      subtask = subsetTask(task, culb$ob_vs_cu)
+      perfs = getSingleDatasetPerf(model, subtask, F)
+      # FIXME: change to name mmce instead of [1L]
+      perfs[1L]})
+
+    list_ob_vs_lb = lapply(alpha_bootstrap_index$list_boot, function(culb) {
+      subtask = subsetTask(task, culb$ob_vs_lb)
+      perfs = getSingleDatasetPerf(model, subtask, F)
+      perfs[1L]})
+    return(list(ob_vs_lb = list_ob_vs_lb, ob_vs_cu = list_ob_vs_cu))
+  })
+}
