@@ -30,8 +30,9 @@ genBootstrapPool = function(instance, alpha = 0.7, rep = 3L) {
 }
 
 plotBoot = function() {
-  res = loadResult(findDone())
+  res = loadResult(1)
   res$res$gperf_env$fso8[['7']]$mixbag[['0.9']]$ob_vs_lb
   unlist(res$res$gperf_env$fso8[['7']]$mixbag[['0.9']]$ob_vs_cu)
+  res$res$gperf_env$fmo[['7']]$mixbag[['0.9']]$ob_vs_cu
   unlist(res$res$gperf_env$fmo[['7']]$mixbag[['0.9']]$ob_vs_cu)
 }
