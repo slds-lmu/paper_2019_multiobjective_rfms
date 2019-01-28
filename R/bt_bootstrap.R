@@ -37,21 +37,45 @@ plotBoot = function() {
   unlist(res$res$gperf_env$fmo[['7']]$mixbag[['0.9']]$ob_vs_cu)
 }
 
-fun = function(res) {
-  bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10)
-  bootstrap_rep = 10L
-  res$list_alpha_bootstrap_index = lapply(bootstrap_alphas, function(alpha) genBootstrapPool(res$res$instance, alpha = alpha, rep = bootstrap_rep))
-  list_perf_mixbag = lapply(res$res$instance$list_alpha_bootstrap_index, function(alpha_bootstrap_index) {
-    list_ob_vs_cu = lapply(alpha_bootstrap_index$list_boot, function(culb) {
-      subtask = subsetTask(task, culb$ob_vs_cu)
-      perfs = getSingleDatasetPerf(model, subtask, F)
-      # FIXME: change to name mmce instead of [1L]
-      perfs[1L]})
 
-    list_ob_vs_lb = lapply(alpha_bootstrap_index$list_boot, function(culb) {
-      subtask = subsetTask(task, culb$ob_vs_lb)
-      perfs = getSingleDatasetPerf(model, subtask, F)
-      perfs[1L]})
-    return(list(ob_vs_lb = list_ob_vs_lb, ob_vs_cu = list_ob_vs_cu))
-  })
+
+
+
+###
+getRes = function(alpha_bootstrap_index, name = "ob_vs_cu", algo_name = "fso8") {
+  list_ob_vs_cu = lapply(alpha_bootstrap_index$list_boot, function(culb) {
+    subtask = subsetTask(task, culb[[name]])
+    lrn.id = res$res$tune_res[[algo_name]]$learner$id
+    lrn_base_id = processLrnName(lrn.id)   # remove .preprocess
+    lrn_wrap = GET_LRN(lrn_base_id)
+    task = res$res$instance$task
+    task_openbox_inbag = subsetTask(task, res$res$instance$openbox_inbag_ind)         
+    model = train(lrn_wrap, task_openbox_inbag)
+    perfs = getSingleDatasetPerf(model, subtask, F)
+    # FIXME: change to name mmce instead of [1L]
+    perfs[1L]})
+}
+
+reduceOneResult = function() {
+    bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10)
+    bootstrap_rep = 10L
+    algo_name = "fso8"
+    list_alpha_bootstrap_index = lapply(bootstrap_alphas, function(alpha) genBootstrapPool(res$res$instance, alpha = alpha, rep = bootstrap_rep))
+    getResOneAlgo = function(algo_name = "fso8") {
+      res = list()
+      res$list_alpha_perf_mixbag_ob_vs_cu = lapply(list_alpha_bootstrap_index, function(alpha_bootstrap_index) {
+        getRes(alpha_bootstrap_index = alpha_bootstrap_index, name = "ob_vs_cu", algo_name = "fso8")
+      })
+      res$list_alpha_perf_mixbag_ob_vs_lb = lapply(list_alpha_bootstrap_index, function(alpha_bootstrap_index) {
+        getRes(alpha_bootstrap_index = alpha_bootstrap_index, name = "ob_vs_lb", algo_name = "fso8")
+      })
+      return(res)
+    }
+    res = getResOneAlgo(algo_name = "fmo")
+    dt = rbindlist(list_alpha_perf_mixbag_ob_vs_cu)
+    dt$alpha = bootstrap_alphas
+    library(tidyr)
+    dtlong = gather(dt, alpha)
+    fig_cu = ggplot2::ggplot(dt, aes(x = alpha, y = value)) + geom_boxplot() 
+    saveRDS(dtlong, file = "dtlong.rds") 
 }
