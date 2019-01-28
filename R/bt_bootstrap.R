@@ -35,3 +35,11 @@ plotBoot = function() {
   unlist(res$res$gperf_env$fso8[['7']]$mixbag[['0.9']]$ob_vs_cu)
   unlist(res$res$gperf_env$fmo[['7']]$mixbag[['0.9']]$ob_vs_cu)
 }
+
+dtlong = readRDS("dtlong.rds")
+
+dtlong = dtlong[, c("alpha", "value", "alphas")]
+dtlong$alphas = as.character(dtlong$alphas)
+fig_alpha = ggplot2::ggplot(dtlong, aes(x = alphas, y = value)) + geom_boxplot() + ggtitle("fso8openbox_curator") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ggsave(fig_alpha, file = "demo.pdf")
