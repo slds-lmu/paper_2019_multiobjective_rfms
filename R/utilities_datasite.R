@@ -1,25 +1,3 @@
-# run this file to dump oml tasks from web to prevent future server problem
-dumpOMLTask = function(tid = 3891) {
-  require(mlr)
-  mlr:::setMlrOption("show.info", TRUE)
-  ot = OpenML::getOMLTask(tid)
-  mt = OpenML::convertOMLTaskToMlr(ot)
-  task_mlr = mt$mlr.task
-  taskstr = sprintf("../Data/temp/oml%sMlrTask.RData", tid)
-  save(task_mlr, file = taskstr)
-}
-
-getOMLTaskTargetName = function(tid = 3891) {
-  require(mlr)
-  mlr:::setMlrOption("show.info", TRUE)
-  ot = OpenML::getOMLTask(tid)
-  mt = OpenML::convertOMLTaskToMlr(ot)
-  task_mlr = mt$mlr.task
-  tname = getTaskTargetNames(task_mlr)
-  return(tname)
-}
-
-
 prepareDataSite = function(path) {
   require(BBmisc)
   require(mlr)
@@ -37,13 +15,13 @@ prepareDataSite = function(path) {
   return(list(task = task, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn))
 }
 
-
 # oml_task_id: 3891, 14966, 
 getMlrTaskFromOML = function(oml_task_id) {
   require(OpenML)
   ot = OpenML::getOMLTask(oml_task_id)
   mt = OpenML::convertOMLTaskToMlr(ot)
   mlr_task = mt$mlr.task
+  return(mlr_task)
 }
 
 
@@ -110,14 +88,9 @@ create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_d
 }
 
 # This function must be used inside the problem since this method is random, only running one time is not fair.
-createRandomStratifPartition = function(taskid = 3891, nsplits = 5) {
-  # Download Task
-  require(OpenML)
-  ot = OpenML::getOMLTask(taskid)
-  mt = OpenML::convertOMLTaskToMlr(ot)
-  task = mt$mlr.task
+createRandomStratifPartition = function(taskid = 3891, nsplits = 5, getTaskFun = getMlrTaskFromOML) {
+  task = getTaskFun(taskid)
   df = getTaskData(task)
-
   # Stratify
   desc = task$task.desc
   dfp = df[which(df[, desc$target] == desc$positive), ]
@@ -132,7 +105,7 @@ createRandomStratifPartition = function(taskid = 3891, nsplits = 5) {
   dfn$dataset_accn = data_accnn[negi]
   df = rbind(dfp, dfn)
   list_dataset_index = split(seq_len(nrow(df)), df$dataset_accn)
-  df_dataset_accn = as.factor(as.character(df$dataset_accn))
+  df_dataset_accn = paste0("ds", df$dataset_accn)
   # list_dataset_index is a list of indices for each dataset.
   # df_dataset_accn    is a vector of which datasite an operation is from.
   return(list(task = task, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn))

@@ -7,7 +7,7 @@ createInput = function(task.ids = c(3891), pca_var_ratio = 0.1, class_balance = 
     OpenML::populateOMLCache(task.ids = task.ids)  # openml can breakdown easily so put it in try clause
   })
 
-  if (recluster) create_rdata_cluster(pca_var_ratio = pca_var_ratio, tids = task.ids, n_datasets = 5, balanced = T, path_regx = path_regx)
+  if (recluster) create_rdata_cluster(pca_var_ratio = pca_var_ratio, tids = task.ids, n_datasets = 7, balanced = T, path_regx = path_regx)
 
   prob_inputs_data = lapply(1:length(task.ids), function(i) {
     taskid = task.ids[i]
