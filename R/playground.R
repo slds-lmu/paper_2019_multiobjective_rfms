@@ -51,7 +51,7 @@ run_cluster = function() {
   mgconf = getGconf()
   reg_input = batchtools::getDefaultRegistry()
   reg_input$default.resources
-  init(prob_names, prob_inputs, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
+  init(prob_names, prob_inputs_conf, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
   submitJobs(597)
 }
 
