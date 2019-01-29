@@ -1,31 +1,48 @@
-dataset_names_input = c("oml14966")
 source("bt_bootstrap.R")
-test_funGenProb = function() {
- instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
- source("bt_algo.R")
- algo_thresholdout(instance)
+#' source("bt_conf.R"); funGenProb_geo(data = prob_inputs, job = NULL, openbox_ind = 1, lockbox_ind = 1)
+funGenProb_geo = function(data, job, openbox_ind, lockbox_ind) {
+  tuple = prepareDataSite(path = data$path[["geo"]])
+  funGenProb(tuple, job, openbox_ind, lockbox_ind)
 }
 
-genProb_inputs_data = function() {
-  prob_inputs_data = list()  # used for addProblem
-  prob_inputs_data[[dataset_name]] = prepareDataSite(path = data$path[[dataset_name]])  # prob_inputs_data could be a global variable in the next refactoring
+#' funGenProb_oml_cluster(data = NULL, job = NULL, openbox_ind = 1, lockbox_ind = 1, task_id = 14966, pca_var_ratio = 0.1)
+funGenProb_oml_cluster = function(data, job, openbox_ind, lockbox_ind, task_id, pca_var_ratio) {
+  task_mlr = loadDiskOMLMlrTask(task_id)
+  list_dataset_index = clusterMlrTask(task_mlr, n_datasets = 5L, balanced = T, pca_var_ratio = pca_var_ratio)
+  names(list_dataset_index) = paste0("ds", 1L:5L)  # names got lost during return
+  df_dataset_accn = sapply(1:getTaskSize(task_mlr), function(x) {
+    bvec = sapply(list_dataset_index, function(vec) x %in% vec)
+    ind = which(bvec)
+    checkmate::assert(length(ind) == 1L)
+    ind
+  })
+  df_dataset_accn = paste0("ds", df_dataset_accn)
+  tuple = list(task = task_mlr, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn)
+  funGenProb(tuple, job, openbox_ind, lockbox_ind)
 }
 
-funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, ratio_inbag = 0.8, bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10), bootstrap_rep = 10L) {
-  if (!is.null(data$path[[dataset_name]])) {
-    tuple = prepareDataSite(path = data$path[[dataset_name]])
-  } else {
-    prob_inputs_data = createInput
-    tuple = prob_inputs_data[[dataset_name]]
-  }
+#' funGenProb_oml_stratif(data = NULL, job = NULL, openbox_ind = 1, lockbox_ind = 1, task_id = 14966)
+funGenProb_oml_stratif = function(data, job, openbox_ind, lockbox_ind, task_id) {
+  task_mlr = loadDiskOMLMlrTask(task_id)
+  tuple = createRandomStratifPartition(task_mlr)
+  funGenProb(tuple, job, openbox_ind, lockbox_ind)
+}
 
+funGenProb = function(data, job, openbox_ind, lockbox_ind) {
+  ratio_inbag = 0.8
+  bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10)
+  bootstrap_rep = 10L
+
+  tuple = data
   res = list()
+
   res$openbox_ind = openbox_ind
   res$lockbox_ind = lockbox_ind
   task_oracle = tuple$task
   res$task = task_oracle
   dataset_index = tuple$list_dataset_index  # list of instance index for each dataset
   ns = names(dataset_index)
+  checkmate::assert(!is.null(ns))
   res$ns = ns
   res$dataset_index = dataset_index
   openbox_name = ns[openbox_ind]
@@ -44,8 +61,6 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, r
   rins = makeFixedHoldoutInstance(openbox_inbag_ind, test.inds, getTaskSize(task_oracle))
   rins$desc$predict = "train" # must be both since some measure aggregation is test
   res$rins = rins
-
-
   curator_list = lapply(curator_names, function(x) {
     inds = which(tuple$df_dataset_accn == x)
     len = length(inds)
@@ -89,9 +104,18 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, r
 }
 
 
-
-prob_names = c("prob")
-prob_funs = list()
-prob_funs[[prob_names[[1L]]]] = funGenProbOracle
+###
 prob_designs = list()
-prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, dataset_name = dataset_names_input, stringsAsFactors = FALSE)
+prob_funs = list()
+#
+prob_names = c("prob_geo")
+prob_funs[[prob_names[[1L]]]] = funGenProb_geo
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, stringsAsFactors = FALSE)
+#
+prob_names = c("prob_oml_cluster", prob_names)
+prob_funs[[prob_names[[1L]]]] = funGenProb_oml_cluster
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, task_id = getGconf()$task.ids, pca_var_ratio = c(0.1, 0.5), stringsAsFactors = FALSE)
+#
+prob_names = c("prob_oml_stratif", prob_names)
+prob_funs[[prob_names[[1L]]]] = funGenProb_oml_stratif
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, task_id = getGconf()$task.ids, stringsAsFactors = FALSE)

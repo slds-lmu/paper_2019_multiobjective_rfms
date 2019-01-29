@@ -1,25 +1,37 @@
-# run this file to dump oml tasks from web to prevent future server problem
-dumpOMLTask = function(tid = 3891) {
-  require(mlr)
-  mlr:::setMlrOption("show.info", TRUE)
-  ot = OpenML::getOMLTask(tid)
-  mt = OpenML::convertOMLTaskToMlr(ot)
-  task_mlr = mt$mlr.task
-  taskstr = sprintf("../Data/temp/oml%sMlrTask.RData", tid)
-  save(task_mlr, file = taskstr)
+if (!dir.exists("../Data/temp")) dir.create("../Data/temp")
+
+#' loadDiskOMLMlrTask(14966)
+loadDiskOMLMlrTask = function(task_id, path_regx = "../Data/temp/oml_%s_task_mlr.RData") {
+  readRDS(sprintf(path_regx, task_id))
 }
 
-getOMLTaskTargetName = function(tid = 3891) {
-  require(mlr)
-  mlr:::setMlrOption("show.info", TRUE)
-  ot = OpenML::getOMLTask(tid)
-  mt = OpenML::convertOMLTaskToMlr(ot)
-  task_mlr = mt$mlr.task
-  tname = getTaskTargetNames(task_mlr)
-  return(tname)
+#' dumpOMLTasks(14966)
+dumpOMLTasks = function(task_ids, path_regx = "../Data/temp/oml_%s_task_mlr.RData") {
+  lapply(task_ids, function(oml_task_id) {
+    task_mlr = getMlrTaskFromOML(oml_task_id)
+    saveRDS(task_mlr, sprintf(path_regx, oml_task_id))
+  })
 }
 
+createInput = function(task.ids = c(3891), pca_var_ratio = 0.1, class_balance = T, recluster = T, n_datasets = 5, path_regx = "../Data/temp/oml_%s_pca%s_clustered_classbalanced_TRUE.RData") {
+  try( {
+    OpenML::populateOMLCache(task.ids = task.ids)  # openml can breakdown easily so put it in try clause
+  })
 
+  if (recluster) create_rdata_cluster(pca_var_ratio = pca_var_ratio, tids = task.ids, n_datasets = 7, balanced = T, path_regx = path_regx)
+
+  prob_inputs_data = lapply(1:length(task.ids), function(i) {
+    taskid = task.ids[i]
+    print(taskid)
+    prepareDataSite(path = sprintf(path_regx, taskid, pca_var_ratio))
+  })
+  names(prob_inputs_data) = paste0("oml", task.ids)
+  # prob_inputs_data$oml9950 = NULL
+  return(prob_inputs_data)
+}
+
+  # 3891, 9950, 9981, 14966, 34536
+  #task.ids = c(3891, 9950, 9981, 14966, 34536)
 prepareDataSite = function(path) {
   require(BBmisc)
   require(mlr)
@@ -37,17 +49,21 @@ prepareDataSite = function(path) {
   return(list(task = task, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn))
 }
 
-
 # oml_task_id: 3891, 14966, 
 getMlrTaskFromOML = function(oml_task_id) {
   require(OpenML)
   ot = OpenML::getOMLTask(oml_task_id)
   mt = OpenML::convertOMLTaskToMlr(ot)
   mlr_task = mt$mlr.task
+  return(mlr_task)
 }
 
 
-clusterMlrTask = function(mlr_task, n_datasets = 5, balanced = T, pca_var_ratio = 0.7) {
+#'@ description 
+#'Output is a list of indices for each dataset
+#'@example
+#'clusterMlrTask(mlr_task = getMlrTaskFromOML(14966), n_datasets = 5, balanced = T, pca_var_ratio = 0.7)
+clusterMlrTask = function(mlr_task, n_datasets = 5L, balanced = T, pca_var_ratio = 0.7) {
   df = getTaskData(mlr_task, target.extra = TRUE)
   if (!balanced) {
     checkmate::assert(!"dataset_accn" %in% colnames(df))
@@ -59,79 +75,97 @@ clusterMlrTask = function(mlr_task, n_datasets = 5, balanced = T, pca_var_ratio 
     list_dataset_index = sapply(unique(prds$data$response), function(x) which(prds$data$response == x))
   } else {
     desc = mlr_task$task.desc
-    pt = lapply(unique(df$target), function(x) {
-      data = df$data[df$target == x, ]
-      ctsk = makeClusterTask(id = "data_cluster", data)
+    dftargets = unique(df$target)
+    pt = lapply(dftargets, function(x) {
+      global_ind = which(df$target == x)
+      oneclassdata = df$data[global_ind, ]
+      cat(sprintf("\n class %s data size %s\n", x, nrow(oneclassdata)))
+      ctsk = makeClusterTask(id = "data_cluster", oneclassdata)
       lrn = makeLearner("cluster.kmeans", centers = n_datasets)
       lrn = makePreprocWrapperCaret(lrn, thresh = pca_var_ratio)
       mod = train(lrn, ctsk)
       prds = predict(mod, ctsk)
-      sapply(unique(prds$data$response), function(x) which(prds$data$response == x))
+      cluster_response = unique(prds$data$response)
+      list_oneclass_index_rel = sapply(cluster_response, function(cluster_ind) which(prds$data$response == cluster_ind))
+      list_oneclass_index = lapply(list_oneclass_index_rel, function(x) global_ind[x])  # transform to global index
     })
-    list_dataset_index = lapply(seq_len(length(pt[[1]])), function(x) c(pt[[1]][[x]], pt[[2]][[x]]))
-  }
-  # Out is a list of indices for each dataset
+    allinds = c(pt[[1]], pt[[2]])
+    checkmate::assert(length(unique(Reduce(c, allinds))) == getTaskSize(mlr_task))
+    vec_len1 = sapply(pt[[1L]], length)
+    vec_len2 = sapply(pt[[2L]], length)
+    checkmate::assert(sum(vec_len1) + sum(vec_len2) == getTaskSize(mlr_task))
+    rel1 = order(vec_len1, decreasing = T)
+    rel2 = order(vec_len2, decreasing = F)
+    list1 = pt[[1]][rel1]
+    list2 = pt[[2]][rel2]
+    checkmate::assert(length(unique(Reduce(c, c(list1, list2)))) == getTaskSize(mlr_task))
+    list_dataset_index = lapply(seq_len(length(pt[[1]])), function(x) c(list1[[x]], list2[[x]]))
+    return(list_dataset_index)
+  }  # else
+  checkmate::assert(sum(sapply(list_dataset_index, length)) == getTaskSize(mlr_task))
+  checkmate::assert(length(unique(Reduce(c, list_dataset_index))) == getTaskSize(mlr_task))
   names(list_dataset_index) = paste0("ds", 1:n_datasets)
   return(list_dataset_index)
 }
 
-#FIXME: remove OML dependencies to arbitrary mlr task
-createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7, getTaskFun = getMlrTaskFromOML) {
-  require(mlr)
+# createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7, getTaskFun = getMlrTaskFromOML) {
+#   require(mlr)
+#   mlr_task = getTaskFun(oml_task_id)
+#   list_dataset_index = clusterMlrTask(mlr_task, n_datasets = 5, balanced = balanced, pca_var_ratio = pca_var_ratio)
+#   return(list(task = mlr_task, list_dataset_index = list_dataset_index))
+# }
+# 
+# 
+#   list.tuple = lapply(tids, function(tid) {
+# 
+#   })
+# 
+#   list.tuple
+# 
+
+create_rdata_cluster = function(pca_var_ratio, mlr_task, n_datasets = 5, balanced = T, path_regx = "../Data/temp/oml_%s_pca_%s_clustered_classbalanced_%s.RData", persist = T) {
   checkmate::assertIntegerish(n_datasets)
-  checkmate::assertIntegerish(oml_task_id)
   checkmate::assertLogical(balanced)
-  mlr_task = getTaskFun(oml_task_id)
   list_dataset_index = clusterMlrTask(mlr_task, n_datasets = 5, balanced = balanced, pca_var_ratio = pca_var_ratio)
-  return(list(task = mlr_task, list_dataset_index = list_dataset_index))
-}
-
-
-create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_datasets = 5, balanced = T, path_regx = "../Data/temp/oml_%s_pca_%s_clustered_classbalanced_%s.RData") {
-  list.tname = lapply(tids, function(tid) {
-      lst = createClassBalancedDfCluster(tid, n_datasets, balanced, pca_var_ratio)
-      dflst = lapply(seq_len(length(lst$list_dataset_index)),
-        function(i) {
-          tsk = subsetTask(lst$task,subset = lst$list_dataset_index[[i]])
-          df = getTaskData(tsk)
-          df$dataset_accn = paste0("ds", i)
-          return(df)
-      })
-      data = do.call("rbind", dflst)
-      filena = sprintf(path_regx, tid, as.character(pca_var_ratio), balanced)
-      tname = getTaskTargetNames(lst$task)
-      tuple = list(df = data, targetname = tname, dataset_id = "dataset_accn")
-      save(tuple,  file = filena)
-      return(tname)
+  dflst = lapply(seq_len(length(list_dataset_index)),
+    function(i) {
+      tsk = subsetTask(mlr_task, subset = list_dataset_index[[i]])
+      df = getTaskData(tsk)
+      df$dataset_accn = paste0("ds", i)
+      return(df)
   })
-  list.tname
+  data = do.call("rbind", dflst)
+  filena = sprintf(path_regx, tid, as.character(pca_var_ratio), balanced)
+  tname = getTaskTargetNames(mlr_task)
+  tuple = list(df = data, targetname = tname, dataset_id = "dataset_accn")
+  df_dataset_accn = data[, tuple$dataset_id]
+  if (persist) save(tuple,  file = filena)  # saving data on disk is always a good idea since openml is not robust to download
+  tuple$df_dataset_accn = df_dataset_accn
+  return(tuple)
 }
 
 # This function must be used inside the problem since this method is random, only running one time is not fair.
-createRandomStratifPartition = function(taskid = 3891, nsplits = 5) {
-  # Download Task
-  require(OpenML)
-  ot = OpenML::getOMLTask(taskid)
-  mt = OpenML::convertOMLTaskToMlr(ot)
-  task = mt$mlr.task
+createRandomStratifPartition = function(task, nsplits = 5, persist = F, path_regx = "../Data/temp/oml_%s_stratified_tuple.RData") {
   df = getTaskData(task)
-
   # Stratify
   desc = task$task.desc
   dfp = df[which(df[, desc$target] == desc$positive), ]
   dfn = df[which(df[, desc$target] == desc$negative), ]
 
-  posi = sample(seq_len(nrow(dfp)))
-  negi = sample(seq_len(nrow(dfn)))
+  posi_rel = sample(seq_len(nrow(dfp)))  # 296 1197  791  778 1751 1066  277  483 1732  847 1002  723  932
+  negi_rel = sample(seq_len(nrow(dfn)))
 
-  data_accnp = rep(seq_len(nsplits), length.out = nrow(dfp))
-  data_accnn = rep(seq_len(nsplits), length.out = nrow(dfn))
-  dfp$dataset_accn = data_accnp[posi]
-  dfn$dataset_accn = data_accnn[negi]
+  data_accnp = rep(seq_len(nsplits), length.out = nrow(dfp))  # 1 2 3 4 5 1 2 3 4 5
+  data_accnn = rep(seq_len(nsplits), length.out = nrow(dfn))  # 1 2 3 4 5 1 2
+  dfp$dataset_accn = data_accnp[posi_rel]   # c(1,2,3, 4, 5, 1, 2,3,4, 5)[3, 9, 7, 1,5], this operation is equivalent as shuffling the 1-5 assignment of each instance
+  dfn$dataset_accn = data_accnn[negi_rel]
   df = rbind(dfp, dfn)
   list_dataset_index = split(seq_len(nrow(df)), df$dataset_accn)
-  df_dataset_accn = as.factor(as.character(df$dataset_accn))
+  names(list_dataset_index) = paste0("ds", 1:nsplits)
+  df_dataset_accn = paste0("ds", df$dataset_accn)
   # list_dataset_index is a list of indices for each dataset.
   # df_dataset_accn    is a vector of which datasite an operation is from.
-  return(list(task = task, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn))
+  tuple = list(task = task, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn)
+  if (persist) saveRDS(tuple, file = sprintf(path_regx, taskid))
+  return(tuple)
 }

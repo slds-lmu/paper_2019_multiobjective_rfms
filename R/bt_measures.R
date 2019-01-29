@@ -1,19 +1,4 @@
 source("bt_obj.R")
-# the aggregation actually does not matter, since the measure does not depend on the train or test, perf.test and perf.train look different since cv is random
-mtrain.agg = makeAggregation(id = "mtrain.agg", name = "only calculate train", properties = "req.train", fun = function(task, perf.test, perf.train, measure, group, pred) {
-  function() {
-    group   # group can be factor(0), but this does not matter
-    pred$data$iter  # the whole data is used
-    pred$data$response  # it can happen that all response is one class, so AUC is na
-    pred$data$set
-  }
-  cat("\n aggregation of measures:")
-  #if(any(is.na(c(perf.train, perf.test)))) browser()
-  #cat(sprintf("--perf.test: %s--", perf.test))
-  cat(sprintf("--perf.train: %s-- \n", perf.train))
-  perf.train
-})
-
 
 mk_measure = function(name, extra.args, obj_fun = fun_measure_obj_curator) {
   makeMeasure(
