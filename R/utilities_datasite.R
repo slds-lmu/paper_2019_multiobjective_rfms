@@ -87,8 +87,8 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
 }
 
 
-create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_datasets = 5, balanced = T, path_regx = "../Data/temp/oml_%s_pca_%s_clustered_classbalanced_%s.RData") {
-  list.tname = lapply(tids, function(tid) {
+create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_datasets = 5, balanced = T, path_regx = "../Data/temp/oml_%s_pca_%s_clustered_classbalanced_%s.RData", persist = T) {
+  list.tuple = lapply(tids, function(tid) {
       lst = createClassBalancedDfCluster(tid, n_datasets, balanced, pca_var_ratio)
       dflst = lapply(seq_len(length(lst$list_dataset_index)),
         function(i) {
@@ -101,10 +101,12 @@ create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_d
       filena = sprintf(path_regx, tid, as.character(pca_var_ratio), balanced)
       tname = getTaskTargetNames(lst$task)
       tuple = list(df = data, targetname = tname, dataset_id = "dataset_accn")
-      save(tuple,  file = filena)
-      return(tname)
+      df_dataset_accn = data[, tuple$dataset_id]
+      if (persist) save(tuple,  file = filena)  # saving data on disk is always a good idea since openml is not robust to download
+      lst$df_dataset_accn = df_dataset_accn
+      return(lst)
   })
-  list.tname
+  list.tuple
 }
 
 # This function must be used inside the problem since this method is random, only running one time is not fair.
