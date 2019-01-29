@@ -61,6 +61,8 @@ submit_jobs = function() {
   unwrap(getJobPars()[1:100, .(algo.pars)])
   submitJobs(597)
   showLog(597)
+    getJobPars()[problem == "prob_geo"][, .(prob.pars)]
+    unwrap(getJobPars()[problem == "prob_oml_cluster"][, .(prob.pars)])
   index = seq.int(from = 1, to = 1800, by = 30)  # 30 replications
   repl = 1:10
   tosub = c()
