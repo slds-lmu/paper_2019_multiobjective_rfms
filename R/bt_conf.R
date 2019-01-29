@@ -20,6 +20,22 @@ mtrain.agg = makeAggregation(id = "mtrain.agg", name = "only calculate train", p
   perf.train
 })
 
+# parameter free version of the Ladder algorithm
+
+calBrierVec = function(pred) {
+  truth = pred$data$truth
+  prob = getPredictionProbabilities(pred)
+  y = as.numeric(truth == pred$task.desc$positive)
+  newvec = (y - prob) ^ 2
+  return(newvec)
+}
+
+cal01Vec = function(pred) {
+  truth = pred$data$truth
+  prob = getPredictionResponse(pred)
+  vmatch = as.numeric(truth == pred$task.desc$positive)
+  return(vmatch)
+}
 
   gconf = list(
     REPLS = 10,
@@ -29,6 +45,11 @@ mtrain.agg = makeAggregation(id = "mtrain.agg", name = "only calculate train", p
     perf_name2tune = "mmce",
     meas_aggr = mtrain.agg,
     list_meas = list(mmce, ber),
+    ladder_noise = 1e-3,
+    ladder_meas = mlr::mmce,
+    fun_cal_ladder_vec = cal01Vec,
+    ladder_worst_vec_ele = 0,
+    thresholdout_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0),
     #list_meas = list(auc, mmce, brier, brier.scaled, ber, logloss)
     CV_ITER_OUTER = 5L, # make it consistent with our 5 split 
     MBO_ITERS = 40L, # 16d

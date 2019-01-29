@@ -84,15 +84,6 @@ fun_measure_obj_curator = function(task, model, pred, feats, extra.args) {
   return(h)
 }
 
-# parameter free version of the Ladder algorithm
-
-calBrierVec = function(pred) {
-  truth = pred$data$truth
-  prob = getPredictionProbabilities(pred)
-  y = as.numeric(truth == pred$task.desc$positive)
-  newvec = (y - prob) ^ 2
-  return(newvec)
-}
 
 fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
   nothing = getPerf4DataSites_Oracle(task, model, extra.args)  # only for log
@@ -102,7 +93,7 @@ fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
   oldvec = gperf_env$current_best_loss_vec
   diffvec = newvec - oldvec
   th = sd(diffvec) / (sqrt(extra.args$instance$curator_len))
-  new_meas = performance(pred, brier)   # FIXME: weight by datasize?
+  new_meas = performance(pred, getGconf()$ladder_meas)   # FIXME: weight by datasize?
   gap = gperf_env$current_best_meas - new_meas
   if (gap > th) {
     gperf_env$current_best_meas = new_meas
@@ -110,7 +101,7 @@ fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
     cat(sprintf("current best meas %f", gperf_env$current_best_meas))
     return(gperf_env$current_best_meas)
   }
-  rn = rnorm(1, sd = 1e-6)
+  rn = rnorm(1, sd = getGconf()$ladder_noise)
   return(gperf_env$current_best_meas + rn)
 }
 
@@ -118,7 +109,7 @@ fun_obj_thresholdout = function(task, model, pred, feats, extra.args) {
   weight = unlist(extra.args$instance$curator_len_list)
   weight = weight / sum(weight)
   if (is.null(extra.args$th_para))
-    extra.args$th_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0)
+    extra.args$th_para = getGconf()$thresholdout_para
   list.perf = getPerf4DataSites_Oracle(task, model, extra.args)
   list.perf.train = list.perf[extra.args$instance$openbox_name]
   list.perf.train = lapply(list.perf.train, function(x) x[[extra.args$perf_name2tune]])

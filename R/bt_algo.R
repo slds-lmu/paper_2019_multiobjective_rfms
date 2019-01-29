@@ -49,10 +49,10 @@ algo_mbo = function(instance, lrn) {
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
   mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
-  gperf_env$current_best_loss_vec = rep(1, instance$curator_inbag_len)
-  gperf_env$current_best_meas = mlr::brier$worst
 
-  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune, calMeasVec = calBrierVec)
+  gperf_env$current_best_loss_vec = rep(getGconf()$ladder_worst_vec_ele, instance$curator_inbag_len)
+  gperf_env$current_best_meas = getGconf()$ladder_worst_vec_ele
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune, calMeasVec = getGconf()$fun_cal_ladder_vec)
 
   meas_openbox_cv = mk_measure(name = "meas_openbox_cv", extra.args, obj_fun = fun_measure_obj_openbox)
   measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)
@@ -61,7 +61,7 @@ algo_mbo = function(instance, lrn) {
 
   # we can only have one global variable here: we need a context object to know which algorithm we are using
   context = "fso_ladder"
-  #res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = context)
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = context)
 
 
   context = "fso_th"
