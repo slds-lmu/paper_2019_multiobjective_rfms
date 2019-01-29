@@ -1,5 +1,18 @@
 if (!dir.exists("../Data/temp")) dir.create("../Data/temp")
 
+#' loadDiskOMLMlrTask(14966)
+loadDiskOMLMlrTask = function(task_id, path_regx = "../Data/temp/oml_%s_task_mlr.RData") {
+  readRDS(sprintf(path_regx, task_id))
+}
+
+#' dumpOMLTasks(14966)
+dumpOMLTasks = function(task_ids, path_regx = "../Data/temp/oml_%s_task_mlr.RData") {
+  lapply(task_ids, function(oml_task_id) {
+    task_mlr = getMlrTaskFromOML(oml_task_id)
+    saveRDS(task_mlr, sprintf(path_regx, oml_task_id))
+  })
+}
+
 createInput = function(task.ids = c(3891), pca_var_ratio = 0.1, class_balance = T, recluster = T, n_datasets = 5, path_regx = "../Data/temp/oml_%s_pca%s_clustered_classbalanced_TRUE.RData") {
   try( {
     OpenML::populateOMLCache(task.ids = task.ids)  # openml can breakdown easily so put it in try clause
@@ -76,23 +89,22 @@ clusterMlrTask = function(mlr_task, n_datasets = 5L, balanced = T, pca_var_ratio
       list_oneclass_index_rel = sapply(cluster_response, function(cluster_ind) which(prds$data$response == cluster_ind))
       list_oneclass_index = lapply(list_oneclass_index_rel, function(x) global_ind[x])  # transform to global index
     })
-    browser()
     allinds = c(pt[[1]], pt[[2]])
-    length(unique(Reduce(c, allinds))) == getTaskSize(mlr_task)
+    checkmate::assert(length(unique(Reduce(c, allinds))) == getTaskSize(mlr_task))
     vec_len1 = sapply(pt[[1L]], length)
     vec_len2 = sapply(pt[[2L]], length)
-    sum(vec_len1) + sum(vec_len2) == getTaskSize(mlr_task)
+    checkmate::assert(sum(vec_len1) + sum(vec_len2) == getTaskSize(mlr_task))
     rel1 = order(vec_len1, decreasing = T)
     rel2 = order(vec_len2, decreasing = F)
     list1 = pt[[1]][rel1]
     list2 = pt[[2]][rel2]
-    length(unique(Reduce(c, c(list1, list2)))) == getTaskSize(mlr_task)
+    checkmate::assert(length(unique(Reduce(c, c(list1, list2)))) == getTaskSize(mlr_task))
     list_dataset_index = lapply(seq_len(length(pt[[1]])), function(x) c(list1[[x]], list2[[x]]))
     return(list_dataset_index)
   }  # else
+  checkmate::assert(sum(sapply(list_dataset_index, length)) == getTaskSize(mlr_task))
+  checkmate::assert(length(unique(Reduce(c, list_dataset_index))) == getTaskSize(mlr_task))
   names(list_dataset_index) = paste0("ds", 1:n_datasets)
-  sum(sapply(list_dataset_index, length)) == getTaskSize(mlr_task)
-  length(unique(Reduce(c, list_dataset_index))) == getTaskSize(mlr_task)
   return(list_dataset_index)
 }
 
@@ -133,8 +145,7 @@ create_rdata_cluster = function(pca_var_ratio, mlr_task, n_datasets = 5, balance
 }
 
 # This function must be used inside the problem since this method is random, only running one time is not fair.
-createRandomStratifPartition = function(taskid = 3891, nsplits = 5, getTaskFun = getMlrTaskFromOML, persist = F, path_regx = "../Data/temp/oml_%s_stratified_tuple.RData") {
-  task = getTaskFun(taskid)
+createRandomStratifPartition = function(task, nsplits = 5, persist = F, path_regx = "../Data/temp/oml_%s_stratified_tuple.RData") {
   df = getTaskData(task)
   # Stratify
   desc = task$task.desc
