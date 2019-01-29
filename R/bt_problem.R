@@ -29,13 +29,9 @@ funGenProb_oml_stratif = function(data, job, openbox_ind, lockbox_ind, task_id) 
 }
 
 funGenProb = function(data, job, openbox_ind, lockbox_ind) {
-  ratio_inbag = 0.8
-  bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10)
-  bootstrap_rep = 10L
-
+  ratio_inbag = getGconf()$ratio_inbag
   tuple = data
   res = list()
-
   res$openbox_ind = openbox_ind
   res$lockbox_ind = lockbox_ind
   task_oracle = tuple$task
@@ -98,8 +94,10 @@ funGenProb = function(data, job, openbox_ind, lockbox_ind) {
   res$curator_inbag_len = getTaskSize(res$task_curator_inbag)
   res$task_lockbox = mlr::subsetTask(task_oracle, subset = dataset_index[[lockbox_name]])
   res$curator_len_list = lapply(curator_list, function(x) x$len)
-  res$list_alpha_bootstrap_index = lapply(bootstrap_alphas, function(alpha) genBootstrapPool(res, alpha = alpha, rep = bootstrap_rep))
-  names(res$list_alpha_bootstrap_index) = bootstrap_alphas
+  #bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10)
+  #bootstrap_rep = 10L
+  #res$list_alpha_bootstrap_index = lapply(bootstrap_alphas, function(alpha) genBootstrapPool(res, alpha = alpha, rep = bootstrap_rep))
+  #names(res$list_alpha_bootstrap_index) = bootstrap_alphas
   return(res)
 }
 

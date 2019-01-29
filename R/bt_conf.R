@@ -40,6 +40,7 @@ cal01Vec = function(pred) {
 gconf = list(
   REPLS = 10L,
   CV_ITER = 10L,  # iteration for crossval
+  ratio_inbag = 0.8,
   predict.type = "response",
   meas2tune = mlr::mmce,
   perf_name2tune = "mmce",
