@@ -41,6 +41,7 @@ debug_cluster = function() {
 run_cluster = function() {
   regname = "../output/georesponse_alpha"
   regname = "../output/oml14966_alpha"
+  regname = "../output/reg_all_jan29"
   DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo)
   source("bt_conf.R")
   source("bt_main.R")
