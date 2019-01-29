@@ -65,7 +65,7 @@ algo_mbo = function(instance, lrn) {
 
 
   context = "fso_th"
-  #res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = context)
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = context)
   print(proc.time() - ptmi)
 
   context = "fso5"

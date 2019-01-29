@@ -1,6 +1,3 @@
-source("bt_pre.R")
-source("utilities_datasite.R")
-
 debug_local = function() {
   DEBUG_FLAG = T
   source("bt_conf.R")
@@ -23,7 +20,7 @@ run_local = function() {
   mgconf = getGconf()
   reg_input = batchtools::getDefaultRegistry()
   reg_input$cluster.functions = makeClusterFunctionsMulticore(ncpus = 64)
-  init(prob_names, prob_inputs, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
+  init(prob_names, prob_inputs_conf, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
   testJob(1)
 }
 
