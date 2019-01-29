@@ -87,9 +87,9 @@ createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, bal
 }
 
 
-create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_datasets = 5, balanced = T, prefix = "../Data/temp/oml_") {
-  list.tname = lapply(tids, function(x) {
-      lst = createClassBalancedDfCluster(x, n_datasets, balanced, pca_var_ratio)
+create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_datasets = 5, balanced = T, path_regx = "../Data/temp/oml_%s_pca%s_clustered_classbalanced_%s.RData") {
+  list.tname = lapply(tids, function(tid) {
+      lst = createClassBalancedDfCluster(tid, n_datasets, balanced, pca_var_ratio)
       dflst = lapply(seq_len(length(lst$list_dataset_index)),
         function(i) {
           tsk = subsetTask(lst$task,subset = lst$list_dataset_index[[i]])
@@ -98,7 +98,7 @@ create_rdata_cluster = function(pca_var_ratio, tids = c(3891, 14966, 34536), n_d
           return(df)
       })
       data = do.call("rbind", dflst)
-      filena = paste0(prefix, x, sprintf("_clustered_classbalanced_%s.RData", balanced))
+      filena = sprintf(path_regx, tid, pca_var_ratio, balanced)
       tname = getTaskTargetNames(lst$task)
       tuple = list(df = data, targetname = tname, dataset_id = "dataset_accn")
       save(tuple,  file = filena)

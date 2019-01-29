@@ -1,4 +1,4 @@
-dataset_names_input = c("geo")
+dataset_names_input = c("oml14966")
 source("bt_bootstrap.R")
 test_funGenProb = function() {
  instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
@@ -12,9 +12,10 @@ genProb_inputs_data = function() {
 }
 
 funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, ratio_inbag = 0.8, bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10), bootstrap_rep = 10L) {
-  if (!exists("prob_inputs_data") || is.null(prob_inputs_data) || length(prob_inputs_data) == 0) {
+  if (!is.null(data$path[[dataset_name]])) {
     tuple = prepareDataSite(path = data$path[[dataset_name]])
   } else {
+    prob_inputs_data = createInput
     tuple = prob_inputs_data[[dataset_name]]
   }
 

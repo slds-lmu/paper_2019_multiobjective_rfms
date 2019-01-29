@@ -4,6 +4,10 @@ library(mlrMBO)
 if (!dir.exists("../output")) dir.create("../output")
 print("conf being sourced")
 
+
+
+###  input
+
 ### dependencies
 pre.source = c("utilities_datasite.R",  "bt_pre.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures.R", "bt_helpers.R", "bt_obj.R")  # order of the sequence being sourced can not be changed!
 
@@ -18,6 +22,11 @@ SEED_REGISTRY = 1273L
 
 path = list()
 path$geo = "../Data/data_cohorts_nonGerman.RData"
+path$oml14966 = "../Data/temp/oml_14966_clustered_classbalanced_TRUE.RData"
+path$oml_34536 = "../Data/temp/oml_34536_clustered_classbalanced_TRUE.RData"
+path$oml_3891 = "../Data/temp/oml_3891_clustered_classbalanced_TRUE.RData"
+path$oml_9950 = "../Data/temp/oml_9950_clustered_classbalanced_TRUE.RData"
+path$oml_9981 = "../Data/temp/oml_9981_clustered_classbalanced_TRUE.RData"
 prob_inputs = list(path = path)
 
 

@@ -37,27 +37,28 @@ plotBoot = function() {
   unlist(res$res$gperf_env$fmo[['7']]$mixbag[['0.9']]$ob_vs_cu)
 }
 
-dtlong = readRDS("dtlong.rds")
-dtlong = dtlong[, c("alpha", "value", "alphas")]
-dtlong$alphas = as.character(dtlong$alphas)
-fig_alpha = ggplot2::ggplot(dtlong, aes(x = alphas, y = value)) + geom_boxplot() + ggtitle("fso8openbox_curator") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-ggsave(fig_alpha, file = "demo.pdf")
-
-
+# dtlong = readRDS("dtlong.rds")
+# dtlong = dtlong[, c("alpha", "value", "alphas")]
+# dtlong$alphas = as.character(dtlong$alphas)
+# fig_alpha = ggplot2::ggplot(dtlong, aes(x = alphas, y = value)) + geom_boxplot() + ggtitle("fso8openbox_curator") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+# ggsave(fig_alpha, file = "demo.pdf")
+# 
+# 
 
 ###
-getRes = function(alpha_bootstrap_index, name = "ob_vs_cu", algo_name = "fso8") {
-  list_ob_vs_cu = lapply(alpha_bootstrap_index$list_boot, function(culb) {
-    subtask = subsetTask(task, culb[[name]])
-    lrn.id = res$res$tune_res[[algo_name]]$learner$id
+getRes = function(tune_res, instance, alpha_bootstrap_index, name = "ob_vs_cu", algo_name = "fso8") {
+  list_ob_vs_cu = lapply(alpha_bootstrap_index$list_boot, function(mix) {
+    subtask = subsetTask(instance$task, mix[[name]])  # mix$ob_vs_cu
+    lrn.id =  tune_res[[algo_name]]$learner$id
     lrn_base_id = processLrnName(lrn.id)   # remove .preprocess
     lrn_wrap = GET_LRN(lrn_base_id)
     task = res$res$instance$task
-    task_openbox_inbag = subsetTask(task, res$res$instance$openbox_inbag_ind)         
+    task_openbox_inbag = subsetTask(instance$task, instance$openbox_inbag_ind)         
     model = train(lrn_wrap, task_openbox_inbag)
     perfs = getSingleDatasetPerf(model, subtask, F)
     # FIXME: change to name mmce instead of [1L]
-    perfs[1L]})
+    perfs[1L]
+  })
 }
 
 reduceOneResult = function() {
