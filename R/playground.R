@@ -34,7 +34,7 @@ debug_cluster = function() {
   mgconf = getGconf()
   reg_input = batchtools::getDefaultRegistry()
   reg_input$default.resources
-  init(prob_names, prob_inputs, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
+  init(prob_names, prob_inputs_conf, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
   submitJobs(597)
 }
 
@@ -63,6 +63,8 @@ submit_jobs = function() {
   submitJobs(597)
   showLog(597)
     getJobPars()[problem == "prob_geo"][, .(prob.pars)]
+    tosub = getJobPars()[problem == "prob_oml_cluster"]$job.id
+    submitJobs(tosub[1:600])
     unwrap(getJobPars()[problem == "prob_oml_cluster"][, .(prob.pars)])
   index = seq.int(from = 1, to = 1800, by = 30)  # 30 replications
   repl = 1:10

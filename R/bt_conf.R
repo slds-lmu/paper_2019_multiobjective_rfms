@@ -81,7 +81,7 @@ getGconf = function(variables) {
 pre.source = c("utilities_datasite.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures.R", "bt_helpers.R", "bt_obj.R")  # order of the sequence being sourced can not be changed!
 
 lapply(pre.source, function(x) source(x))
-pre.source = c(pre.source, "bt_conf.R")
+pre.source = c("bt_conf.R", pre.source)
 pre.packages = c("mlr", "BBmisc", "mlrMBO")  ## OpenML removed
 
 ### General
@@ -91,5 +91,4 @@ SEED_REGISTRY = 1273L
 
 path = list()
 path$geo = "../Data/data_cohorts_nonGerman.RData"
-#path$oml14966 = "../Data/temp/oml_14966_pca_0.1_clustered_classbalanced_TRUE.RData"
 prob_inputs_conf = list(path = path)

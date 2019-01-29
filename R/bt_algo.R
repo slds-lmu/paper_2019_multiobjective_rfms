@@ -61,12 +61,16 @@ algo_mbo = function(instance, lrn) {
 
   # we can only have one global variable here: we need a context object to know which algorithm we are using
   context = "fso_ladder"
+  try({
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = context)
+  })
 
 
   context = "fso_th"
+  try({
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = context)
   print(proc.time() - ptmi)
+  })
 
   context = "fso5"
   extra.args$alpha = 0.5
