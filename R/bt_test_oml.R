@@ -1,6 +1,8 @@
 source("utilities_datasite.R")
 source("bt_pre.R")
 task.ids = c(14966) # input
+
+#task.ids = c(14966, 34536, 3891, 9950, 9981) # input
 prob_inputs_data = createInput(task.ids = task.ids, pca_var_ratio = 0.1, class_balance = T, recluster = T, n_datasets = 5, path_regx = "../Data/temp/oml_%s_pca_%s_clustered_classbalanced_TRUE.RData")
 dataset_names_input = paste0("oml", task.ids)
 DEBUG_FLAG = T
