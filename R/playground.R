@@ -15,7 +15,7 @@ run_local = function() {
   DEBUG_FLAG = F
   source("bt_conf.R")
   source("bt_main.R")
-  REG_FILE_DIR = "../output/geo"
+  REG_FILE_DIR = "../output/omlstratif"
   btDelInit(local = T, force = DEBUG_FLAG)
   mgconf = getGconf()
   reg_input = batchtools::getDefaultRegistry()
@@ -62,8 +62,11 @@ submit_jobs = function() {
   unwrap(getJobPars()[1:100, .(algo.pars)])
   submitJobs(597)
   showLog(597)
-    getJobPars()[problem == "prob_geo"][, .(prob.pars)]
+    unwrap(getJobPars()[problem == "prob_oml_stratif"][, .(prob.pars)])[task_id == 31]
+    dt = unwrap(getJobPars()[problem == "prob_oml_stratif"][, .(job.id, prob.pars)])[task_id == 31]
+    submitJobs(dt$job.id)
     tosub = getJobPars()[problem == "prob_oml_cluster"]$job.id
+    getJobPars()[problem == "prob_oml_stratif"]$job.id
     submitJobs(tosub[1:600])
     unwrap(getJobPars()[problem == "prob_oml_cluster"][, .(prob.pars)])
   index = seq.int(from = 1, to = 1800, by = 30)  # 30 replications
