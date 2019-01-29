@@ -21,12 +21,13 @@ SEED_REGISTRY = 1273L
 
 
 path = list()
+task.ids = c(14966, 34536, 3891, 9950, 9981) # input
 path$geo = "../Data/data_cohorts_nonGerman.RData"
-path$oml14966 = "../Data/temp/oml_14966_clustered_classbalanced_TRUE.RData"
-path$oml_34536 = "../Data/temp/oml_34536_clustered_classbalanced_TRUE.RData"
-path$oml_3891 = "../Data/temp/oml_3891_clustered_classbalanced_TRUE.RData"
-path$oml_9950 = "../Data/temp/oml_9950_clustered_classbalanced_TRUE.RData"
-path$oml_9981 = "../Data/temp/oml_9981_clustered_classbalanced_TRUE.RData"
+path$oml14966 = "../Data/temp/oml_14966_pca_0.1_clustered_classbalanced_TRUE.RData"
+path$oml34536 = "../Data/temp/oml_34536_clustered_classbalanced_TRUE.RData"
+path$oml3891 = "../Data/temp/oml_3891_clustered_classbalanced_TRUE.RData"
+path$oml9950 = "../Data/temp/oml_9950_clustered_classbalanced_TRUE.RData"
+path$oml9981 = "../Data/temp/oml_9981_clustered_classbalanced_TRUE.RData"
 prob_inputs = list(path = path)
 
 

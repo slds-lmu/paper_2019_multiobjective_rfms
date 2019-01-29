@@ -8,7 +8,7 @@ try({
 
 createInput = function(task.ids = c(3891), pca_var_ratio = 0.1, class_balance = T, recluster = T, n_datasets = 5, path_regx = "../Data/temp/oml_%s_pca%s_clustered_classbalanced_TRUE.RData") {
 
-  if (recluster) create_rdata_cluster(pca_var_ratio = pca_var_ratio, tids = task.ids, n_datasets = 5, balanced = T, regx = path_regx)
+  if (recluster) create_rdata_cluster(pca_var_ratio = pca_var_ratio, tids = task.ids, n_datasets = 5, balanced = T, path_regx = path_regx)
 
   prob_inputs_data = lapply(1:length(task.ids), function(i) {
     taskid = task.ids[i]
