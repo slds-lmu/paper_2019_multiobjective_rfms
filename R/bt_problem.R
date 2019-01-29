@@ -1,7 +1,6 @@
-dataset_names_input = c("oml14966")
 source("bt_bootstrap.R")
 test_funGenProb = function() {
- instance = funGenProbOracle(data = prob_inputs_data, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
+ instance = funGenProb_geo(data = prob_inputs_data, job = NULL, openbox_ind = 1L, lockbox_ind = 1L, dataset_name = "geo")
  source("bt_algo.R")
  algo_thresholdout(instance)
 }
@@ -11,14 +10,36 @@ genProb_inputs_data = function() {
   prob_inputs_data[[dataset_name]] = prepareDataSite(path = data$path[[dataset_name]])  # prob_inputs_data could be a global variable in the next refactoring
 }
 
-funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, ratio_inbag = 0.8, bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10), bootstrap_rep = 10L) {
-  if (!is.null(data$path[[dataset_name]])) {
-    tuple = prepareDataSite(path = data$path[[dataset_name]])
-  } else {
-    prob_inputs_data = createInput
-    tuple = prob_inputs_data[[dataset_name]]
-  }
 
+funGenProb_geo = function(data, job, openbox_ind, lockbox_ind, dataset_name = "geo", ratio_inbag = 0.8, bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10), bootstrap_rep = 10L) {
+  tuple = prepareDataSite(path = data$path[[dataset_name]])
+  funGenProb(tuple, job, openbox_ind, lockbox_ind, dataset_name, ratio_inbag = ratio_inbag, bootstrap_alphas = bootstrap_alphas, bootstrap_rep = bootstrap_rep)
+}
+
+
+funGenProb_oml_cluster = function(data, job, openbox_ind, lockbox_ind, dataset_name, pca_var_ratio) {
+  task_mlr = loadDiskOMLMlrTask(dataset_name)
+  list_dataset_index = clusterMlrTask(mlr_task, n_datasets = 5L, balanced = T, pca_var_ratio = pca_var_ratio)
+  df_dataset_accn = sapply(1:getTaskSize(task_mlr), function(x) {
+    bvec = sapply(list_dataset_index, function(vec) x %in% vec)
+    browser()
+    which(bvec)
+  })
+  tuple = list(task = task_mlr, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn)
+  funGenProb(tuple, job, openbox_ind, lockbox_ind)
+}
+
+funGenProb_oml_stratif = function(data, job, openbox_ind, lockbox_ind, dataset_name, ratio_inbag = 0.8, bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10), bootstrap_rep = 10L) {
+  task_mlr = loadDiskOMLMlrTask(dataset_name)
+  tuple = createRandomStratifPartition(task_mlr)
+  funGenProb(tuple, job, openbox_ind, lockbox_ind, dataset_name, ratio_inbag = ratio_inbag, bootstrap_alphas = bootstrap_alphas, bootstrap_rep = bootstrap_rep)
+}
+
+funGenProb = function(data, job, openbox_ind, lockbox_ind) {
+  ratio_inbag = 0.8
+  bootstrap_alphas = seq(from = 0.1, to = 0.9, length.out = 10)
+  bootstrap_rep = 10L
+  tuple = data
   res = list()
   res$openbox_ind = openbox_ind
   res$lockbox_ind = lockbox_ind
@@ -90,8 +111,11 @@ funGenProbOracle = function(data, job, openbox_ind, lockbox_ind, dataset_name, r
 
 
 
-prob_names = c("prob")
-prob_funs = list()
-prob_funs[[prob_names[[1L]]]] = funGenProbOracle
 prob_designs = list()
-prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, dataset_name = dataset_names_input, stringsAsFactors = FALSE)
+prob_funs = list()
+prob_names = c("prob_geo")
+prob_funs[[prob_names[[1L]]]] = funGenProb_geo
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, dataset_name = c("geo"), stringsAsFactors = FALSE)
+prob_names = c("prob_oml", prob_names)
+prob_funs[[prob_names[[1L]]]] = funGenProb_oml
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, dataset_name = c(3891, 9950, 9981, 14966, 34536), stringsAsFactors = FALSE)
