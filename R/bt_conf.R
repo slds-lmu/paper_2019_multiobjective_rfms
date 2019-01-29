@@ -37,30 +37,34 @@ cal01Vec = function(pred) {
   return(vmatch)
 }
 
-  gconf = list(
-    REPLS = 10,
-    CV_ITER = 10L,  # iteration for crossval
-    predict.type = "response",
-    meas2tune = mlr::mmce,
-    perf_name2tune = "mmce",
-    meas_aggr = mtrain.agg,
-    list_meas = list(mmce, ber),
-    ladder_noise = 1e-3,
-    ladder_meas = mlr::mmce,
-    fun_cal_ladder_vec = cal01Vec,
-    ladder_worst_vec_ele = 0,
-    thresholdout_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0),
-    #list_meas = list(auc, mmce, brier, brier.scaled, ber, logloss)
-    CV_ITER_OUTER = 5L, # make it consistent with our 5 split 
-    MBO_ITERS = 40L, # 16d
-    INIT_DES = 20L,  # default 8d
-    task.ids = c(14966, 3891) # input
-# 14966 bioresponse
-# 3891 gina-agnostic
-# 9950 micro-mass  (20 classes)
-# 9981 cnae-9 (9 class to 2 class)
-# 167125 internet ads
+gconf = list(
+  REPLS = 10L,
+  CV_ITER = 10L,  # iteration for crossval
+  predict.type = "response",
+  meas2tune = mlr::mmce,
+  perf_name2tune = "mmce",
+  meas_aggr = mtrain.agg,
+  list_meas = list(mmce, ber),
+  ladder_noise = 1e-3,
+  ladder_meas = mlr::mmce,
+  fun_cal_ladder_vec = cal01Vec,
+  ladder_worst_vec_ele = 0,
+  thresholdout_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0),
+  #list_meas = list(auc, mmce, brier, brier.scaled, ber, logloss)
+  CV_ITER_OUTER = 5L, # make it consistent with our 5 split 
+  MBO_ITERS = 40L, # 16d
+  INIT_DES = 20L,  # default 8d
+  task.ids = c(14966, 3891, 10101, 31) # input
+  # 14966 bioresponse
+  # 3891 gina-agnostic
+  # 9950 micro-mass  (20 classes)
+  # 9981 cnae-9 (9 class to 2 class)
+  # 167125 internet ads
+  # 10101 5 features, 200 instance
+  # 31 21 features, 1000 instance
+  # https://www.openml.org/d/1132
 )
+
 getGconf = function(variables) {
  if (exists("DEBUG_FLAG")) {
    if (get("DEBUG_FLAG") == TRUE) {
