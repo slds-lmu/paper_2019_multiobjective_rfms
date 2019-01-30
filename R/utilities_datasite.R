@@ -13,25 +13,6 @@ dumpOMLTasks = function(task_ids, path_regx = "../Data/temp/oml_%s_task_mlr.RDat
   })
 }
 
-createInput = function(task.ids = c(3891), pca_var_ratio = 0.1, class_balance = T, recluster = T, n_datasets = 5, path_regx = "../Data/temp/oml_%s_pca%s_clustered_classbalanced_TRUE.RData") {
-  try( {
-    OpenML::populateOMLCache(task.ids = task.ids)  # openml can breakdown easily so put it in try clause
-  })
-
-  if (recluster) create_rdata_cluster(pca_var_ratio = pca_var_ratio, tids = task.ids, n_datasets = 7, balanced = T, path_regx = path_regx)
-
-  prob_inputs_data = lapply(1:length(task.ids), function(i) {
-    taskid = task.ids[i]
-    print(taskid)
-    prepareDataSite(path = sprintf(path_regx, taskid, pca_var_ratio))
-  })
-  names(prob_inputs_data) = paste0("oml", task.ids)
-  # prob_inputs_data$oml9950 = NULL
-  return(prob_inputs_data)
-}
-
-  # 3891, 9950, 9981, 14966, 34536
-  #task.ids = c(3891, 9950, 9981, 14966, 34536)
 prepareDataSite = function(path) {
   require(BBmisc)
   require(mlr)
@@ -49,7 +30,7 @@ prepareDataSite = function(path) {
   return(list(task = task, list_dataset_index = list_dataset_index, df_dataset_accn = df_dataset_accn))
 }
 
-# oml_task_id: 3891, 14966, 
+#'getMlrTaskFromOML = function(14966)
 getMlrTaskFromOML = function(oml_task_id) {
   require(OpenML)
   ot = OpenML::getOMLTask(oml_task_id)
@@ -59,7 +40,7 @@ getMlrTaskFromOML = function(oml_task_id) {
 }
 
 
-#'@ description 
+#'@ description
 #'Output is a list of indices for each dataset
 #'@example
 #'clusterMlrTask(mlr_task = getMlrTaskFromOML(14966), n_datasets = 5, balanced = T, pca_var_ratio = 0.7)
@@ -108,38 +89,29 @@ clusterMlrTask = function(mlr_task, n_datasets = 5L, balanced = T, pca_var_ratio
   return(list_dataset_index)
 }
 
-# createClassBalancedDfCluster = function(oml_task_id = 14966, n_datasets = 5, balanced = TRUE, pca_var_ratio = 0.7, getTaskFun = getMlrTaskFromOML) {
-#   require(mlr)
-#   mlr_task = getTaskFun(oml_task_id)
-#   list_dataset_index = clusterMlrTask(mlr_task, n_datasets = 5, balanced = balanced, pca_var_ratio = pca_var_ratio)
-#   return(list(task = mlr_task, list_dataset_index = list_dataset_index))
-# }
-# 
-# 
-#   list.tuple = lapply(tids, function(tid) {
-# 
-#   })
-# 
-#   list.tuple
-# 
-
-create_rdata_cluster = function(pca_var_ratio, mlr_task, n_datasets = 5, balanced = T, path_regx = "../Data/temp/oml_%s_pca_%s_clustered_classbalanced_%s.RData", persist = T) {
+obsolete_create_rdata_cluster4tsne = function(pca_var_ratio, mlr_task, n_datasets = 5, balanced = T, path_regx = "../Data/temp/oml_%s_pca_%s_clustered_classbalanced_%s.RData", tid = NULL, persist = F) {
+  dataset_id = "dataset_accn"
   checkmate::assertIntegerish(n_datasets)
   checkmate::assertLogical(balanced)
   list_dataset_index = clusterMlrTask(mlr_task, n_datasets = 5, balanced = balanced, pca_var_ratio = pca_var_ratio)
+  # dflst is a permutation of original dataframe
   dflst = lapply(seq_len(length(list_dataset_index)),
     function(i) {
       tsk = subsetTask(mlr_task, subset = list_dataset_index[[i]])
       df = getTaskData(tsk)
-      df$dataset_accn = paste0("ds", i)
+      df[dataset_id] = paste0("ds", i)
       return(df)
   })
   data = do.call("rbind", dflst)
-  filena = sprintf(path_regx, tid, as.character(pca_var_ratio), balanced)
+  df_feat = data
   tname = getTaskTargetNames(mlr_task)
-  tuple = list(df = data, targetname = tname, dataset_id = "dataset_accn")
+  df_feat[c(dataset_id, tname)] = NULL
+  tuple = list(df = data, targetname = tname, dataset_id = dataset_id, df_feat = df_feat)
   df_dataset_accn = data[, tuple$dataset_id]
-  if (persist) save(tuple,  file = filena)  # saving data on disk is always a good idea since openml is not robust to download
+  if (persist) {
+    filena = sprintf(path_regx, tid, as.character(pca_var_ratio), balanced)
+    save(tuple,  file = filena)  # saving data on disk is always a good idea since openml is not robust to download
+  }
   tuple$df_dataset_accn = df_dataset_accn
   return(tuple)
 }
