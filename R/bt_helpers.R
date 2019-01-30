@@ -1,11 +1,4 @@
 require("mlrMBO")
-# getModelFromTask = function(major_task, lrn.id, pvs) {
-#   lrn_basis = GET_LRN(lrn.id)
-#   lrn_basis = setWraperHyperPars(lrn_obj = lrn_basis, pvs = pvs)
-#   model = mlr::train(learner = lrn_basis, task = major_task)
-#   model
-# }
-
 init_mbo_ctrl_so = function(iters) {
   control = makeMBOControl()
   control = setMBOControlTermination(control, iters = iters)

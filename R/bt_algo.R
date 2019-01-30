@@ -19,6 +19,13 @@ algo_rand = function(instance, lrn, list_measures, gperf_env, context) {
 }
 
 
+# getModelFromTask = function(major_task, lrn.id, pvs) {
+#   lrn_basis = GET_LRN(lrn.id)
+#   lrn_basis = setWraperHyperPars(lrn_obj = lrn_basis, pvs = pvs)
+#   model = mlr::train(learner = lrn_basis, task = major_task)
+#   model
+# }
+
 
 
 selModelPareto = function(tune_res, instance, alpha = 0.5) {
