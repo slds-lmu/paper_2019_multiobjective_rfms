@@ -82,7 +82,7 @@ submit_jobs = function() {
 
 post_rs_local = function(i) {
   require(batchtools)
-  REG_FILE_DIR = "../output/geo"
+  REG_FILE_DIR = "../output/omlstratif"
   reg = loadRegistry(REG_FILE_DIR, conf.file = NA)
   reg$writeable = T
   submitJobs(1)

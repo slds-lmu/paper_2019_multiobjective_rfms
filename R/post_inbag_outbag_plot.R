@@ -3,14 +3,7 @@ library(ggplot2)
 library(tidyr)
 dt = readRDS("dt_res_oml_jan29.rds")
 
-fig_ob = ggplot2::ggplot(dt, aes(x = algo, y = openbox, fill = bag)) + geom_boxplot() + facet_grid(cols = vars(lrn)) + ggtitle("openbox")
+dtl = tidyr::gather(dt, key = box, value = mmce, openbox, lockbox, curator)
 
-ggsave("ob.pdf", plot = fig_ob)
-
-
-fig_cu = ggplot2::ggplot(dt, aes(x = algo, y = curator, fill = bag)) + geom_boxplot() + facet_grid(cols = vars(lrn)) + ggtitle("curator")
-ggsave("cu.pdf", plot = fig_cu)
-
-fig_lb = ggplot2::ggplot(dt, aes(x = algo, y = lockbox, fill = bag)) + geom_boxplot() + facet_grid(cols = vars(lrn)) + ggtitle("lockbox")
-
-ggsave("lb.pdf", plot = fig_lb)
+fig = ggplot2::ggplot(dtl, aes(x = algo, y = mmce, color = bag)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(box)) + ggtitle("openbox")
+ggsave("lb.pdf", plot = fig)
