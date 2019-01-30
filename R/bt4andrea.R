@@ -2,7 +2,7 @@ source("bt_pre.R")
 DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo) set to F
 source("bt_conf.R")
 source("bt_main.R")
-btInit(path = "registry2", local = F)   # set local=T to allow on local PC running
+btInit(path = "registry3", local = F)   # set local=T to allow on local PC running
 ######################################
 mgconf = getGconf()
 reg_input = batchtools::getDefaultRegistry()

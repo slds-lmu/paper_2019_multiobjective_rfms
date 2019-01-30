@@ -144,9 +144,9 @@ algo_mbo = function(instance, lrn) {
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
   print(proc.time() - ptmi)
  
-  context = "rso_curator"
-  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = context)
-  print(proc.time() - ptmi)
+  #context = "rso_curator"
+  # res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = context) ## very likely to meet t.default(T) argument is not a matrix, but since rso is aspecial case of fso but lso is not a special case of fso
+  #print(proc.time() - ptmi)
 
  
   print("algorithm finished")
