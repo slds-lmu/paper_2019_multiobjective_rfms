@@ -39,6 +39,7 @@ selModelPareto = function(tune_res, instance, alpha = 0.5) {
       combo
     }
     vec = sapply(tune_res$x, trypar)
+    print(vec)
     which.min(vec)
 }
 
@@ -87,10 +88,22 @@ algo_mbo = function(instance, lrn) {
   context = "fmo"
   res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
 
-  context = "rand"
+  ## extract best learner from pareto front
+  tune_res = res[[context]]
+  res$pareto = list()
+  alphas = seq(from = 0.1, to = 0.9, by = 0.1)
+  res$pareto[[context]] = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
+  names(res$pareto[[context]]) = as.character(alphas)
+
+  context = "rand_mo"
   res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
 
-
+  ## extract best learner from pareto front
+  tune_res = res[[context]]
+  res$pareto = list()
+  alphas = seq(from = 0.1, to = 0.9, by = 0.1)
+  res$pareto[[context]] = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
+  names(res$pareto[[context]]) = as.character(alphas)
 
   # we can only have one global variable here: we need a context object to know which algorithm we are using
   context = "fso_ladder"
