@@ -1,8 +1,9 @@
 DEBUG_FLAG = T
+#source("bt_pre.R") 
 source("bt_conf.R")
 source("bt_main.R")
 REG_FILE_DIR = "../output/only4testreg"
-btDelInit(local = T, force = DEBUG_FLAG)
+btDelInit(path = REG_FILE_DIR, local = T, force = DEBUG_FLAG)
 mgconf = getGconf()
 reg_input = batchtools::getDefaultRegistry()
 reg_input$cluster.functions = makeClusterFunctionsMulticore()

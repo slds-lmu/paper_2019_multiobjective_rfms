@@ -18,6 +18,30 @@ algo_rand = function(instance, lrn, list_measures, gperf_env, context) {
   res
 }
 
+
+
+
+selModelPareto = function(tune_res, instance, alpha = 0.5) {
+    lrn.id =  tune_res$learner$id
+    lrn_base_id = processLrnName(lrn.id)   # remove .preprocess
+    lrn_wrap = GET_LRN(lrn_base_id)
+
+    task = instance$task
+    task_openbox_inbag = subsetTask(instance$task, instance$openbox_inbag_ind)
+    task_curator_inbag = subsetTask(instance$task, instance$curator_inbags_oracle_inds)
+    trypar = function(pvs) {
+      lrn_wrap$next.learner$par.vals = pvs
+      model = train(lrn_wrap, task_openbox_inbag)
+      perf_ob = getSingleDatasetPerf(model, task_openbox_inbag, F)
+      perf_cu = getSingleDatasetPerf(model, task_curator_inbag, F)
+      #FIXME: change 1L to something else
+      combo = alpha * perf_ob[1L] + (1 - alpha) * perf_cu[1L]
+      combo
+    }
+    vec = sapply(tune_res$x, trypar)
+    which.min(vec)
+}
+
 algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
   cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
@@ -59,6 +83,15 @@ algo_mbo = function(instance, lrn) {
   measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
   meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
 
+ ### MultiObj
+  context = "fmo"
+  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
+
+  context = "rand"
+  res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
+
+
+
   # we can only have one global variable here: we need a context object to know which algorithm we are using
   context = "fso_ladder"
   try({
@@ -87,25 +120,15 @@ algo_mbo = function(instance, lrn) {
   meas_alpha_so = mk_measure(name = "meas_alpha_so8", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = context)
 
-  context = "rand"
-  res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
-
   context = "lso"
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
   print(proc.time() - ptmi)
-  
-  #context = "rso_curator"
-  #res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = context)
-  #print(proc.time() - ptmi)
+ 
+  context = "rso_curator"
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = context)
+  print(proc.time() - ptmi)
 
-  #res$tune_res_lso_openbox_nocv = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "lso_openbox_nocv")
-  #print(proc.time() - ptmi)
-
-  ### MultiObj
-  context = "fmo"
-  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
-
-  #res$tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
+ 
   print("algorithm finished")
   print(proc.time() - ptmi)
   res = list(tune_res = res, gperf_env = gperf_env, instance = instance)

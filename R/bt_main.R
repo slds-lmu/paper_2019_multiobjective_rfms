@@ -21,9 +21,7 @@ btInit = function(path = NULL, src = "bt_experiment.R", local = FALSE) {
  return(reg)
 }
 
-btDelInit = function(path = NULL, src = "bt_experiment.R", local = FALSE, force = F) {
- if (is.null(path)) path = REG_FILE_DIR
- lapply(pre.source, function(x) source(x))
+btDelInit = function(path, src = "bt_experiment.R", local = FALSE, force = F) {
  print("path:")
  print(path)
  if (!force)  {
