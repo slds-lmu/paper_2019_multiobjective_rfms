@@ -99,7 +99,6 @@ algo_mbo = function(instance, lrn) {
 
   getAlpha = function(tune_res, alphas, context) {
    res = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
-   names(res$pareto) = as.character(alphas)
    res
   }
 
