@@ -270,7 +270,6 @@ algo_proposal_5 = function(instance, lrn = "classif.rpart", mbo_design) {
 }
 
 agg_genTable_onejob = function(res) {
-  browser()
   aggonejob = function(res) {
     agglistonejob = lapply(names(res$tune_res), function(algo_name) {
       cat(sprintf("\n algorithm name: %s \n", algo_name))
