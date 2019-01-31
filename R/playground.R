@@ -42,11 +42,12 @@ run_cluster = function() {
   regname = "../output/georesponse_alpha"
   regname = "../output/oml14966_alpha"
   regname = "../output/reg_all_jan29"
+  regname = "../output/reg_all_jan31"
   DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo)
   source("bt_conf.R")
   source("bt_main.R")
   REG_FILE_DIR = regname
-  btDelInit(local = F)  # type "yEs" here
+  btDelInit(path = regname, local = F)  # type "yEs" here
   ######################################
   mgconf = getGconf()
   reg_input = batchtools::getDefaultRegistry()

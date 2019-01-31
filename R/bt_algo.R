@@ -203,9 +203,25 @@ algo_thresholdoutauc = function(instance, conf) {
 
 
 # only depend on the lockbox
-algoCheating = function() {
+algoCheating = function(instance, lrn) {
+  res = list()
+  gperf_env = new.env()   # gperf_env is only being modified in side measure function!
+  ptmi = proc.time()
+  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune, calMeasVec = getGconf()$fun_cal_ladder_vec)
+
+  meas_openbox_cv = mk_measure(name = "meas_openbox_cv", extra.args, obj_fun = fun_measure_obj_openbox)
+  measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)
+  measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
+  meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
+  mk_measure_local2remote(extra.args_bs2)
+
+ ### MultiObj
+  context = "fmo"
+  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
+
+ 
  #tune_res_bs4 = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_local_tr_tune_remote_tune_nocv(extra.args), mmce), gperf_env = gperf_env, context = "bs4")
-  #print("lso single obj proposal no cv finished:")
   ## redefine extra.args
   #   extra.args_bs2 =  getOpenBox2CuratorBoxID(instance)
   #   missingns = setdiff(names(extra.args), names(extra.args_bs2))
@@ -261,6 +277,7 @@ agg_genTable = function(res) {
       if (stringi::stri_detect(algo_name, regex = "mo")) return(agg_mo(res, algo_name = algo_name))
       if (stringi::stri_detect(algo_name, regex = "so")) return(agg_so(res, algo_name = algo_name))
       if (stringi::stri_detect(algo_name, regex = "rand")) return(agg_rand(res, algo_name = algo_name))
+      if (stringi::stri_detect(algo_name, regex = "pareto")) return(agg_pareto(res))
       stop("algorithm names wrong!")
     })
     names(agglist) = names(res$tune_res)
@@ -349,8 +366,12 @@ agg_mo = function(res_all, meas_name = "mmce", algo_name) {
   dt
 }
 
-reduceResult = function() {
-  reslist = reduceResultsList(ids = findDone(), fun = function(job, res) {
+agg_pareto = function(res_all) {
+  list()
+}
+
+reduceResult = function(ids = findDone()) {
+  reslist = reduceResultsList(ids = ids, fun = function(job, res) {
     # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
     dt = agg_genTable(res$res)
     dt$repl = job$repl
