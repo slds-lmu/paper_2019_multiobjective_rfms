@@ -2,7 +2,10 @@ library(data.table)
 library(ggplot2)
 
 dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
+dat = as.data.table(readRDS(file = "dt_14966_pca0.1.rds"))
+
 context = "geo"
+context = "oml14966"
 dat = dat[bag == "outbag", ]
 unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
 unique_ids2 = c("openbox_name", "lockbox_name", "lrn", "repl")
