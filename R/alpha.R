@@ -6,9 +6,50 @@ dtmmcenew[, alpha(openbox, curator, 0.5), by = seq_len(nrow(dtmmcenew))]
 
 
 
+dtmmcenew = readRDS("dt_lambdaJan31.rds")
+
+
+dt_obcu = dtmmcenew[, c(.SD, setNames(lapply(alphas, function(x) alpha(openbox, curator, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dtmmcenew))]
+dt_oblb = dtmmcenew[, c(.SD, setNames(lapply(alphas, function(x) alpha(openbox, lockbox, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dtmmcenew))]
+
+
+dt_obcu_ig = dt_obcu[bag=="inbag"]
+dt_obcu_og = dt_obcu[bag=="outbag"]
+dt_oblb_og = dt_oblb[bag=="outbag"]
+
+library(ggplot)
+
+dtl = tidyr::gather(dt_obcu_og, key = alpha, value = mmce, alpha1:alpha9)
+
+ggplot2::ggplot(dtl, aes(x = alpha, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
+ggsave(file = "openbox-curator-alpha.pdf")
+
+dtl2 = tidyr::gather(dt_oblb_og, key = alpha, value = mmce, alpha1:alpha9)
+ggplot2::ggplot(dtl2, aes(x = alpha, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-lockbox")
+ggsave(file = "openbox-lockbox-alpha.pdf")
+
+
+dt_obcu_ig[, idx:=apply(.SD, 2, which.min), by = .(algo, openbox_name, lockbox_name, lrn, repl), .SDcols = paste0("alpha", 1:9)]
+
+dt_obcu_ig[, t(apply(.SD, 2, which.min)), by = .(algo, openbox_name, lockbox_name, lrn, repl), .SDcols = paste0("alpha", 1:9)]
+
+fun = function(x) {
+  y = x[, paste0("alpha", 1:9)]
+  ind = apply(y, 2, which.min)
+  best_ind_new = sapply(ind, function(i) x[i, best_ind])
+  x[ind, best_ind]
+}
+dt_obcu_ig[1:4, paste0("ind",1:9) := fun(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
 
 
 
-dtmmcenew[, lapply(alphas, function(x) alpha(openbox, curator, x)), by = seq_len(nrow(dtmmcenew))]
-dt_obcu = dtmmcenew[, c(.SD, lapply(alphas, function(x) alpha(openbox, curator, x))), by = seq_len(nrow(dtmmcenew))]
-dt_oblb = dtmmcenew[, c(.SD, lapply(alphas, function(x) alpha(openbox, lockbox, x))), by = seq_len(nrow(dtmmcenew))]
+
+dt_obcu_og[, idx:=apply(.SD, 1, which.min), by = .(algo, openbox_name, lockbox_name, lrn, repl), .SDcols = paste0("alpha", 1:9)]
+dt_obcu_og$idx
+
+takeind = function(x) {
+  browser()
+  x$idx
+}
+
+dt_obcu_ig[, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
