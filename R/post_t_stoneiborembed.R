@@ -12,8 +12,11 @@ plot_geo = function() {
 plot_cluster = function(tuple, pca_var_ratios = c(0.1, 0.5)) {
    source("bt_conf.R")
    mlr_task = loadDiskOMLMlrTask(14966)
-   list_dataset_index_1 = clusterMlrTask(mlr_task, n_datasets = 5, balanced = T, pca_var_ratio = 0.1)
-   list_dataset_index_5 = clusterMlrTask(mlr_task, n_datasets = 5, balanced = T, pca_var_ratio = 0.5)
+   list_dataset_index_1 = clusterMlrTask(mlr_task, n_datasets = 5, balanced = T, pca_var_ratio = 10)
+   list_dataset_index_5 = clusterMlrTask(mlr_task, n_datasets = 5, balanced = T, pca_var_ratio = 50)
+
+  tuple = createRandomStratifPartition(mlr_task, nsplits = 5, persist = F, path_regx = NULL)
+  list_dataset_index_stra =  tuple$list_dataset_index
    # tsne is stochastic, to avoid this, we just run one time tsne, so the data is identical on the 2-d space, but the data is colored differently due to different clustering
    getmetacol = function(list_dataset_index) {
       dataset_accn = sapply(1:getTaskSize(mlr_task), function(rind) {
@@ -28,7 +31,11 @@ plot_cluster = function(tuple, pca_var_ratios = c(0.1, 0.5)) {
    library(ggplot2)
    col1 = getmetacol(list_dataset_index_1)
    col5 = getmetacol(list_dataset_index_5)
+   col_stra = getmetacol(list_dataset_index_stra)
    ggplot(as.data.frame(tsne$Y), aes(x = V1, y = V2, color = col1)) + geom_point()
    dev.new()
    ggplot(as.data.frame(tsne$Y), aes(x = V1, y = V2, color = col5)) + geom_point()
+   dev.new()
+   ggplot(as.data.frame(tsne$Y), aes(x = V1, y = V2, color = col_stra)) + geom_point()
+
 }
