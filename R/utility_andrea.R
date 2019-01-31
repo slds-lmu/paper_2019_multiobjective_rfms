@@ -3,11 +3,14 @@
 library(data.table)
 
 reduce.fun = function(job, res) {
-  algos = c("fmo", "fmo_nocv", "fso", "fso_th", "lso_openbox", "lso_openbox_nocv", "rso_curator")
+  browser()
+  algos = c("fmo", "fso2", "fso5", "fso8", "fso_th", "lso")
   algos = intersect(algos, ls(res$res$gperf_env))
 
   dat = lapply(algos, function(a) {
+    browser()
     d = lapply(1:length(res$res$gperf_env[[a]]), function(i) {
+      browser()
       l = res$res$gperf_env[[a]][[i]]
       tmp = BBmisc::convertListOfRowsToDataFrame(l)
       tmp = cbind(tmp, dataset = names(l), iter = i, stringsAsFactors = FALSE)

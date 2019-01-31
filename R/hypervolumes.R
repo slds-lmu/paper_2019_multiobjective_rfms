@@ -3,9 +3,13 @@ library(ggplot2)
 
 dat = as.data.table(readRDS(file = "dtmmcenew.rds"))
 dat = dat[bag == "outbag", ]
+unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
+unique_ids2 = c("openbox_name", "lockbox_name", "lrn", "repl")
+kickout = c("fso_ladder")
+dat = dat[algo != kickout]
 
-ns = dat[, .N, by = c("algo", "openbox_name", "lockbox_name", "lrn", "dsna", "repl")]
-table(ns$algo, ns$N)
+ns = dat[, .N, by = unique_ids]
+table(ns$algo, ns$N)  # fmo only has 179 out of 600 occurrences to return 1 result
 
 hv = function(x) {
   pf = mco::paretoFilter(as.matrix(x))
@@ -13,9 +17,7 @@ hv = function(x) {
   mco::dominatedHypervolume(pf, rep(1, 3))
 }
 
-dat2 = dat[, list(dhv = hv(.SD)),
-  by = c("algo", "openbox_name", "lockbox_name", "lrn", "dsna", "repl"),
-  .SDcols = c("curator", "lockbox", "openbox")]
+dat2 = dat[, list(dhv = hv(.SD)), by = unique_ids, .SDcols = c("curator", "lockbox", "openbox")]
 
 dat2s = split(dat2, dat2$lrn)
 
@@ -30,8 +32,7 @@ lapply(dat2s, function(d) {
 })
 dev.off()
 
-dat3 = dat2[, list(mdhv = mean(dhv)),
-  by = c("algo", "openbox_name", "lockbox_name", "lrn", "dsna")]
+dat3 = dat2[, list(mdhv = mean(dhv)), by = unique_ids]
 
 pdf(file = "mean_hypervolumes.pdf", height = 7, width = 10)
 ggplot(data = dat3, mapping = aes(y = mdhv, x = algo, color = algo)) +
@@ -53,10 +54,10 @@ fr = function(x, algo) {
   })
   data.table(algo1 = algo[design[, 1]], algo2 = algo[design[, 2]], wins = wins)
 }
-dat4 = dat2[, fr(dhv, algo), by = c("openbox_name", "lockbox_name", "lrn", "dsna", "repl")]
+dat4 = dat2[, fr(dhv, algo), by = unique_ids2]
 
 dat4a = dat4[, list(wins = sum(wins)), by = c("algo1", "algo2")]
-n.exp = nrow(dat[, .N, c("openbox_name", "lockbox_name", "lrn", "dsna", "repl")])
+n.exp = nrow(dat[, .N, unique_ids2])
 
 pdf("wins_and_losses.pdf", width = 8, height = 6)
 ggplot(data = dat4a, mapping = aes(x = algo1, y = algo2)) +
