@@ -1,7 +1,8 @@
 library(data.table)
 library(ggplot2)
 
-dat = as.data.table(readRDS(file = "dtmmcenew.rds"))
+dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
+context = "geo"
 dat = dat[bag == "outbag", ]
 unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
 unique_ids2 = c("openbox_name", "lockbox_name", "lrn", "repl")
@@ -21,7 +22,7 @@ dat2 = dat[, list(dhv = hv(.SD)), by = unique_ids, .SDcols = c("curator", "lockb
 
 dat2s = split(dat2, dat2$lrn)
 
-pdf(file = "hypervolumes.pdf", height = 7, width = 10)
+pdf(file = sprintf("hypervolumes_%s.pdf", context), height = 7, width = 10)
 lapply(dat2s, function(d) {
   ggplot(data = d, mapping = aes(y = dhv, x = algo, color = algo)) +
     geom_boxplot() +
@@ -34,7 +35,7 @@ dev.off()
 
 dat3 = dat2[, list(mdhv = mean(dhv)), by = unique_ids]
 
-pdf(file = "mean_hypervolumes.pdf", height = 7, width = 10)
+pdf(file = sprintf("mean_hypervolumes_%s.pdf", context), height = 7, width = 10)
 ggplot(data = dat3, mapping = aes(y = mdhv, x = algo, color = algo)) +
   geom_boxplot() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +
@@ -59,7 +60,7 @@ dat4 = dat2[, fr(dhv, algo), by = unique_ids2]
 dat4a = dat4[, list(wins = sum(wins)), by = c("algo1", "algo2")]
 n.exp = nrow(dat[, .N, unique_ids2])
 
-pdf("wins_and_losses.pdf", width = 8, height = 6)
+pdf(sprintf("wins_and_losses_%s.pdf", context), width = 8, height = 6)
 ggplot(data = dat4a, mapping = aes(x = algo1, y = algo2)) +
   geom_tile(aes(fill = wins)) +
   geom_text(aes(label = wins, color = abs(wins - n.exp / 2) >= 125), size = 5) +
