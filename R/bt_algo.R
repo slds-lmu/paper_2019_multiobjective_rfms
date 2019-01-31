@@ -78,6 +78,7 @@ algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context,
 
 algo_mbo = function(instance, lrn) {
   res = list()
+
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
   mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
@@ -92,27 +93,25 @@ algo_mbo = function(instance, lrn) {
   meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
 
  ### MultiObj
-  context = "fmo"
-  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
-
   ## extract best learner from pareto front
-  tune_res = res[[context]]
   res$pareto = list()
   alphas = seq(from = 0.1, to = 0.9, by = 0.1)
-  res$pareto[[context]] = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
-  names(res$pareto[[context]]) = as.character(alphas)
+
+  getAlpha = function(tune_res, alphas, context) {
+   res = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
+   names(res$pareto) = as.character(alphas)
+   res
+  }
+
+  context = "fmo"
+  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
+  res$pareto[[context]] = getAlpha(res[[context]], alphas, context)
 
   context = "rand_mo"
   res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
+  res$pareto[[context]] = getAlpha(res[[context]], alphas, context)
 
-  ## extract best learner from pareto front
-  tune_res = res[[context]]
-  res$pareto = list()
-  alphas = seq(from = 0.1, to = 0.9, by = 0.1)
-  res$pareto[[context]] = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
-  names(res$pareto[[context]]) = as.character(alphas)
-
-  # we can only have one global variable here: we need a context object to know which algorithm we are using
+  ## differential privacy
   context = "fso_ladder"
   try({
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_ladder), gperf_env = gperf_env, context = context)
@@ -270,21 +269,22 @@ algo_proposal_5 = function(instance, lrn = "classif.rpart", mbo_design) {
   return(list(tuneRes = res, testperf = testperf, tuneperf = tuneperf))
 }
 
-agg_genTable = function(res) {
-  agg = function(res) {
-    agglist = lapply(names(res$tune_res), function(algo_name) {
+agg_genTable_onejob = function(res) {
+  browser()
+  aggonejob = function(res) {
+    agglistonejob = lapply(names(res$tune_res), function(algo_name) {
       cat(sprintf("\n algorithm name: %s \n", algo_name))
       if (stringi::stri_detect(algo_name, regex = "mo")) return(agg_mo(res, algo_name = algo_name))
       if (stringi::stri_detect(algo_name, regex = "so")) return(agg_so(res, algo_name = algo_name))
       if (stringi::stri_detect(algo_name, regex = "rand")) return(agg_rand(res, algo_name = algo_name))
-      if (stringi::stri_detect(algo_name, regex = "pareto")) return(agg_pareto(res))
+      if (stringi::stri_detect(algo_name, regex = "pareto")) return(list())
       stop("algorithm names wrong!")
     })
-    names(agglist) = names(res$tune_res)
-    rbindlist(agglist, use.names = TRUE)
+    names(agglistonejob) = names(res$tune_res)
+    rbindlist(agglistonejob, use.names = TRUE)
   }
   lrn.id = res$tune_res[[names(res$tune_res)[1L]]]$learner$id
-  dt = agg(res)
+  dt = aggonejob(res)
   instance = res$instance
   dt$openbox_name = instance$openbox_name
   dt$lockbox_name = instance$lockbox_name
@@ -366,14 +366,10 @@ agg_mo = function(res_all, meas_name = "mmce", algo_name) {
   dt
 }
 
-agg_pareto = function(res_all) {
-  list()
-}
-
 reduceResult = function(ids = findDone()) {
   reslist = reduceResultsList(ids = ids, fun = function(job, res) {
     # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
-    dt = agg_genTable(res$res)
+    dt = agg_genTable_onejob(res$res)
     dt$repl = job$repl
     dt$dsna = job$prob.pars$dataset_name
     dt$lrn = job$algo.pars$lrn
