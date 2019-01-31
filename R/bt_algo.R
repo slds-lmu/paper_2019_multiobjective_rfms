@@ -18,6 +18,38 @@ algo_rand = function(instance, lrn, list_measures, gperf_env, context) {
   res
 }
 
+
+# getModelFromTask = function(major_task, lrn.id, pvs) {
+#   lrn_basis = GET_LRN(lrn.id)
+#   lrn_basis = setWraperHyperPars(lrn_obj = lrn_basis, pvs = pvs)
+#   model = mlr::train(learner = lrn_basis, task = major_task)
+#   model
+# }
+
+
+
+selModelPareto = function(tune_res, instance, alpha = 0.5) {
+    lrn.id =  tune_res$learner$id
+    lrn_base_id = processLrnName(lrn.id)   # remove .preprocess
+    lrn_wrap = GET_LRN(lrn_base_id)
+
+    task = instance$task
+    task_openbox_inbag = subsetTask(instance$task, instance$openbox_inbag_ind)
+    task_curator_inbag = subsetTask(instance$task, instance$curator_inbags_oracle_inds)
+    trypar = function(pvs) {
+      lrn_wrap$next.learner$par.vals = pvs
+      model = train(lrn_wrap, task_openbox_inbag)
+      perf_ob = getSingleDatasetPerf(model, task_openbox_inbag, F)
+      perf_cu = getSingleDatasetPerf(model, task_curator_inbag, F)
+      #FIXME: change 1L to something else
+      combo = alpha * perf_ob[1L] + (1 - alpha) * perf_cu[1L]
+      combo
+    }
+    vec = sapply(tune_res$x, trypar)
+    print(vec)
+    which.min(vec)
+}
+
 algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
   cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
@@ -59,6 +91,27 @@ algo_mbo = function(instance, lrn) {
   measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
   meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
 
+ ### MultiObj
+  context = "fmo"
+  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
+
+  ## extract best learner from pareto front
+  tune_res = res[[context]]
+  res$pareto = list()
+  alphas = seq(from = 0.1, to = 0.9, by = 0.1)
+  res$pareto[[context]] = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
+  names(res$pareto[[context]]) = as.character(alphas)
+
+  context = "rand_mo"
+  res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
+
+  ## extract best learner from pareto front
+  tune_res = res[[context]]
+  res$pareto = list()
+  alphas = seq(from = 0.1, to = 0.9, by = 0.1)
+  res$pareto[[context]] = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
+  names(res$pareto[[context]]) = as.character(alphas)
+
   # we can only have one global variable here: we need a context object to know which algorithm we are using
   context = "fso_ladder"
   try({
@@ -87,25 +140,15 @@ algo_mbo = function(instance, lrn) {
   meas_alpha_so = mk_measure(name = "meas_alpha_so8", extra.args = extra.args, obj_fun = fun_measure_obj_openbox_tr_curator_tune)
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha_so), gperf_env = gperf_env, context = context)
 
-  context = "rand"
-  res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
-
   context = "lso"
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
   print(proc.time() - ptmi)
-  
+ 
   #context = "rso_curator"
-  #res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = context)
+  # res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = context) ## very likely to meet t.default(T) argument is not a matrix, but since rso is aspecial case of fso but lso is not a special case of fso
   #print(proc.time() - ptmi)
 
-  #res$tune_res_lso_openbox_nocv = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "lso_openbox_nocv")
-  #print(proc.time() - ptmi)
-
-  ### MultiObj
-  context = "fmo"
-  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
-
-  #res$tune_res_fmo_nocv = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_nocv, measure_curator), gperf_env = gperf_env, context = "fmo_nocv")
+ 
   print("algorithm finished")
   print(proc.time() - ptmi)
   res = list(tune_res = res, gperf_env = gperf_env, instance = instance)
@@ -160,9 +203,25 @@ algo_thresholdoutauc = function(instance, conf) {
 
 
 # only depend on the lockbox
-algoCheating = function() {
+algoCheating = function(instance, lrn) {
+  res = list()
+  gperf_env = new.env()   # gperf_env is only being modified in side measure function!
+  ptmi = proc.time()
+  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune, calMeasVec = getGconf()$fun_cal_ladder_vec)
+
+  meas_openbox_cv = mk_measure(name = "meas_openbox_cv", extra.args, obj_fun = fun_measure_obj_openbox)
+  measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)
+  measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
+  meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
+  mk_measure_local2remote(extra.args_bs2)
+
+ ### MultiObj
+  context = "fmo"
+  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
+
+ 
  #tune_res_bs4 = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_local_tr_tune_remote_tune_nocv(extra.args), mmce), gperf_env = gperf_env, context = "bs4")
-  #print("lso single obj proposal no cv finished:")
   ## redefine extra.args
   #   extra.args_bs2 =  getOpenBox2CuratorBoxID(instance)
   #   missingns = setdiff(names(extra.args), names(extra.args_bs2))
@@ -218,6 +277,7 @@ agg_genTable = function(res) {
       if (stringi::stri_detect(algo_name, regex = "mo")) return(agg_mo(res, algo_name = algo_name))
       if (stringi::stri_detect(algo_name, regex = "so")) return(agg_so(res, algo_name = algo_name))
       if (stringi::stri_detect(algo_name, regex = "rand")) return(agg_rand(res, algo_name = algo_name))
+      if (stringi::stri_detect(algo_name, regex = "pareto")) return(agg_pareto(res))
       stop("algorithm names wrong!")
     })
     names(agglist) = names(res$tune_res)
@@ -306,8 +366,12 @@ agg_mo = function(res_all, meas_name = "mmce", algo_name) {
   dt
 }
 
-reduceResult = function() {
-  reslist = reduceResultsList(ids = findDone(), fun = function(job, res) {
+agg_pareto = function(res_all) {
+  list()
+}
+
+reduceResult = function(ids = findDone()) {
+  reslist = reduceResultsList(ids = ids, fun = function(job, res) {
     # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
     dt = agg_genTable(res$res)
     dt$repl = job$repl

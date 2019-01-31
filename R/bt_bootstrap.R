@@ -45,7 +45,11 @@ plotBoot = function() {
 # 
 # 
 
+
 ###
+
+
+
 getRes = function(tune_res, instance, alpha_bootstrap_index, name = "ob_vs_cu", algo_name = "fso8") {
   list_ob_vs_cu = lapply(alpha_bootstrap_index$list_boot, function(mix) {
     subtask = subsetTask(instance$task, mix[[name]])  # mix$ob_vs_cu

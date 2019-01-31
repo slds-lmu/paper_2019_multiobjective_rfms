@@ -181,6 +181,7 @@ getHyperParFromModel = function(model) {
   }
 }
 
+#' only to be used with getHyperParFromModel!!!!!!!
 setWraperHyperPars = function(lrn_obj, pvs) {
   # mlr:::setHyperPars2.BaseWrapper
   ### pvs$all contains hyperpars from learner and wrapper in one single list
