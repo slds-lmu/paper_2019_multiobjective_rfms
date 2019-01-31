@@ -4,7 +4,16 @@ library(tidyr)
 dt = readRDS("dt_res_oml_jan29.rds")
 dt = readRDS("dt_lambdaJan31.rds")
 
-dtl = tidyr::gather(dt, key = box, value = mmce, openbox, lockbox, curator)
+genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
+  library(hrbrthemes)
+  checkmate::assert(all(c("lrn", "algo", "bag", "openbox", "lockbox", "curator") %in% colnames(dt)))
 
-fig = ggplot2::ggplot(dtl, aes(x = algo, y = mmce, color = bag)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(box)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("comparison of mmce across learner and data site on geo dataset")
-ggsave("geo_box.pdf", plot = fig)
+  if(!is.null(kickout)) dt = dt[with(dt, algo != kickout), ]
+  dtl = tidyr::gather(dt, key = box, value = mmce, openbox, lockbox, curator)
+  fig = ggplot2::ggplot(dtl, aes(x = algo, y = mmce, fill = bag)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(box)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_fill_ipsum()
+  #+ ggtitle("comparison of mmce across learner and data site on geo dataset")
+  ggsave(sprintf("boxplot_%s_%s_%s.pdf", dname, task_id, resample_name), plot = fig)
+  fig
+}
+
+genBox(dt_31, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_th", "fmo") )
