@@ -66,6 +66,20 @@ gconf = list(
   # https://www.openml.org/d/1132
 )
 
+#' probe(3891)
+probe = function(task_id) {
+  #task = getMlrTaskFromOML(task_id)
+  res = list()
+  task = loadDiskOMLMlrTask(task_id)
+  res$n  = getTaskSize(task)
+  res$p = getTaskNFeats(task)
+  res$pn = (res$p / res$n)
+  res$pn5 = (res$p / res$n) * 5
+  cd = task$task.desc$class.distribution
+  res$cd = min(cd) / max(cd)
+  res
+}
+
 getGconf = function(variables) {
  if (exists("DEBUG_FLAG")) {
    if (get("DEBUG_FLAG") == TRUE) {

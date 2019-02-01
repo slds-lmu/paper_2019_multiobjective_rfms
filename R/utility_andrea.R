@@ -3,15 +3,12 @@
 library(data.table)
 
 reduce.fun = function(job, res) {
-  browser()
-  algos = c("fmo", "fso2", "fso5", "fso8", "fso_th", "lso")
+  algos = c("fmo", "fso_ladder", "fso_th", "fso2", "fso5", "fso8", "lso", "rand_mo")
   algos = intersect(algos, ls(res$res$gperf_env))
 
   dat = lapply(algos, function(a) {
-    browser()
     d = lapply(1:length(res$res$gperf_env[[a]]), function(i) {
-      browser()
-      l = res$res$gperf_env[[a]][[i]]
+      l = res$res$gperf_env[[a]][[i]]$outbag
       tmp = BBmisc::convertListOfRowsToDataFrame(l)
       tmp = cbind(tmp, dataset = names(l), iter = i, stringsAsFactors = FALSE)
       rownames(tmp) = NULL
@@ -27,11 +24,11 @@ reduce.fun = function(job, res) {
   ret = cbind(
     dat,
     lrn = job$pars$algo.pars$lrn,
-    dataset_name = job$pars$prob.pars$dataset_name,
     openbox_name = res$res$instance$openbox_name,
     lockbox_name = res$res$instance$lockbox_name,
     repl = job$repl,
     algorithm = job$algo.name,
+    problem = job$prob.name,
     job.id = job$job.id
   )
 

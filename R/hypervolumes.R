@@ -5,12 +5,13 @@ dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
 dat = as.data.table(readRDS(file = "dt_14966_pca0.1.rds"))
 
 context = "geo"
-context = "oml14966"
+context = "oml14966_pca0.1"
 dat = dat[bag == "outbag", ]
 unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
 unique_ids2 = c("openbox_name", "lockbox_name", "lrn", "repl")
-kickout = c("fso_ladder")
-dat = dat[algo != kickout]
+kickout = c("fso_ladder", "fso_th", "rand")
+
+dat = dat[with(dat, !(algo %in% kickout)), ]
 
 ns = dat[, .N, by = unique_ids]
 table(ns$algo, ns$N)  # fmo only has 179 out of 600 occurrences to return 1 result
