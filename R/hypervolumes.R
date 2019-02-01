@@ -24,6 +24,10 @@ hv = function(x) {
 
 dat2 = dat[, list(dhv = hv(.SD)), by = unique_ids, .SDcols = c("curator", "lockbox", "openbox")]
 
+ns2 = dat2[, .N, by = unique_ids]
+table(ns2$algo, ns2$N)  # fmo only has 179 out of 600 occurrences to return 1 result
+
+
 dat2s = split(dat2, dat2$lrn)
 
 pdf(file = sprintf("hypervolumes_%s.pdf", context), height = 7, width = 10)
