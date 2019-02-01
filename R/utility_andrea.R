@@ -1,12 +1,13 @@
 # Reduce results of batchtools jobs
 
 library(data.table)
+# c("fmo", "fso_ladder", "fso_th", "fso2", "fso5", "fso8", "lso", "rand_mo")
+bag2sel = "inbag"
+sprintf("tsc_%s.rds", bag2sel)
 
-bag2sel = "outbag"
+algos = c("fmo", "fso2", "fso5", "fso8", "lso", "rand_mo")
 reduce.fun = function(job, res) {
-  algos = c("fmo", "fso_ladder", "fso_th", "fso2", "fso5", "fso8", "lso", "rand_mo")
   algos = intersect(algos, ls(res$res$gperf_env))
-
   dat = lapply(algos, function(a) {
     d = lapply(1:length(res$res$gperf_env[[a]]), function(i) {
       l = res$res$gperf_env[[a]][[i]][[bag2sel]]
@@ -90,13 +91,14 @@ f3 = function(mmces, iter) {
 res3 = res1[, f3(mmce.lockbox, iter), by = c("algo", jobinfo.cols)]
 res3$lockbox.best = unlist(res3$lockbox.best)
 
-saveRDS(list(res = res, res2 = res2, res3 = res3), file = "tsc.rds")
+saveRDS(list(res = res, res2 = res2, res3 = res3), file = filename)
 ###################################################################
+
 # Plots
-
+# since cluster does not support plot, the following code will be execulated locally.
+mkplot = function() {
 library(ggplot2)
-
-tuple = readRDS(file = "tsc.rds")
+tuple = readRDS(file = filename)
 res = tuple$res
 res2 = tuple$res2
 res3 = tuple$res3
@@ -241,4 +243,4 @@ ggplot(data = res3ma.part, mapping = aes(x = iter, y = mean.lb, group = algo, co
   ylab("Mean current best mmce on lockbox") +
   facet_grid(lrn ~ problem + algorithm, scales = "free_y")
 dev.off()
-
+}
