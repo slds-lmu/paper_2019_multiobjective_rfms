@@ -44,6 +44,12 @@ getMlrTaskFromOML = function(oml_task_id) {
 #'Output is a list of indices for each dataset
 #'@example
 #'clusterMlrTask(mlr_task = getMlrTaskFromOML(14966), n_datasets = 5, balanced = T, pca_var_ratio = 0.7)
+rebalance = function(list_oneclass_index ) {
+  lens = sapply(list_oneclass_index, length)
+  rel = order(lens, decreasing = F)
+  #rel[1] is the smallest cluster
+}
+
 clusterMlrTask = function(mlr_task, n_datasets = 5L, balanced = T, pca_var_ratio = 0.7) {
   df = getTaskData(mlr_task, target.extra = TRUE)
   if (!balanced) {
