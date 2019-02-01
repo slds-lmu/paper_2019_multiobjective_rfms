@@ -8,8 +8,7 @@ dt = readRDS("dt_10101_stratif.rds")
 genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
   library(hrbrthemes)
   checkmate::assert(all(c("lrn", "algo", "bag", "openbox", "lockbox", "curator") %in% colnames(dt)))
-
-  if(!is.null(kickout)) dt = dt[with(dt, algo != kickout), ]
+  if(!is.null(kickout)) dt = dt[with(dt, !(algo %in% kickout)), ]
   dtl = tidyr::gather(dt, key = box, value = mmce, openbox, lockbox, curator)
   fig = ggplot2::ggplot(dtl, aes(x = algo, y = mmce, fill = bag)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(box)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_fill_ipsum()
   #+ ggtitle("comparison of mmce across learner and data site on geo dataset")
@@ -17,8 +16,7 @@ genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
   fig
 }
 
-genBox(dt_31, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_th", "fmo") )
-genBox(dt, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_th", "fmo") )
+genBox(dt, task_id = 31, dname = "geo", resample_name = "stratif", kickout = c("fso_th", "fso_ladder", "rand_mo") )
 
 
 genBox2 = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
