@@ -2,13 +2,14 @@
 
 library(data.table)
 
+bag2sel = "outbag"
 reduce.fun = function(job, res) {
   algos = c("fmo", "fso_ladder", "fso_th", "fso2", "fso5", "fso8", "lso", "rand_mo")
   algos = intersect(algos, ls(res$res$gperf_env))
 
   dat = lapply(algos, function(a) {
     d = lapply(1:length(res$res$gperf_env[[a]]), function(i) {
-      l = res$res$gperf_env[[a]][[i]]$outbag
+      l = res$res$gperf_env[[a]][[i]][[bag2sel]]
       tmp = BBmisc::convertListOfRowsToDataFrame(l)
       tmp = cbind(tmp, dataset = names(l), iter = i, stringsAsFactors = FALSE)
       rownames(tmp) = NULL
@@ -95,7 +96,7 @@ saveRDS(list(res = res, res2 = res2, res3 = res3), file = "tsc.rds")
 
 library(ggplot2)
 
-tuple = readRDS(list(res = res, res2 = res2, res3 = res3), file = "tsc.rds")
+tuple = readRDS(file = "tsc.rds")
 res = tuple$res
 res2 = tuple$res2
 res3 = tuple$res3
