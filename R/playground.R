@@ -57,6 +57,16 @@ run_cluster = function() {
 }
 
 
+subm = function(probname = "prob_oml_stratif", task_id = 31) {
+    # probname = "prob_oml_stratif"
+    # task_id = 31
+    dt2sub = unwrap(getJobPars()[problem == probname][, .(job.id, prob.pars)])
+    ind = (dt2sub$task_id == task_id) dt2sub[ind, ]
+}
+
+dt = subm(probname = "prob_oml_cluster", task_id = 14966)
+dt = subm(probname = "prob_oml_stratif", task_id = 14966)
+
 submit_jobs = function() {
   submitJobs(1, resources = list(walltime = 100))
   getStatus()
