@@ -3,7 +3,7 @@
 library(data.table)
 # c("fmo", "fso_ladder", "fso_th", "fso2", "fso5", "fso8", "lso", "rand_mo")
 bag2sel = "inbag"
-sprintf("tsc_%s.rds", bag2sel)
+filename = sprintf("tsc_%s.rds", bag2sel)
 
 algos = c("fmo", "fso2", "fso5", "fso8", "lso", "rand_mo")
 reduce.fun = function(job, res) {
