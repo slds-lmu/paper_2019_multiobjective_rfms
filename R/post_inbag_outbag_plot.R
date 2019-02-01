@@ -19,3 +19,29 @@ genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
 
 genBox(dt_31, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_th", "fmo") )
 genBox(dt, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_th", "fmo") )
+
+
+genBox2 = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
+  library(hrbrthemes)
+  checkmate::assert(all(c("lrn", "algo", "bag", "openbox", "lockbox", "curator") %in% colnames(dt)))
+  library(tidyr)
+  library(dplyr)
+  library(data.table)
+  if(!is.null(kickout)) dt = dt[with(dt, !(algo %in% kickout)), ]
+  dtl = tidyr::gather(dt, key = box, value = mmce, openbox, lockbox, curator)
+  dtl = as.data.table(dtl)
+  func = function(x) {
+    worst = max(x)
+    x/worst
+  }
+  dtl[, mmce:=func(mmce), by = c("openbox_name", "lockbox_name", "lrn")]
+  browser()
+  fig = ggplot2::ggplot(dtl, aes(x = algo, y = mmce, fill = bag)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(box)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_fill_ipsum()
+  #+ ggtitle("comparison of mmce across learner and data site on geo dataset")
+  ggsave(sprintf("boxplot_%s_%s_%s.pdf", dname, task_id, resample_name), plot = fig)
+  fig
+}
+
+
+
+genBox2(dt, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_th", "fmo") )
