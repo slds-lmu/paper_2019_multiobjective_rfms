@@ -68,8 +68,7 @@ mmce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
 openbox.ind = sapply(res1$openbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
 res1 = cbind(res1, openbox.index = openbox.ind)
 
-res2 = res1[, f2(.SD), .SDcols = c(mmce.cols, "iter", "openbox.index"),
-  by = c("algo", jobinfo.cols)]
+res2 = res1[, f2(.SD), .SDcols = c(mmce.cols, "iter", "openbox.index"), by = c("algo", jobinfo.cols)]
 res2$cdhv = unlist(res2$cdhv)
 
 
@@ -79,7 +78,7 @@ res2$cdhv = unlist(res2$cdhv)
 lockbox.ind = sapply(res1$lockbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
 tmp = subset(res1, select = mmce.cols)
 lockbox.perf = unlist(sapply(1:length(lockbox.ind), function(i) tmp[i, lockbox.ind[i], with = FALSE]))
-res1 = cbind(res1, mmce.lockbox = lockbox.perf)
+res1 = cbind(res1, mmce.lockbox = lockbox.perf)  # slow step
 
 f3 = function(mmces, iter) {
   best = lapply(1:length(iter), function(i) {
@@ -90,11 +89,16 @@ f3 = function(mmces, iter) {
 res3 = res1[, f3(mmce.lockbox, iter), by = c("algo", jobinfo.cols)]
 res3$lockbox.best = unlist(res3$lockbox.best)
 
+saveRDS(list(res = res, res2 = res2, res3 = res3), file = "tsc.rds")
 ###################################################################
 # Plots
 
 library(ggplot2)
 
+tuple = readRDS(list(res = res, res2 = res2, res3 = res3), file = "tsc.rds")
+res = tuple$res
+res2 = tuple$res2
+res3 = tuple$res3
 # Plot the development over time: each job is on a separate page
 pdf(file = "mmce_over_time.pdf", height = 7, width  = 10)
 lapply(split(res, res$job.id), function(dat) {
