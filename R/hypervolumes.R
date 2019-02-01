@@ -8,6 +8,11 @@ context = "geo"
 context = "oml14966_pca0.1"
 dat = dat[bag == "outbag", ]
 unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
+
+
+
+
+
 unique_ids2 = c("openbox_name", "lockbox_name", "lrn", "repl")
 kickout = c("fso_ladder", "fso_th", "rand")
 

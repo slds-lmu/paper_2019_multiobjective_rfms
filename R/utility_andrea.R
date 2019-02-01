@@ -1,10 +1,9 @@
 # Reduce results of batchtools jobs
-
-library(data.table)
-# c("fmo", "fso_ladder", "fso_th", "fso2", "fso5", "fso8", "lso", "rand_mo")
 bag2sel = "inbag"
 filename = sprintf("tsc_%s.rds", bag2sel)
-
+redu = function() {
+library(data.table)
+# c("fmo", "fso_ladder", "fso_th", "fso2", "fso5", "fso8", "lso", "rand_mo")
 algos = c("fmo", "fso2", "fso5", "fso8", "lso", "rand_mo")
 reduce.fun = function(job, res) {
   algos = intersect(algos, ls(res$res$gperf_env))
@@ -91,19 +90,28 @@ f3 = function(mmces, iter) {
 res3 = res1[, f3(mmce.lockbox, iter), by = c("algo", jobinfo.cols)]
 res3$lockbox.best = unlist(res3$lockbox.best)
 
+res4 = res1[, f3(mmce.openbox, iter), by = c("algo", jobinfo.cols)]
+res4$openbox.best = unlist(res4$openbox.best)
+
 saveRDS(list(res = res, res2 = res2, res3 = res3), file = filename)
 ###################################################################
-
+}
 # Plots
 # since cluster does not support plot, the following code will be execulated locally.
-mkplot = function() {
+mkna4plot = function(prefix, strna) {
+  paste0(prefix, strna)
+}
+#' mkplot(filename)
+mkplot = function(filename) {
+library(data.table)
 library(ggplot2)
 tuple = readRDS(file = filename)
+prefix = stringi::stri_replace(filename, replacement = "_", regex = ".rds")
 res = tuple$res
 res2 = tuple$res2
 res3 = tuple$res3
 # Plot the development over time: each job is on a separate page
-pdf(file = "mmce_over_time.pdf", height = 7, width  = 10)
+pdf(file = mkna4plot(prefix, "mmce_over_time.pdf"), height = 7, width  = 10)
 lapply(split(res, res$job.id), function(dat) {
   ggplot(data = dat, mapping = aes(x = iter, y = mmce, group = dataset, color = dataset)) +
     geom_line() + geom_point() +
@@ -114,7 +122,7 @@ lapply(split(res, res$job.id), function(dat) {
 })
 dev.off()
 
-pdf(file = "hypervolume_over_time.pdf", height = 7, width  = 10)
+pdf(file = paste0(prefix, "hypervolume_over_time.pdf"), height = 7, width  = 10)
 lapply(split(res2, res2$job.id), function(dat) {
   ggplot(data = dat, mapping = aes(x = iter, y = cdhv, group = algo, color = algo)) +
     geom_line() + geom_point() +
@@ -127,7 +135,7 @@ dev.off()
 
 
 # Aggregate over repls
-pdf("hypervolume_over_time_aggr_quartiles.pdf", height = 7, width = 10)
+pdf(mkna4plot(prefix, "hypervolume_over_time_aggr_quartiles.pdf"), height = 7, width = 10)
 lapply(split(res2, paste(res2$lrn, res2$problem, res2$algorithm)), function(dat) {
   ggplot(data = dat, mapping = aes(x = iter, y = cdhv, group = algo, color = algo)) +
     stat_summary(geom = "ribbon",
@@ -146,26 +154,24 @@ res2m = res2[, list(
   mean.cdhv = mean(cdhv),
   median.cdhv = median(cdhv),
   lower = quantile(cdhv, 0.25, type = 2),
-  upper = quantile(cdhv, 0.75, type = 2)
-),
-  by = c("lrn", "problem", "algorithm", "openbox_name", "lockbox_name", "iter", "algo")]
+  upper = quantile(cdhv, 0.75, type = 2)), by = c("lrn", "problem", "algorithm", "openbox_name", "lockbox_name", "iter", "algo")]
 res2m$lower[res2m$iter %% 5 != 0] = NA
 res2m$upper[res2m$iter %% 5 != 0] = NA
 
 res2m.part = res2m[iter >= 20, ]
 
-pdf("hypervolume_over_time_aggr_mean.pdf", height = 7, width = 10)
+pdf(mkna4plot(prefix, "hypervolume_over_time_aggr_mean.pdf"), height = 7, width = 10)
 lapply(split(res2m.part, paste(res2m.part$lrn, res2m.part$problem, res2m.part$algorithm)), function(dat) {
   ggplot(data = dat, mapping = aes(x = iter, y = mean.cdhv, group = algo, color = algo)) +
     geom_line() +
     ylab("Mean currently dominated hypervolume (based on all datasets except openbox)") +
     facet_grid(openbox_name ~ lockbox_name, scales = "free_y") +
     ggtitle(paste0("lrn: ", dat$lrn[1], ", problem: ", dat$problem[1],
-      ", algorithm: ", dat$algorithm[1]))
-})
+        ", algorithm: ", dat$algorithm[1]))
+  })
 dev.off()
 
-pdf("hypervolume_over_time_aggr_median.pdf", height = 7, width = 10)
+pdf(mkna4plot(prefix, "hypervolume_over_time_aggr_median.pdf"), height = 7, width = 10)
 lapply(split(res2m, paste(res2m$lrn, res2m$problem, res2m$algorithm)), function(dat) {
   ggplot(data = dat, mapping = aes(x = iter, y = median.cdhv, group = algo, color = algo)) +
     geom_line() +
@@ -173,15 +179,15 @@ lapply(split(res2m, paste(res2m$lrn, res2m$problem, res2m$algorithm)), function(
     ylab("Median currently dominated hypervolume (based on all datasets except openbox)") +
     facet_grid(openbox_name ~ lockbox_name, scales = "free_y") +
     ggtitle(paste0("lrn: ", dat$lrn[1], ", problem: ", dat$problem[1],
-      ", algorithm: ", dat$algorithm[1]))
-})
+        ", algorithm: ", dat$algorithm[1]))
+  })
 dev.off()
 
 res3m = res3[, list(mean.lb = mean(lockbox.best)),
   by = c("lrn", "problem", "algorithm", "openbox_name", "lockbox_name", "iter", "algo")]
 res3m.part = res3m[iter >= 20, ]
 
-pdf("lockbox_over_time_aggr_mean.pdf", height = 7, width = 10)
+pdf(mkna4plot(prefix, "lockbox_over_time_aggr_mean.pdf"), height = 7, width = 10)
 lapply(split(res3m.part, paste(res3m.part$lrn, res3m.part$problem, res3m.part$algorithm)), function(dat) {
   ggplot(data = dat, mapping = aes(x = iter, y = mean.lb, group = algo, color = algo)) +
     geom_line() +
@@ -194,7 +200,7 @@ dev.off()
 
 
 # Aggregate over repls, openbox_name and lockbox_name
-pdf("hypervolume_over_time_aggr_quartiles2.pdf", height = 7, width = 7)
+pdf(mkna4plot(prefix, "hypervolume_over_time_aggr_quartiles2.pdf"), height = 7, width = 7)
 ggplot(data = res2, mapping = aes(x = iter, y = cdhv, color = algo)) +
   stat_summary(geom = "ribbon",
     fun.ymin = function(x) quantile(x, 0.25, type = 2),
@@ -217,7 +223,7 @@ res2ma$upper[res2ma$iter %% 5 != 0] = NA
 
 res2ma.part = res2ma[iter >= 20, ]
 
-pdf("hypervolume_over_time_aggr_mean2.pdf", height = 7, width = 7)
+pdf(mkna4plot(prefix, "hypervolume_over_time_aggr_mean2.pdf"), height = 7, width = 7)
 ggplot(data = res2ma.part, mapping = aes(x = iter, y = mean.cdhv, group = algo, color = algo)) +
   geom_line() +
   ylab("Mean currently dominated hypervolume (based on all datasets except openbox)") +
@@ -237,10 +243,11 @@ res3ma = res3[, list(mean.lb = mean(lockbox.best)),
   by = c("lrn", "problem", "algorithm", "iter", "algo")]
 res3ma.part = res3ma[iter >= 20, ]
 
-pdf("lockbox_over_time_aggr_mean2.pdf", height = 7, width = 10)
+pdf(mkna4plot(prefix, "lockbox_over_time_aggr_mean2.pdf"), height = 7, width = 10)
 ggplot(data = res3ma.part, mapping = aes(x = iter, y = mean.lb, group = algo, color = algo)) +
   geom_line() +
   ylab("Mean current best mmce on lockbox") +
   facet_grid(lrn ~ problem + algorithm, scales = "free_y")
 dev.off()
+
 }
