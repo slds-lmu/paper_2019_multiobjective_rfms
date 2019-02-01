@@ -93,7 +93,7 @@ res3$lockbox.best = unlist(res3$lockbox.best)
 res4 = res1[, f3(mmce.openbox, iter), by = c("algo", jobinfo.cols)]
 res4$openbox.best = unlist(res4$openbox.best)
 
-saveRDS(list(res = res, res2 = res2, res3 = res3), file = filename)
+saveRDS(list(res = res, res2 = res2, res3 = res3, res4 = res4), file = filename)
 ###################################################################
 }
 # Plots
