@@ -3,9 +3,11 @@ library(ggplot2)
 
 dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
 dat = as.data.table(readRDS(file = "dt_14966_pca0.1.rds"))
+dat = as.data.table(readRDS(file = "dt_10101_stratif.rds"))
 
 context = "geo"
 context = "oml14966_pca0.1"
+context = "oml10101_stratif"
 dat = dat[bag == "outbag", ]
 unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
 

@@ -3,6 +3,7 @@ library(ggplot2)
 library(tidyr)
 dt = readRDS("dt_res_oml_jan29.rds")
 dt = readRDS("dt_lambdaJan31.rds")
+dt = readRDS("dt_10101_stratif.rds")
 
 genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
   library(hrbrthemes)
@@ -17,3 +18,4 @@ genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
 }
 
 genBox(dt_31, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_th", "fmo") )
+genBox(dt, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_th", "fmo") )
