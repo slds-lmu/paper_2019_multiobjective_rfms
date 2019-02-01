@@ -35,7 +35,6 @@ genBox2 = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
     x/worst
   }
   dtl[, mmce:=func(mmce), by = c("openbox_name", "lockbox_name", "lrn")]
-  browser()
   fig = ggplot2::ggplot(dtl, aes(x = algo, y = mmce, fill = bag)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(box)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_fill_ipsum()
   #+ ggtitle("comparison of mmce across learner and data site on geo dataset")
   ggsave(sprintf("boxplot_%s_%s_%s.pdf", dname, task_id, resample_name), plot = fig)
