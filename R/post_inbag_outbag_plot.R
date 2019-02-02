@@ -11,7 +11,7 @@ genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
   checkmate::assert(all(c("lrn", "algo", "bag", "openbox", "lockbox", "curator") %in% colnames(dt)))
   if(!is.null(kickout)) dt = dt[with(dt, !(algo %in% kickout)), ]
   dtl = tidyr::gather(dt, key = box, value = mmce, openbox, lockbox, curator)
-  fig = ggplot2::ggplot(dtl, aes(x = algo, y = mmce, fill = bag)) + geom_violin(draw_quantiles = c(0.25, 0.5, 0.75),adjust = .5, scale = "area" ) + facet_grid(rows = vars(lrn), cols = vars(box)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_fill_ipsum()
+  fig = ggplot2::ggplot(dtl, aes(x = algo, y = mmce, fill = bag)) + geom_violin(draw_quantiles = c(0.25, 0.5, 0.75),adjust = .5, scale = "count" ) + facet_grid(rows = vars(lrn), cols = vars(box)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_fill_ipsum()
   #+ ggtitle("comparison of mmce across learner and data site on geo dataset")
   ggsave(sprintf("boxplot_%s_%s_%s.pdf", dname, task_id, resample_name), plot = fig)
   fig

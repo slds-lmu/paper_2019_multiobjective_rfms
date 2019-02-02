@@ -2,11 +2,13 @@ alpha = function(f1, f2, alpha) {
  alpha * f1 + (1-alpha)  * f2
 }
 alphas = seq(from = 0.1, to = 0.9, by = 0.1)
-dtmmcenew[, alpha(openbox, curator, 0.5), by = seq_len(nrow(dtmmcenew))]
 
-
-
+library(data.table)
 dtmmcenew = readRDS("dt_lambdaJan31.rds")
+dtmmcenew[bag =="inbag", alpha(openbox, curator, 0.5)]
+
+
+
 
 
 dt_obcu = dtmmcenew[, c(.SD, setNames(lapply(alphas, function(x) alpha(openbox, curator, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dtmmcenew))]
@@ -35,11 +37,13 @@ dt_obcu_ig[, t(apply(.SD, 2, which.min)), by = .(algo, openbox_name, lockbox_nam
 
 fun = function(x) {
   y = x[, paste0("alpha", 1:9)]
-  ind = apply(y, 2, which.min)
-  best_ind_new = sapply(ind, function(i) x[i, best_ind])
-  x[ind, best_ind]
+  best_ind_pareto = apply(y, 2, which.min)
+  #best_ind_new = sapply(best_ind_pareto, function(i) x[i, best_ind_pareto])
+  #x[ind, best_ind]
+  as.list(best_ind_pareto)
 }
-dt_obcu_ig[1:4, paste0("ind",1:9) := fun(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+dt_obcu_ig[, paste0("ind", 1:9) := fun(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+dt_obcu_ig[1:4, fun(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
 
 
 
