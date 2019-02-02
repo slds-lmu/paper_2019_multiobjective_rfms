@@ -38,8 +38,6 @@ dt_obcu_ig[, t(apply(.SD, 2, which.min)), by = .(algo, openbox_name, lockbox_nam
 fun = function(x) {
   y = x[, paste0("alpha", 1:9)]
   best_ind_pareto = apply(y, 2, which.min)
-  #best_ind_new = sapply(best_ind_pareto, function(i) x[i, best_ind_pareto])
-  #x[ind, best_ind]
   as.list(best_ind_pareto)
 }
 dt_obcu_ig[, paste0("ind", 1:9) := fun(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
