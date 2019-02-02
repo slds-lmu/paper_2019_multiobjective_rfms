@@ -35,23 +35,32 @@ dt_obcu_ig[, idx:=apply(.SD, 2, which.min), by = .(algo, openbox_name, lockbox_n
 
 dt_obcu_ig[, t(apply(.SD, 2, which.min)), by = .(algo, openbox_name, lockbox_name, lrn, repl), .SDcols = paste0("alpha", 1:9)]
 
-fun = function(x) {
+takeind = function(x) {
   y = x[, paste0("alpha", 1:9)]
   best_ind_pareto = apply(y, 2, which.min)
   as.list(best_ind_pareto)
 }
-dt_obcu_ig[, paste0("ind", 1:9) := fun(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
-dt_obcu_ig[1:4, fun(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+dt_obcu_ig[, paste0("ind", 1:9) := takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+dt_obcu_ig[1:4, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
 
+unids = c("best_ind", "openbox_name", "lockbox_name", "lrn", "repl")
+unids2 = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
+obcu_sub = dt_obcu_ig[, c(paste0("ind", 1:9), unids), with = F]
 
+dtm = merge(obcu_sub, dt_obcu_og, by = unids)
 
-
-dt_obcu_og[, idx:=apply(.SD, 1, which.min), by = .(algo, openbox_name, lockbox_name, lrn, repl), .SDcols = paste0("alpha", 1:9)]
-dt_obcu_og$idx
-
-takeind = function(x) {
-  browser()
-  x$idx
+fun = function(x) {
+  lre = lapply(1:9, function(i) {
+    col = paste0("ind", i)
+    ind = x[, col, with = F][[col]][1]
+    x[ind, paste0("alpha", i), with = F] 
+  })
+  names(lre) = paste0("alphan", 1:9)
+  as.data.table(lre)
 }
 
-dt_obcu_ig[, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+dtm[, .N, by = unids2]
+dtm[algo == "fmo", .N, by = unids2]
+dtmr = dtm[algo == "fmo", fun(.SD), by = unids2]
+
+dtmr[, .N, by = unids2][,N]
