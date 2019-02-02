@@ -1,7 +1,8 @@
 # Reduce results of batchtools jobs
-bag2sel = "inbag"
+bag2sel = "outbag"
 filename = sprintf("tsc_%s.rds", bag2sel)
-redu = function() {
+library("batchtools")
+reg = loadRegistry("../output/georesponse_alpha/", writeable = T, conf.file = NA)
 library(data.table)
 # c("fmo", "fso_ladder", "fso_th", "fso2", "fso5", "fso8", "lso", "rand_mo")
 algos = c("fmo", "fso2", "fso5", "fso8", "lso", "rand_mo")
@@ -52,6 +53,7 @@ f1 = function(mmces, nam) {
 res1 = res[, f1(mmce, dataset), by = c("iter", "algo", jobinfo.cols)]
 
 f2 = function(x) {
+  #FIXME: only use ob-cu in the inbag
   iter = x$iter
   o.index = unique(x$openbox.index)
   nc = ncol(x)
@@ -65,8 +67,14 @@ f2 = function(x) {
   return(data.table(iter = iter, cdhv = dhvs))
 }
 
-# res1$curator_names = sapply()
-#func = function(x) {
+
+mmcecols = substring(mmce.cols, first = 6)
+curator_names = lapply(1:nrow(res1), function(i){
+   y = res1[i, ]
+   cuna = setdiff(mmcecols, c(y$openbox_name, y$lockbox_name)) 
+   as.list(cuna)
+ })
+func = function(x) {
   mmcecols = substring(mmce.cols, first = 6)
   curator_names = sapply(1:nrow(res1), function(i) {
     y = x[i, ]
@@ -75,10 +83,11 @@ f2 = function(x) {
 #  browser()
 #  tor = data.table(curator_names = as.list(cuna))
 #  return(tor)
-#}
-mmce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
+}
+
+mamce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
 openbox.ind = sapply(res1$openbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
-#curator.ind = sapply(res1$curator_name, function(n) which(n == substring(mmce.cols, first = 6)))
+#curator.ind = sapply(res1$curator_names, function(n) which(n == substring(mmce.cols, first = 6)))
 res1 = cbind(res1, openbox.index = openbox.ind)
 
 #res1[, curator_names:= func(.SD), by = c("openbox_name", "lockbox_name"), .SDcols = c("openbox_name", "lockbox_name")]
@@ -106,7 +115,6 @@ f3 = function(mmces, iter) {
 }
 res3 = res1[, f3(mmce.lockbox, iter), by = c("algo", jobinfo.cols)]
 res3$lockbox.best = unlist(res3$lockbox.best)
-browser()
 f4 = function(mmces, iter) {
   best = lapply(1:length(iter), function(i) {
     min(mmces[1:i])
@@ -125,6 +133,5 @@ f5 = function(mmces, iter) {
 }
 
 saveRDS(list(res = res, res2 = res2, res3 = res3, res4 = res4), file = filename)
-###################################################################
-}
+
 # source("utility_tsc_plot.R")
