@@ -66,17 +66,23 @@ f2 = function(x) {
 }
 
 # res1$curator_names = sapply()
-func = function(x) {
+#func = function(x) {
   mmcecols = substring(mmce.cols, first = 6)
-  cuna = setdiff(mmcecols, c(x$openbox_name[1], x$lockbox_name[1])) 
-  as.list(cuna)
-}
-res1[, curator_names:= func(.SD), by = c("openbox_name", "lockbox_name"), .SDcols = c("openbox_name", "lockbox_name")]
+  curator_names = sapply(1:nrow(res1), function(i) {
+    y = x[i, ]
+    cuna = setdiff(mmcecols, c(y$openbox_name, y$lockbox_name)) 
+  })
+#  browser()
+#  tor = data.table(curator_names = as.list(cuna))
+#  return(tor)
+#}
 mmce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
 openbox.ind = sapply(res1$openbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
 #curator.ind = sapply(res1$curator_name, function(n) which(n == substring(mmce.cols, first = 6)))
 res1 = cbind(res1, openbox.index = openbox.ind)
 
+#res1[, curator_names:= func(.SD), by = c("openbox_name", "lockbox_name"), .SDcols = c("openbox_name", "lockbox_name")]
+res1[, curator_names:= func(.SD)]
 
 res2 = res1[, f2(.SD), .SDcols = c(mmce.cols, "iter", "openbox.index"), by = c("algo", jobinfo.cols)]
 res2$cdhv = unlist(res2$cdhv)
