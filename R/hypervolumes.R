@@ -6,9 +6,12 @@ dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
 dat = as.data.table(readRDS(file = "dt_14966_pca0.1.rds"))
 dat = as.data.table(readRDS(file = "dt_10101_stratif.rds"))
 
+dat = as.data.table(readRDS(file = "dt_14966_stratif.rds"))
+
 context = "geo"
 context = "oml14966_pca0.1"
 context = "oml10101_stratif"
+context = "oml14966_stratif"
 dat = dat[bag == "outbag", ]
 unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
 
@@ -17,6 +20,7 @@ unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
 
 
 unique_ids2 = c("openbox_name", "lockbox_name", "lrn", "repl")
+#kickout = c("fso_ladder", "fso_th")
 kickout = c("fso_ladder", "fso_th", "rand")
 
 dat = dat[with(dat, !(algo %in% kickout)), ]
