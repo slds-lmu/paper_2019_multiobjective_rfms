@@ -1,7 +1,8 @@
 # Reduce results of batchtools jobs
 bag2sel = "outbag"
 filename = sprintf("tsc_%s.rds", bag2sel)
-redu = function() {
+library("batchtools")
+reg = loadRegistry("../output/georesponse_alpha/", writeable = T, conf.file = NA)
 library(data.table)
 # c("fmo", "fso_ladder", "fso_th", "fso2", "fso5", "fso8", "lso", "rand_mo")
 algos = c("fmo", "fso2", "fso5", "fso8", "lso", "rand_mo")
@@ -67,7 +68,7 @@ f2 = function(x) {
 
 
 mmcecols = substring(mmce.cols, first = 6)
-curator_names = sapply(1:nrow(res1), function(i){
+curator_names = lapply(1:nrow(res1), function(i){
    y = res1[i, ]
    cuna = setdiff(mmcecols, c(y$openbox_name, y$lockbox_name)) 
    as.list(cuna)
@@ -81,9 +82,9 @@ func = function(x) {
 #  browser()
 #  tor = data.table(curator_names = as.list(cuna))
 #  return(tor)
-#}
+}
 
-mmce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
+mamce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
 openbox.ind = sapply(res1$openbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
 #curator.ind = sapply(res1$curator_names, function(n) which(n == substring(mmce.cols, first = 6)))
 res1 = cbind(res1, openbox.index = openbox.ind)
@@ -131,6 +132,5 @@ f5 = function(mmces, iter) {
 }
 
 saveRDS(list(res = res, res2 = res2, res3 = res3, res4 = res4), file = filename)
-###################################################################
-}
+
 # source("utility_tsc_plot.R")
