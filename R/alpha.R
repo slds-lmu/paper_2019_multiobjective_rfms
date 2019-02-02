@@ -55,12 +55,18 @@ fun = function(x) {
     ind = x[, col, with = F][[col]][1]
     x[ind, paste0("alpha", i), with = F] 
   })
-  names(lre) = paste0("alphan", 1:9)
+  #names(lre) = paste0("alphan", 1:9)
   as.data.table(lre)
 }
 
 dtm[, .N, by = unids2]
 dtm[algo == "fmo", .N, by = unids2]
-dtmr = dtm[algo == "fmo", fun(.SD), by = unids2]
-
+dtmr_fmo = dtm[algo == "fmo", fun(.SD), by = unids2]
+dtmr = dtm[, fun(.SD), by = unids2]
+dtmr
 dtmr[, .N, by = unids2][,N]
+
+dtmrl = tidyr::gather(dtmr, key = alpha, value = mmce, alpha1:alpha9)
+
+ggplot2::ggplot(dtmrl, aes(x = algo, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
+ggsave(file = "openbox-curator-alpha.pdf")
