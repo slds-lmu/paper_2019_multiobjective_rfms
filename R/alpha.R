@@ -4,13 +4,12 @@ alpha_mix = function(f1, f2, alpha) {
 alphas = seq(from = 0.1, to = 0.9, by = 0.1)
 
 library(data.table)
-dtmmcenew = readRDS("dt_lambdaJan31.rds")
+dtmmcenew = readRDS("dt_res_geo_response.rds")
 dtmmcenew[bag =="inbag", alpha_mix(openbox, curator, 0.5)]
 
 
 
 
-dtmmcenew = dtmmcenew[, by = bag]
 
 dtmmcenew[, cid := seq_len(.N), by = .(openbox_name, lockbox_name, lrn, repl, algo, bag)]
 #dtmmcenew[, seq_len(.N), by = runids]
@@ -29,6 +28,7 @@ library(ggplot2)
 dtl = tidyr::gather(dt_obcu_og, key = alpha, value = mmce, alpha1:alpha9)
 
 ggplot2::ggplot(dtl, aes(x = alpha, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
+ggplot2::ggplot(dtl, aes(x = algo, y = mmce)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
 ggsave(file = "openbox-curator-alpha.pdf")
 
 dtl2 = tidyr::gather(dt_oblb_og, key = alpha, value = mmce, alpha1:alpha9)
@@ -43,15 +43,19 @@ takeind = function(x) {
   #checkmate::assert(best_ind_pareto <=nrow(x))
   as.list(best_ind_pareto)
 }
-dt_obcu_ig[, paste0("sel_ind", 1:9) := takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
-dt_obcu_ig[1:40, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
 
-unids = c("best_ind", "openbox_name", "lockbox_name", "lrn", "repl")
-unids_merge = c("cid", "openbox_name", "lockbox_name", "lrn", "repl")
+dt_obcu_ig[1:40, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+dt_obcu_ig[, paste0("sel_ind", 1:9) := takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+
+unids = c("best_ind", "job_id", "cid", "openbox_name", "lockbox_name", "lrn", "repl")
+unids_merge = c("job_id", "openbox_name", "lockbox_name", "lrn", "repl")
 unids2 = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
 obcu_sub = dt_obcu_ig[, c(paste0("sel_ind", 1:9), unids), with = F]
 
-dtm = merge(obcu_sub, dt_obcu_og, by = unids)
+obcu_sub[, unids_merge, with = F]
+dt_obcu_og[, unids_merge, with = F]
+#dtm = merge(obcu_sub, dt_obcu_og, by = unids_merge, all.y = all)
+dtm = merge(obcu_sub, dt_obcu_og)
 
 fun = function(x) {
   lre = lapply(1:9, function(i) {
