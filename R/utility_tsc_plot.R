@@ -1,4 +1,4 @@
-bag2sel = "inbag"
+bag2sel = "outbag"
 filename = sprintf("tsc_%s.rds", bag2sel)
 # Plots
 # since cluster does not support plot, the following code will be execulated locally.
