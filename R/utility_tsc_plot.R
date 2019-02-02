@@ -145,7 +145,6 @@ dev.off()
 res3ma = res3[, list(mean.lb = mean(lockbox.best)),
   by = c("lrn", "problem", "algorithm", "iter", "algo")]
 res3ma.part = res3ma[iter >= 20, ]
-browser()
 # lockbox inbag and outbag is the same
 pdf(mkna4plot(prefix, "lockbox_over_time_aggr_mean2.pdf"), height = 7, width = 10)
 ggplot(data = res3ma.part, mapping = aes(x = iter, y = mean.lb, group = algo, color = algo)) +
