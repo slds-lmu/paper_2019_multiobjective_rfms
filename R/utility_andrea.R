@@ -53,6 +53,7 @@ f1 = function(mmces, nam) {
 res1 = res[, f1(mmce, dataset), by = c("iter", "algo", jobinfo.cols)]
 
 f2 = function(x) {
+  #FIXME: only use ob-cu in the inbag
   iter = x$iter
   o.index = unique(x$openbox.index)
   nc = ncol(x)
