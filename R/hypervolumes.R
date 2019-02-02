@@ -1,11 +1,14 @@
 library(data.table)
+library(hrbrthemes)
 library(ggplot2)
 
 dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
 dat = as.data.table(readRDS(file = "dt_14966_pca0.1.rds"))
+dat = as.data.table(readRDS(file = "dt_10101_stratif.rds"))
 
 context = "geo"
 context = "oml14966_pca0.1"
+context = "oml10101_stratif"
 dat = dat[bag == "outbag", ]
 unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
 
@@ -49,10 +52,9 @@ dev.off()
 dat3 = dat2[, list(mdhv = mean(dhv)), by = unique_ids]
 
 pdf(file = sprintf("mean_hypervolumes_%s.pdf", context), height = 7, width = 10)
-ggplot(data = dat3, mapping = aes(y = mdhv, x = algo, color = algo)) +
+ggplot(data = dat3, mapping = aes(y = mdhv, x = algo, fill = algo)) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +
-  xlab("Algorithm") + ylab("Mean dominated hyper volume") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +  theme_bw() + scale_fill_ipsum() + xlab("Algorithm") + ylab("Mean dominated hyper volume") +
   facet_wrap("lrn")
 dev.off()
 
