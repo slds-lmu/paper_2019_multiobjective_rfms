@@ -1,25 +1,30 @@
-alpha = function(f1, f2, alpha) {
+alpha_mix = function(f1, f2, alpha) {
  alpha * f1 + (1-alpha)  * f2
 }
 alphas = seq(from = 0.1, to = 0.9, by = 0.1)
 
 library(data.table)
 dtmmcenew = readRDS("dt_lambdaJan31.rds")
-dtmmcenew[bag =="inbag", alpha(openbox, curator, 0.5)]
+dtmmcenew[bag =="inbag", alpha_mix(openbox, curator, 0.5)]
 
 
 
 
+dtmmcenew = dtmmcenew[, by = bag]
 
-dt_obcu = dtmmcenew[, c(.SD, setNames(lapply(alphas, function(x) alpha(openbox, curator, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dtmmcenew))]
-dt_oblb = dtmmcenew[, c(.SD, setNames(lapply(alphas, function(x) alpha(openbox, lockbox, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dtmmcenew))]
+dtmmcenew[, cid := seq_len(.N), by = .(openbox_name, lockbox_name, lrn, repl, algo, bag)]
+#dtmmcenew[, seq_len(.N), by = runids]
+dtmmcenew$cid
 
+dt_obcu = dtmmcenew[, c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, curator, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dtmmcenew))] # the benefit is get a unique identifier
+
+dt_oblb = dtmmcenew[, c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, lockbox, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dtmmcenew))]
+dt_oblb_og = dtmmcenew[bag!="inbag", c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, lockbox, x)), paste0("alpha", 1:9)))]
 
 dt_obcu_ig = dt_obcu[bag=="inbag"]
 dt_obcu_og = dt_obcu[bag=="outbag"]
-dt_oblb_og = dt_oblb[bag=="outbag"]
 
-library(ggplot)
+library(ggplot2)
 
 dtl = tidyr::gather(dt_obcu_og, key = alpha, value = mmce, alpha1:alpha9)
 
@@ -31,31 +36,31 @@ ggplot2::ggplot(dtl2, aes(x = alpha, y = mmce, fill = algo)) + geom_boxplot() + 
 ggsave(file = "openbox-lockbox-alpha.pdf")
 
 
-dt_obcu_ig[, idx:=apply(.SD, 2, which.min), by = .(algo, openbox_name, lockbox_name, lrn, repl), .SDcols = paste0("alpha", 1:9)]
-
-dt_obcu_ig[, t(apply(.SD, 2, which.min)), by = .(algo, openbox_name, lockbox_name, lrn, repl), .SDcols = paste0("alpha", 1:9)]
-
 takeind = function(x) {
   y = x[, paste0("alpha", 1:9)]
   best_ind_pareto = apply(y, 2, which.min)
+  if(any(best_ind_pareto > nrow(x))) stop("excced nrow!")
+  #checkmate::assert(best_ind_pareto <=nrow(x))
   as.list(best_ind_pareto)
 }
-dt_obcu_ig[, paste0("ind", 1:9) := takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
-dt_obcu_ig[1:4, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+dt_obcu_ig[, paste0("sel_ind", 1:9) := takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+dt_obcu_ig[1:40, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
 
 unids = c("best_ind", "openbox_name", "lockbox_name", "lrn", "repl")
+unids_merge = c("cid", "openbox_name", "lockbox_name", "lrn", "repl")
 unids2 = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
-obcu_sub = dt_obcu_ig[, c(paste0("ind", 1:9), unids), with = F]
+obcu_sub = dt_obcu_ig[, c(paste0("sel_ind", 1:9), unids), with = F]
 
 dtm = merge(obcu_sub, dt_obcu_og, by = unids)
 
 fun = function(x) {
   lre = lapply(1:9, function(i) {
-    col = paste0("ind", i)
+    col = paste0("sel_ind", i)
     ind = x[, col, with = F][[col]][1]
     x[ind, paste0("alpha", i), with = F] 
   })
   #names(lre) = paste0("alphan", 1:9)
+  if (any(is.na(unlist(lre)))) browser()
   as.data.table(lre)
 }
 

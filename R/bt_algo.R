@@ -368,6 +368,8 @@ reduceResult = function(ids = findDone()) {
   reslist = reduceResultsList(ids = ids, fun = function(job, res) {
     # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
     dt = agg_genTable_onejob(res$res)
+    browser()
+    dt$job_id = job$job.id
     dt$repl = job$repl
     dt$dsna = job$prob.pars$dataset_name
     dt$lrn = job$algo.pars$lrn
