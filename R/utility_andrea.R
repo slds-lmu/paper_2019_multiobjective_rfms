@@ -65,9 +65,24 @@ f2 = function(x) {
   return(data.table(iter = iter, cdhv = dhvs))
 }
 
+# res1$curator_names = sapply()
+#func = function(x) {
+  mmcecols = substring(mmce.cols, first = 6)
+  curator_names = sapply(1:nrow(res1), function(i) {
+    y = x[i, ]
+    cuna = setdiff(mmcecols, c(y$openbox_name, y$lockbox_name)) 
+  })
+#  browser()
+#  tor = data.table(curator_names = as.list(cuna))
+#  return(tor)
+#}
 mmce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
 openbox.ind = sapply(res1$openbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
+#curator.ind = sapply(res1$curator_name, function(n) which(n == substring(mmce.cols, first = 6)))
 res1 = cbind(res1, openbox.index = openbox.ind)
+
+#res1[, curator_names:= func(.SD), by = c("openbox_name", "lockbox_name"), .SDcols = c("openbox_name", "lockbox_name")]
+res1[, curator_names:= func(.SD)]
 
 res2 = res1[, f2(.SD), .SDcols = c(mmce.cols, "iter", "openbox.index"), by = c("algo", jobinfo.cols)]
 res2$cdhv = unlist(res2$cdhv)
@@ -79,7 +94,9 @@ res2$cdhv = unlist(res2$cdhv)
 lockbox.ind = sapply(res1$lockbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
 tmp = subset(res1, select = mmce.cols)
 lockbox.perf = unlist(sapply(1:length(lockbox.ind), function(i) tmp[i, lockbox.ind[i], with = FALSE]))
+openbox.perf = unlist(sapply(1:length(openbox.ind), function(i) tmp[i, openbox.ind[i], with = FALSE]))
 res1 = cbind(res1, mmce.lockbox = lockbox.perf)  # slow step
+res1 = cbind(res1, mmce.openbox = openbox.perf)  # slow step
 
 f3 = function(mmces, iter) {
   best = lapply(1:length(iter), function(i) {
@@ -89,9 +106,23 @@ f3 = function(mmces, iter) {
 }
 res3 = res1[, f3(mmce.lockbox, iter), by = c("algo", jobinfo.cols)]
 res3$lockbox.best = unlist(res3$lockbox.best)
+browser()
+f4 = function(mmces, iter) {
+  best = lapply(1:length(iter), function(i) {
+    min(mmces[1:i])
+  })
+  return(data.table(iter = iter, openbox.best = best))
+}
 
-res4 = res1[, f3(mmce.openbox, iter), by = c("algo", jobinfo.cols)]
+res4 = res1[, f4(mmce.openbox, iter), by = c("algo", jobinfo.cols)]
 res4$openbox.best = unlist(res4$openbox.best)
+
+f5 = function(mmces, iter) {
+  best = lapply(1:length(iter), function(i) {
+    min(mmces[1:i])
+  })
+  return(data.table(iter = iter, curator.best = best))
+}
 
 saveRDS(list(res = res, res2 = res2, res3 = res3, res4 = res4), file = filename)
 ###################################################################
