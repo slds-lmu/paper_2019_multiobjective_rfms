@@ -363,7 +363,7 @@ agg_mo = function(res_all, meas_name = "mmce", algo_name) {
   dt$algo = algo_name
   dt
 }
-#' library("batchtools"); reg = loadRegistry("../output/georesponse", conf.file = NA, writeable = T); dt_res_geo_response = reduceResult()
+#' library("batchtools"); reg = loadRegistry("../output/georesponse", conf.file = NA, writeable = T); dt_res_geo_response = reduceResult(); saveRDS(dt_res_geo_response, file = "dt_res_geo_response")
 reduceResult = function(ids = findDone()) {
   reslist = reduceResultsList(ids = ids, fun = function(job, res) {
     # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
