@@ -1,5 +1,5 @@
 # Reduce results of batchtools jobs
-bag2sel = "inbag"
+bag2sel = "outbag"
 filename = sprintf("tsc_%s.rds", bag2sel)
 redu = function() {
 library(data.table)
@@ -65,8 +65,14 @@ f2 = function(x) {
   return(data.table(iter = iter, cdhv = dhvs))
 }
 
-# res1$curator_names = sapply()
-#func = function(x) {
+
+mmcecols = substring(mmce.cols, first = 6)
+curator_names = sapply(1:nrow(res1), function(i){
+   y = res1[i, ]
+   cuna = setdiff(mmcecols, c(y$openbox_name, y$lockbox_name)) 
+   as.list(cuna)
+ })
+func = function(x) {
   mmcecols = substring(mmce.cols, first = 6)
   curator_names = sapply(1:nrow(res1), function(i) {
     y = x[i, ]
@@ -76,9 +82,10 @@ f2 = function(x) {
 #  tor = data.table(curator_names = as.list(cuna))
 #  return(tor)
 #}
+
 mmce.cols = colnames(res1)[grep("mmce.", colnames(res1))]
 openbox.ind = sapply(res1$openbox_name, function(n) which(n == substring(mmce.cols, first = 6)))
-#curator.ind = sapply(res1$curator_name, function(n) which(n == substring(mmce.cols, first = 6)))
+#curator.ind = sapply(res1$curator_names, function(n) which(n == substring(mmce.cols, first = 6)))
 res1 = cbind(res1, openbox.index = openbox.ind)
 
 #res1[, curator_names:= func(.SD), by = c("openbox_name", "lockbox_name"), .SDcols = c("openbox_name", "lockbox_name")]
@@ -106,7 +113,6 @@ f3 = function(mmces, iter) {
 }
 res3 = res1[, f3(mmce.lockbox, iter), by = c("algo", jobinfo.cols)]
 res3$lockbox.best = unlist(res3$lockbox.best)
-browser()
 f4 = function(mmces, iter) {
   best = lapply(1:length(iter), function(i) {
     min(mmces[1:i])
