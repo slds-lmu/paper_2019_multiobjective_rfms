@@ -1,24 +1,30 @@
+library(data.table)
+
+dtin = readRDS("dt_res_geo_response.rds")
+
+
+#' dtin[bag =="inbag", alpha_mix(openbox, curator, 0.5)]
 alpha_mix = function(f1, f2, alpha) {
  alpha * f1 + (1-alpha)  * f2
 }
 alphas = seq(from = 0.1, to = 0.9, by = 0.1)
 
-library(data.table)
-dtmmcenew = readRDS("dt_res_geo_response.rds")
-dtmmcenew[bag =="inbag", alpha_mix(openbox, curator, 0.5)]
 
 
 
 
 
-dtmmcenew[, cid := seq_len(.N), by = .(openbox_name, lockbox_name, lrn, repl, algo, bag)]
-#dtmmcenew[, seq_len(.N), by = runids]
-dtmmcenew$cid
+#dt2plot = dtin[(openbox_name=="GSE16446") & (lockbox_name=="GSE20194"),]
+dt2plot = dtin
+# no change now
+dt2plot[, cid := seq_len(.N), by = .(openbox_name, lockbox_name, lrn, repl, algo, bag)]
+#dt2plot[, seq_len(.N), by = runids]
+dt2plot$cid
 
-dt_obcu = dtmmcenew[, c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, curator, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dtmmcenew))] # the benefit is get a unique identifier
+dt_obcu = dt2plot[, c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, curator, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dt2plot))] # the benefit is get a unique identifier
 
-dt_oblb = dtmmcenew[, c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, lockbox, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dtmmcenew))]
-dt_oblb_og = dtmmcenew[bag!="inbag", c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, lockbox, x)), paste0("alpha", 1:9)))]
+dt_oblb = dt2plot[, c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, lockbox, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dt2plot))]
+dt_oblb_og = dt2plot[bag!="inbag", c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, lockbox, x)), paste0("alpha", 1:9)))]
 
 dt_obcu_ig = dt_obcu[bag=="inbag"]
 dt_obcu_og = dt_obcu[bag=="outbag"]
@@ -80,7 +86,7 @@ dtmr[, .N, by = unids2][,N]
 dtmrl = tidyr::gather(dtmr, key = alpha, value = mmce, alpha1:alpha9)
 dtmrl_lb = tidyr::gather(dtmr_lb, key = alpha, value = mmce, alpha1:alpha9)
 
-ggplot2::ggplot(dtmrl, aes(x = algo, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
+ggplot2::ggplot(dtmrl, aes(x = algo, y = mmce, fill = algo)) + geom_violin() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
 ggsave(file = "openbox-curator-alpha.pdf")
 
 ggplot2::ggplot(dtmrl_lb, aes(x = algo, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-lockbox")

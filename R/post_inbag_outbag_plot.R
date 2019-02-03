@@ -6,6 +6,7 @@ dt = readRDS("dt_lambdaJan31.rds")
 dt = readRDS("dt_10101_stratif.rds")
 dt = readRDS("dt_res_geo_response.rds")
 
+dt2 = dt[(openbox_name=="GSE16446") & (lockbox_name=="GSE20194"),]
 genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
   library(hrbrthemes)
   library(ggplot2)
@@ -18,7 +19,10 @@ genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
   fig
 }
 
-genBox(dt, task_id = 31, dname = "geo", resample_name = "stratif", kickout = c("fso_th", "fso_ladder", "rand_mo") )
+
+
+
+genBox(dt, task_id = "", dname = "geo", resample_name = "", kickout = c("fso_th", "fso_ladder") )
 
 
 genBox2 = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
