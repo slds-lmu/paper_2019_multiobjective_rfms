@@ -54,10 +54,22 @@ getMlrTaskFromOML = function(oml_task_id) {
 #'Output is a list of indices for each dataset
 #'@example
 #'clusterMlrTask(mlr_task = getMlrTaskFromOML(14966), n_datasets = 5, balanced = T, pca_var_ratio = 0.7)
-rebalance = function(list_oneclass_index ) {
-  lens = sapply(list_oneclass_index, length)
-  rel = order(lens, decreasing = F)
-  #rel[1] is the smallest cluster
+rebalance = function(list_oneclass_index_rel_input, ratio = 0.1, rebalance_size = 5) {
+  list_oneclass_index_rel= list_oneclass_index_rel_input
+  k = length(list_oneclass_index_rel)
+  lens = sapply(list_oneclass_index_rel, length)
+  n = sum(lens)
+  rel_ind_inc = order(lens, decreasing = F)
+  while(( min(lens) / n) < ratio) {
+    mincluster = rel_ind_inc[1]
+    maxcluster = rel_ind_inc[k]
+    ind_rel = sample(lens[maxcluster], size = rebalance_size)
+    list_oneclass_index_rel[[mincluster]] =  c(list_oneclass_index_rel[[mincluster]], list_oneclass_index_rel[[maxcluster]][ind_rel])
+    list_oneclass_index_rel[[maxcluster]]  = list_oneclass_index_rel[[maxcluster]][-ind_rel]
+    lens = sapply(list_oneclass_index_rel, length)
+    rel_ind_inc = order(lens, decreasing = F)
+  }
+  return(list_oneclass_index_rel)
 }
 
 clusterMlrTask = function(mlr_task, n_datasets = 5L, balanced = T, pca_var_ratio = 0.7) {
@@ -84,6 +96,7 @@ clusterMlrTask = function(mlr_task, n_datasets = 5L, balanced = T, pca_var_ratio
       prds = predict(mod, ctsk)
       cluster_response = unique(prds$data$response)
       list_oneclass_index_rel = sapply(cluster_response, function(cluster_ind) which(prds$data$response == cluster_ind))
+      rebalance(list_oneclass_index_rel)
       list_oneclass_index = lapply(list_oneclass_index_rel, function(x) global_ind[x])  # transform to global index
     })
     allinds = c(pt[[1]], pt[[2]])
