@@ -177,7 +177,7 @@ convertInst2ThresholdoutAUC = function(instance, conf) {
 }
 
 
-algo_thresholdoutauc = function(instance, conf) {
+# algo_thresholdoutauc = function(instance, conf) {
 #   conf = list(n_adapt_rounds = 10
 #   ,signif_level = 0.0001           # cutoff level used to determine which predictors to consider in each round based on their p-values. set small here for bigger parsimosmally for quick convergence
 #   ,thresholdout_threshold = 0.02 # T in the Thresholdout algorithm
@@ -191,13 +191,13 @@ algo_thresholdoutauc = function(instance, conf) {
  
   #thresholdoutauc = algo_thresholdoutauc(instance = instance, conf = conf)  # enough repetition is sufficient to get unbiased result of the random adding of instances
 
-  source("thresholdout4real_data/refactor_general_simulation.R", chdir = T)
-  results = run_sim(data_fun = convertInst2ThresholdoutAUC, instance = instance, conf = conf)
-  rowind_test = which((results$dataset == "test_auc") & (results$round == 10))  # the last round
-  rowind_holdout = which((results$dataset == "holdout_auc") & (results$round == 10))
-  results[rowind_test, ]  # test set
-  results[rowind_holdout, ]  # test set
-}
+  # source("thresholdout4real_data/refactor_general_simulation.R", chdir = T)
+  # results = run_sim(data_fun = convertInst2ThresholdoutAUC, instance = instance, conf = conf)
+  # rowind_test = which((results$dataset == "test_auc") & (results$round == 10))  # the last round
+  # rowind_holdout = which((results$dataset == "holdout_auc") & (results$round == 10))
+  # results[rowind_test, ]  # test set
+  # results[rowind_holdout, ]  # test set
+  # }
 
 
 # only depend on the lockbox
@@ -205,30 +205,16 @@ algoCheating = function(instance, lrn) {
   res = list()
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
-  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
-  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune, calMeasVec = getGconf()$fun_cal_ladder_vec)
-
-  meas_openbox_cv = mk_measure(name = "meas_openbox_cv", extra.args, obj_fun = fun_measure_obj_openbox)
-  measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)
-  measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
-  meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
-  mk_measure_local2remote(extra.args_bs2)
-
- ### MultiObj
-  context = "fmo"
-  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
-
- 
- #tune_res_bs4 = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_local_tr_tune_remote_tune_nocv(extra.args), mmce), gperf_env = gperf_env, context = "bs4")
-  ## redefine extra.args
-  #   extra.args_bs2 =  getOpenBox2CuratorBoxID(instance)
-  #   missingns = setdiff(names(extra.args), names(extra.args_bs2))
-  #   extra.args_bs2 = c(extra.args_bs2, extra.args[missingns])
-  #   tune_res_lso_openbox_curator = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(mk_measure_local2remote(extra.args_bs2), mmce), gperf_env = gperf_env, context = "bs2")  # mk_measure_local2remote inside call measure_curator to populate the gperf_env environment, so it is a bad idea to add measure_curator again, also because measure_curator added to the outside does not give us the right result since bs2 is a oracle which use all the d_mf and d_ms.
-  #   print("baseline 2 single crit major + remote tuning finished")
-  #   print(proc.time() - ptmi)
-  # 
- # tune_res_lso_openbox_curator = tune_res_lso_openbox_curator, 
+  mbo_design = getMBODesign(lrn, getGconf())
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune)
+  cmeas  = mk_measure(name = "meas_ob_cu_cv", extra.args, obj_fun = fun_measure_obj_cso)
+  mgconf = getGconf()
+  ctrl_bs = getTuneMethod("mbodefault", mgconf = mgconf)
+  ctrl_bs$mbo.design = mbo_design
+  tune_res_cso = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list(cmeas, mmce), par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_bs, show.info = TRUE)  # only the first of the list_measures are being tuned
+  cat(sprintf("\n\n\n %s finished  \n\n\n", context))
+  print(proc.time() - ptmi)
+  tune_res_cso 
 }
 
 
