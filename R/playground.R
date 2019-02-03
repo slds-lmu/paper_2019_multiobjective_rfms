@@ -44,6 +44,7 @@ run_cluster = function() {
   regname = "../output/reg_all_jan29"
   regname = "../output/reg_all_jan31"
   regname = "../output/reg_feb2"
+  regname = "../output/reg_feb3_rebalnce"
   DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo)
   source("bt_conf.R")
   source("bt_main.R")
@@ -64,6 +65,11 @@ subm = function(probname = "prob_oml_stratif", task_id = 31) {
     dt2sub = unwrap(getJobPars()[problem == probname][, .(job.id, prob.pars)])
     ind = (dt2sub$task_id == task_id) 
     dt2sub[ind, ]
+=======
+    # probname = "prob_oml_stratkif"
+    unwrap(getJobPars()[, .(job.id, prob.pars)])[task_id == 3891]
+    unwrap(getJobPars()[problem == "prob_oml_cluster", .(job.id, prob.pars)]) # task_id = 31 dt2sub = unwrap(getJobPars()[problem == probname][, .(job.id, prob.pars)])
+    ind = (dt2sub$task_id == task_id) 
 }
 
 dt = subm(probname = "prob_oml_cluster", task_id = 14966)

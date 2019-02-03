@@ -53,14 +53,30 @@ getMlrTaskFromOML = function(oml_task_id) {
 #'@ description
 #'Output is a list of indices for each dataset
 #'@example
-#'clusterMlrTask(mlr_task = getMlrTaskFromOML(14966), n_datasets = 5, balanced = T, pca_var_ratio = 0.7)
-rebalance = function(list_oneclass_index ) {
-  lens = sapply(list_oneclass_index, length)
-  rel = order(lens, decreasing = F)
-  #rel[1] is the smallest cluster
+#'clusterMlrTask(mlr_task = getMlrTaskFromOML(3891), n_datasets = 5, balanced = T, pca_var_ratio = 0.7)
+rebalance = function(list_oneclass_index_rel_input, ratio = 0.1, rebalance_size = 5) {
+  list_oneclass_index_rel= list_oneclass_index_rel_input
+  k = length(list_oneclass_index_rel)
+  lens = sapply(list_oneclass_index_rel, length)
+  n = sum(lens)
+  rel_ind_inc = order(lens, decreasing = F)
+  count = 0
+  while(( min(lens) / n) < ratio) {
+    count = count + 1
+    cat(sprintf("rebalancing %s times", count))
+    mincluster = rel_ind_inc[1]
+    maxcluster = rel_ind_inc[k]
+    ind_rel = sample(lens[maxcluster], size = rebalance_size)
+    list_oneclass_index_rel[[mincluster]] =  c(list_oneclass_index_rel[[mincluster]], list_oneclass_index_rel[[maxcluster]][ind_rel])
+    list_oneclass_index_rel[[maxcluster]]  = list_oneclass_index_rel[[maxcluster]][-ind_rel]
+    lens = sapply(list_oneclass_index_rel, length)
+    rel_ind_inc = order(lens, decreasing = F)
+  }
+  return(list_oneclass_index_rel)
 }
 
 clusterMlrTask = function(mlr_task, n_datasets = 5L, balanced = T, pca_var_ratio = 0.7) {
+  cat(sprintf("clustering"))
   df = getTaskData(mlr_task, target.extra = TRUE)
   if (!balanced) {
     checkmate::assert(!"dataset_accn" %in% colnames(df))
@@ -84,6 +100,15 @@ clusterMlrTask = function(mlr_task, n_datasets = 5L, balanced = T, pca_var_ratio
       prds = predict(mod, ctsk)
       cluster_response = unique(prds$data$response)
       list_oneclass_index_rel = sapply(cluster_response, function(cluster_ind) which(prds$data$response == cluster_ind))
+      lenv = sapply(list_oneclass_index_rel, length)
+      lenvstr = paste(as.character(lenv), collapse = "-")
+      cat(sprintf("\n before reblancing, cluster size list: %s \n", lenvstr))
+      #
+      list_oneclass_index_rel = rebalance(list_oneclass_index_rel)
+      #
+      lenv = sapply(list_oneclass_index_rel, length)
+      lenvstr = paste(as.character(lenv), collapse = "-")
+      cat(sprintf("\n after reblancing, cluster size list: %s \n", lenvstr))
       list_oneclass_index = lapply(list_oneclass_index_rel, function(x) global_ind[x])  # transform to global index
     })
     allinds = c(pt[[1]], pt[[2]])
