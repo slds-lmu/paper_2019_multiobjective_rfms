@@ -55,22 +55,25 @@ gconf = list(
   CV_ITER_OUTER = 5L, # make it consistent with our 5 split 
   MBO_ITERS = 40L, # 16d
   INIT_DES = 20L,  # default 8d
-  task.ids = c(14966, 3891, 10101, 31) # input
+  #task.ids = c(14966, 3891, 10101, 31) # input
+  task.ids = c(3608, 3891) # input
   # 14966 bioresponse
   # 3891 gina-agnostic
   # 9950 micro-mass  (20 classes)
   # 9981 cnae-9 (9 class to 2 class)
   # 167125 internet ads
-  # 10101 5 features, 200 instance
-  # 31 21 features, 1000 instance
+  # 10101 5 features, 200 instance   ## too few features
+  # 31 21 features, 1000 instance     # could be run locally 
   # https://www.openml.org/d/1132
 )
 
+#' probe(3608)
 #' probe(3891)
 probe = function(task_id) {
-  #task = getMlrTaskFromOML(task_id)
+  library(OpenML)
+  task = getMlrTaskFromOML(task_id)
   res = list()
-  task = loadDiskOMLMlrTask(task_id)
+  #task = loadDiskOMLMlrTask(task_id)
   res$n  = getTaskSize(task)
   res$p = getTaskNFeats(task)
   res$pn = (res$p / res$n)
