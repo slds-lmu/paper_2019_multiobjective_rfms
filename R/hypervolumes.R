@@ -2,17 +2,39 @@ library(data.table)
 library(hrbrthemes)
 library(ggplot2)
 
-dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
-dat = as.data.table(readRDS(file = "dt_14966_pca0.1.rds"))
 dat = as.data.table(readRDS(file = "dt_10101_stratif.rds"))
 dat = as.data.table(readRDS(file = "dt_10101_stratif.rds"))
 
-dat = as.data.table(readRDS(file = "dt_14966_stratif.rds"))
+dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
+dat = as.data.table(readRDS(file = "dt_14966_pca1.rds"))
+dat = as.data.table(readRDS(file = "dt_3608_pca0.1_partial.rds"))
+
+dats = list()
+#dats$geo = "dt_10101_stratif.rds"
+dats$oml14966_pca1 = "dt_14966_pca0.1.rds"
+dats$oml3608_pca1 = "dt_3608_pca0.1_partial.rds"
+
+{
+dat1 = as.data.table(readRDS(file = "dt_14966_pca1.rds"))
+dat2 = as.data.table(readRDS(file = "dt_3608_pca0.1_partial.rds"))
+colnames(dat1)
+colnames(dat2)
+dat = rbind(dat1, dat2, fill = TRUE)
+}
+
+{
+dat1 = as.data.table(readRDS(file = "dt_14966_stratif.rds"))
+dat2 = as.data.table(readRDS(file = "dt_3608_stratif.rds"))
+dat = rbind(dat1, dat2, fill = TRUE)
+}
 
 context = "geo"
 context = "oml14966_pca0.1"
 context = "oml10101_stratif"
 context = "oml14966_stratif"
+context = "oml3608_pca1_partial"
+context = "oml_combined_stratif"
+
 dat = dat[bag == "outbag", ]
 unique_ids = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")
 
