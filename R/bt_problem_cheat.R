@@ -84,7 +84,7 @@ algoCheating = function(instance, lrn) {
   ctrl_bs$mbo.design = mbo_design
   tune_res_cso = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list(cmeas), par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_bs, show.info = TRUE)  # only the first of the list_measures are being tuned
   print(proc.time() - ptmi)
-  tune_res_cso 
+  res = list(tune_res = tune_res_cso , gperf_env = gperf_env, instance = instance)
 }
 
 algo_names = c()       # list of strings defining algorithm names
@@ -106,11 +106,12 @@ algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
 }
 CHEAT_LOCAL = T
 source("bt_pre.R")
-DEBUG_FLAG = T # if true: use low budget (only 7 iterations of mbo) set to F
 source("bt_conf.R")
 source("bt_main.R")
 #btInit(path = "registrydebuagsg", local = T)   # set local=T to allow on local PC running
-reg = mkReg("haha", replace = T, local = T) 
+DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo) set to F
+reg = mkReg("reg_cheat_feb4", replace = T, local = T) 
+reg$cluster.functions = makeClusterFunctionsMulticore(ncpus = 50)
 ######################################
 mgconf = getGconf()
 reg_input = batchtools::getDefaultRegistry()
