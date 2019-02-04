@@ -97,7 +97,8 @@ getGconf = function(variables) {
 
 ### dependencies
 pre.source = c("utilities_datasite.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures.R", "bt_helpers.R", "bt_obj.R")  # order of the sequence being sourced can not be changed!
-
+kick_source = c("bt_algo.R", "bt_problem.R")
+if (exists("CHEAT_LOCAL")) pre.source = setdiff(pre.source, kick_source)
 lapply(pre.source, function(x) source(x))
 pre.source = c("bt_conf.R", pre.source)
 pre.packages = c("mlr", "BBmisc", "mlrMBO")  ## OpenML removed

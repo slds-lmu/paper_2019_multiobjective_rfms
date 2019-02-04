@@ -67,3 +67,58 @@ prob_funs = list()
 prob_names = c("prob_geo_cheat")
 prob_funs[[prob_names[[1L]]]] = funGenProbCheat
 prob_designs[[prob_names[1L]]] = expand.grid(lockbox_ind = 1:5, stringsAsFactors = FALSE)
+
+
+# only depend on the lockbox
+algoCheating = function(instance, lrn) {
+  context = "cheat"
+  res = list()
+  gperf_env = new.env()   # gperf_env is only being modified in side measure function!
+  gperf_env$index = 1
+  ptmi = proc.time()
+  mbo_design = getMBODesign(lrn, getGconf())
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune)
+  cmeas  = mk_measure(name = "meas_ob_cu_cv", extra.args, obj_fun = fun_measure_obj_cso)
+  mgconf = getGconf()
+  ctrl_bs = getTuneMethod("mbodefault", mgconf = mgconf)
+  ctrl_bs$mbo.design = mbo_design
+  tune_res_cso = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list(cmeas), par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_bs, show.info = TRUE)  # only the first of the list_measures are being tuned
+  print(proc.time() - ptmi)
+  tune_res_cso 
+}
+
+algo_names = c()       # list of strings defining algorithm names
+algo_designs = list()  # algorithm function need extra parameters which will be defined here
+algoaggs = list()  # list of functions for aggregation of result
+#' To make the result analysis easy, the aggregation function for each algorithm must return a consistent result. For some algorithms, some field does not make sense, in this case, they are NA. The final data table would look like: algo_name(char), runtime(numeric), perf(numeric)[resample or simple train test], feat.subset(char)
+algo_funs = list()
+
+algo_names = c("cheat", algo_names)
+algoaggs[[algo_names[1L]]] = function(res) {
+  list()
+}
+
+algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.ksvm", "classif.ranger", "classif.glmnet"), stringsAsFactors = FALSE)
+
+algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
+    res = algoCheating(instance = instance, lrn = lrn)
+    return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
+}
+CHEAT_LOCAL = T
+source("bt_pre.R")
+DEBUG_FLAG = T # if true: use low budget (only 7 iterations of mbo) set to F
+source("bt_conf.R")
+source("bt_main.R")
+#btInit(path = "registrydebuagsg", local = T)   # set local=T to allow on local PC running
+reg = mkReg("haha", replace = T, local = T) 
+######################################
+mgconf = getGconf()
+reg_input = batchtools::getDefaultRegistry()
+reg_input$default.resources
+#init(prob_names, prob_inputs_conf, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
+#
+addProblem(name = prob_names[[1L]],  data = prob_inputs_conf, fun = prob_funs[[1]], seed = 1L)
+addAlgorithm(name = algo_names, fun = algo_funs[[algo_names]])
+addExperiments(prob.design = prob_designs, algo.design = algo_designs, repls = 10)
+
+testJob(1)
