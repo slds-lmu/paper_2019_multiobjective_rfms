@@ -6,8 +6,7 @@ library(ggplot2)
 source("bt_measures.R")
 source("bt_helpers.R")
 
-
-algo_rand = function(instance, lrn, list_measures, gperf_env, context) {
+algo_rand_mo = function(instance, lrn, list_measures, gperf_env, context) {
   cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
   gperf_env$index = 1
@@ -17,6 +16,19 @@ algo_rand = function(instance, lrn, list_measures, gperf_env, context) {
   cat(sprintf("\n %s finished  \n", context))
   res
 }
+
+algo_rand_so = function(instance, lrn, list_measures, gperf_env, context) {
+  cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
+  gperf_env$context =  context
+  gperf_env$index = 1
+  mgconf = getGconf()
+  ctrl_rand = mlr::makeTuneControlRandom(maxit = mgconf$MBO_ITERS + mgconf$INIT_DES)
+  res = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_rand, show.info = TRUE)
+  cat(sprintf("\n %s finished  \n", context))
+  res
+}
+
+
 
 
 # getModelFromTask = function(major_task, lrn.id, pvs) {
@@ -92,6 +104,12 @@ algo_mbo = function(instance, lrn) {
   measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
   meas_ladder = mk_measure(name = "meas_ladder", extra.args = extra.args, obj_fun = fun_ladder_parafree)
 
+
+  context = "rand_so"
+  res[[context]] = algo_rand_so(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv), gperf_env = gperf_env, context = context)
+
+
+
  ### MultiObj
   ## extract best learner from pareto front
   res$pareto = list()
@@ -107,7 +125,7 @@ algo_mbo = function(instance, lrn) {
   res$pareto[[context]] = getAlpha(res[[context]], alphas, context)
 
   context = "rand_mo"
-  res[[context]] = algo_rand(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
+  res[[context]] = algo_rand_mo(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
   res$pareto[[context]] = getAlpha(res[[context]], alphas, context)
 
   ## differential privacy
