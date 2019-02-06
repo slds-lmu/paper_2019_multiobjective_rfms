@@ -2,39 +2,45 @@ library(data.table)
 library(hrbrthemes)
 library(ggplot2)
 
+single = function() {
 dat = as.data.table(readRDS(file = "dt_10101_stratif.rds"))
 dat = as.data.table(readRDS(file = "dt_10101_stratif.rds"))
 dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
-dat = as.data.table(readRDS(file = "dt_14966_pca1.rds"))
 dat = as.data.table(readRDS(file = "dt_3608_pca1.rds"))
+dat = as.data.table(readRDS(file = "dt_3891_pca1.rds"))
+dat = as.data.table(readRDS(file = "dt_3891_stratif.rds"))
+}
 
-function() {
+pcacluster = function() {
   dat1 = as.data.table(readRDS(file = "dt_14966_pca1.rds"))
   colnames(dat1)
   unique(dat1$algo)
   dat1$algo = sapply(dat1$algo, function(x) {
      if(x=="rand") return("rand_mo")
-     return(x)
-})
+     return(x)})
+  dat1$dataset = "oml14966"
   dat2 = as.data.table(readRDS(file = "dt_3608_pca1.rds"))
+  dat2$dataset = "oml3608"
   colnames(dat2)
   unique(dat2$algo)
-  dat1$dataset = "oml14966"
-  dat2$dataset = "oml3608"
-  dat = rbind(dat1, dat2, fill = TRUE)
+
+  dat3 = as.data.table(readRDS(file = "dt_3891_pca1.rds"))
+  dat3$dataset = "oml3891"
+  dat = rbind(dat1, dat2, dat3, fill = TRUE)
 }
 
-function() {
+
+stratif = function() {
   dat1 = as.data.table(readRDS(file = "dt_14966_stratif.rds"))
+  dat1$dataset = "oml14966"
   dat1$algo = sapply(dat1$algo, function(x) {
      if(x=="rand") return("rand_mo")
-     return(x)
-})
-
+     return(x)})
   dat2 = as.data.table(readRDS(file = "dt_3608_stratif.rds"))
-  dat1$dataset = "oml14966"
   dat2$dataset = "oml3608"
-  dat = rbind(dat1, dat2, fill = TRUE)
+  dat3 = as.data.table(readRDS(file = "dt_3891_stratif.rds"))
+  dat3$dataset =  "oml3891"
+  dat = rbind(dat1, dat2, dat3, fill = TRUE)
 }
 
 genhv = function(dat) {
@@ -92,12 +98,15 @@ list_res = genhv(dat)
 
 context = "testcombine"
 context = "geo"
-context = "oml14966_pca0.1"
+context = "oml14966_pca1"
 context = "oml10101_stratif"
 context = "oml14966_stratif"
 context = "oml3608_pca1"
 context = "oml_combined_stratif"
-context = "oml_combined_pca"
+context = "oml_3891_pca1"
+context = "oml_3891_stratif"
+context = "oml_combined_pca_3sets"
+context = "oml_combined_stratif_3sets"
 
 
 pdf(sprintf("wins_and_losses_%s.pdf", context), width = 8, height = 6)
@@ -111,7 +120,7 @@ dev.off()
 
 pdf(file = sprintf("mean_hypervolumes_%s.pdf", context), height = 7, width = 10)
 ggplot(data = list_res$dat3, mapping = aes(y = mdhv, x = algo, fill = algo)) +
-  geom_boxplot() +
+  geom_violin() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +  theme_bw() + scale_fill_ipsum() + xlab("Algorithm") + ylab("Mean dominated hyper volume") +
   facet_wrap("lrn")
 dev.off()
