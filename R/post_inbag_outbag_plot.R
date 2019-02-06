@@ -23,6 +23,7 @@ genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
 
 
 genBox(dt, task_id = "", dname = "geo", resample_name = "", kickout = c("fso_th", "fso_ladder") )
+genBox(dt, task_id = "", dname = "geo", resample_name = "", kickout = c("fso_ladder") )
 
 
 genBox2 = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {

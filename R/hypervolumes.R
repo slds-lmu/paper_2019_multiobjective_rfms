@@ -43,8 +43,8 @@ genhv = function(dat) {
   if (!"dataset" %in% colnames(dat)) dat$dataset = "unknown"
   unique_ids_algo4job = c("algo", "openbox_name", "lockbox_name", "lrn", "repl", "dataset")
   unique_ids_job = c("openbox_name", "lockbox_name", "lrn", "repl", "dataset")
+  kickout = c("fso_ladder")
   #kickout = c("fso_ladder", "fso_th")
-  kickout = c("fso_ladder", "fso_th")
 
   dat = dat[with(dat, !(algo %in% kickout)), ]
 
