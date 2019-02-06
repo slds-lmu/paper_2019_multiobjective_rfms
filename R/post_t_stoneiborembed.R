@@ -33,9 +33,11 @@ plot_cluster = function(tuple, pca_var_ratios = c(0.1, 0.5)) {
    col5 = getmetacol(list_dataset_index_5)
    col_stra = getmetacol(list_dataset_index_stra)
    ggplot(as.data.frame(tsne$Y), aes(x = V1, y = V2, color = col1)) + geom_point()
+   ggsave(filename = "tnsecluster_pca1.pdf")
    dev.new()
    ggplot(as.data.frame(tsne$Y), aes(x = V1, y = V2, color = col5)) + geom_point()
+   ggsave(filename = "tnsecluster_pca5.pdf")
    dev.new()
    ggplot(as.data.frame(tsne$Y), aes(x = V1, y = V2, color = col_stra)) + geom_point()
-
+   ggsave(filename = "tnsecluster_stratif.pdf")
 }

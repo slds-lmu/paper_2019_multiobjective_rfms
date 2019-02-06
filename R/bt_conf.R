@@ -60,6 +60,7 @@ gconf = list(
   # 14966 bioresponse
   # 3891 gina-agnostic
   # 9950 micro-mass  (20 classes)
+  # 3608: fri_c4_500_100
   # 9981 cnae-9 (9 class to 2 class)
   # 167125 internet ads
   # 10101 5 features, 200 instance   ## too few features
