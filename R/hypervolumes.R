@@ -125,7 +125,7 @@ dev.off()
 
 
 pdf(file = sprintf("mean_hypervolumes_%s.pdf", context), height = 7, width = 10)
-ggplot(data = list_res$dat3, mapping = aes(y = mdhv, x = algo, fill = algo)) + geom_boxplot() + theme_bw() + scale_fill_ipsum() + xlab("Algorithm") + ylab("Mean dominated hyper volume") + theme(axis.text=element_text(size=24, face="bold"), axis.title=element_text(size = 24, face = "bold"), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) + facet_wrap("lrn") + theme(strip.text.x = element_text(size = 24, colour = "orange"), legend.text=element_text(size=24), legend.title=element_text(size=24))
+ggplot(data = list_res$dat3, mapping = aes(y = mdhv, x = algo, fill = algo)) + geom_boxplot() + theme_bw() + scale_fill_ipsum() + xlab("Algorithm") + ylab("Mean dominated hyper volume") + theme(axis.text=element_text(size=24, face="bold"), axis.title=element_text(size = 24, face = "bold"), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) + facet_wrap("lrn") + theme(strip.text.x = element_text(size = 24, colour = "black"), legend.text=element_text(size=24), legend.title=element_text(size=24))
 dev.off()
 
 
