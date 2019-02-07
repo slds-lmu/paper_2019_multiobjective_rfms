@@ -1,6 +1,20 @@
 library(data.table)
 library(hrbrthemes)
 library(ggplot2)
+context = "testcombine"
+context = "geo"
+context = "oml14966_pca1"
+context = "oml10101_stratif"
+context = "oml14966_stratif"
+context = "oml3608_pca1"
+context = "oml_combined_stratif"
+context = "oml_3891_pca1"
+context = "oml_3891_stratif"
+context = "oml_combined_pca_3sets"
+context = "oml_combined_stratif_3sets"
+context = "debug"
+
+
 
 single = function() {
 dat = as.data.table(readRDS(file = "dt_10101_stratif.rds"))
@@ -27,6 +41,7 @@ pcacluster = function() {
   dat3 = as.data.table(readRDS(file = "dt_3891_pca1.rds"))
   dat3$dataset = "oml3891"
   dat = rbind(dat1, dat2, dat3, fill = TRUE)
+  dat$split = "cluster"
 }
 
 
@@ -41,6 +56,7 @@ stratif = function() {
   dat3 = as.data.table(readRDS(file = "dt_3891_stratif.rds"))
   dat3$dataset =  "oml3891"
   dat = rbind(dat1, dat2, dat3, fill = TRUE)
+  dat$split = "srs"
 }
 
 genhv = function(dat) {
@@ -94,36 +110,24 @@ genhv = function(dat) {
   list_res$n.exp = nrow(dat[, .N, unique_ids_job])
   return(list_res)
 }
+
 list_res = genhv(dat)
-
-context = "testcombine"
-context = "geo"
-context = "oml14966_pca1"
-context = "oml10101_stratif"
-context = "oml14966_stratif"
-context = "oml3608_pca1"
-context = "oml_combined_stratif"
-context = "oml_3891_pca1"
-context = "oml_3891_stratif"
-context = "oml_combined_pca_3sets"
-context = "oml_combined_stratif_3sets"
-
 
 pdf(sprintf("wins_and_losses_%s.pdf", context), width = 8, height = 6)
 n.exp = list_res$n.exp
 ggplot(data = list_res$dat4a, mapping = aes(x = algo1, y = algo2)) + geom_tile(aes(fill = wins)) + geom_text(aes(label = wins, color = abs(wins - n.exp / 2) >= 125), size = 5) +
   scale_color_manual(guide = FALSE, values = c("black", "white")) +
   scale_fill_gradient2(low = "darkblue", mid = "white", high = "darkred", name = "Times",
-    midpoint = n.exp / 2) +
-  xlab("Winner") + ylab("Loser")
+    midpoint = n.exp / 2) + xlab("Winner") + ylab("Loser") + theme(axis.text=element_text(size=24, face="bold"), axis.title=element_text(size = 24, face = "bold"), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) 
 dev.off()
 
+
+
+
 pdf(file = sprintf("mean_hypervolumes_%s.pdf", context), height = 7, width = 10)
-ggplot(data = list_res$dat3, mapping = aes(y = mdhv, x = algo, fill = algo)) +
-  geom_violin() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +  theme_bw() + scale_fill_ipsum() + xlab("Algorithm") + ylab("Mean dominated hyper volume") +
-  facet_wrap("lrn")
+ggplot(data = list_res$dat3, mapping = aes(y = mdhv, x = algo, fill = algo)) + geom_boxplot() + theme_bw() + scale_fill_ipsum() + xlab("Algorithm") + ylab("Mean dominated hyper volume") + theme(axis.text=element_text(size=24, face="bold"), axis.title=element_text(size = 24, face = "bold"), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) + facet_wrap("lrn") + theme(strip.text.x = element_text(size = 24, colour = "orange"), legend.text=element_text(size=24), legend.title=element_text(size=24))
 dev.off()
+
 
 pdf(file = sprintf("hypervolumes_%s.pdf", context), height = 7, width = 10)
 lapply(list_res$dat2s, function(d) {
