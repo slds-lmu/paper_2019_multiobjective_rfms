@@ -118,7 +118,7 @@ n.exp = list_res$n.exp
 ggplot(data = list_res$dat4a, mapping = aes(x = algo1, y = algo2)) + geom_tile(aes(fill = wins)) + geom_text(aes(label = wins, color = abs(wins - n.exp / 2) >= 125), size = 5) +
   scale_color_manual(guide = FALSE, values = c("black", "white")) +
   scale_fill_gradient2(low = "darkblue", mid = "white", high = "darkred", name = "Times",
-    midpoint = n.exp / 2) + xlab("Winner") + ylab("Loser") + theme(axis.text=element_text(size=24, face="bold"), axis.title=element_text(size = 24, face = "bold"), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) 
+    midpoint = n.exp / 2) + xlab("Winner") + ylab("Loser") + theme_bw() + theme(axis.text=element_text(size=24, face="bold"), axis.title=element_text(size = 24, face = "bold"), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0), legend.title = element_text(size = 24)) 
 dev.off()
 
 
