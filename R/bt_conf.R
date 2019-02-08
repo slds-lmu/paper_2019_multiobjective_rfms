@@ -50,7 +50,7 @@ gconf = list(
   ladder_meas = mlr::mmce,
   fun_cal_ladder_vec = cal01Vec,
   ladder_worst_vec_ele = 0,
-  thresholdout_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0),
+  thresholdout_para = list(threshold = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0),
   #list_meas = list(auc, mmce, brier, brier.scaled, ber, logloss)
   CV_ITER_OUTER = 5L, # make it consistent with our 5 split 
   MBO_ITERS = 40L, # 16d
