@@ -50,7 +50,7 @@ gconf = list(
   ladder_meas = mlr::mmce,
   fun_cal_ladder_vec = cal01Vec,
   ladder_worst_vec_ele = 0,
-  thresholdout_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0),
+  thresholdout_para = list(threshold = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0),
   #list_meas = list(auc, mmce, brier, brier.scaled, ber, logloss)
   CV_ITER_OUTER = 5L, # make it consistent with our 5 split 
   MBO_ITERS = 40L, # 16d
@@ -60,6 +60,7 @@ gconf = list(
   # 14966 bioresponse
   # 3891 gina-agnostic
   # 9950 micro-mass  (20 classes)
+  # 3608: fri_c4_500_100
   # 9981 cnae-9 (9 class to 2 class)
   # 167125 internet ads
   # 10101 5 features, 200 instance   ## too few features

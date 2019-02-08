@@ -88,6 +88,22 @@ algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context,
   tune_res_bs
 }
 
+algo_th_family = function(instance, lrn, threshold, sigma) {
+  res = list()
+  gperf_env = new.env()   # gperf_env is only being modified in side measure function!
+  ptmi = proc.time()
+  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
+  #thresholdout_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0)
+  thresholdout_para = list("threshold" = threshold, sigma = sigma, noise_distribution = "norm", gamma = 0)
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune, calMeasVec = getGconf()$fun_cal_ladder_vec, th_para = thresholdout_para)
+  measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
+  context = "fso_th"
+  try({
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = context)
+  print(proc.time() - ptmi)
+  })
+}
+
 algo_mbo = function(instance, lrn) {
   res = list()
 
@@ -190,12 +206,20 @@ algoaggs[[algo_names[1L]]] = function(res) {
   list()
 }
 
-algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.ksvm", "classif.ranger", "classif.glmnet"), stringsAsFactors = FALSE)
+algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet"), stringsAsFactors = FALSE, threshold = seq(from = 0.001, to = 0.1, length.out = 3), sigma = seq(from =0.01, to = 0.1, length.out= 3 ))
 
-algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
-    res = algo_mbo(instance = instance, lrn = lrn)
+algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, threshold, sigma) {
+    res = algo_th_family(instance = instance, lrn = lrn, threshold, sigma)
     return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
 }
+
+#algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.ksvm", "classif.ranger", "classif.glmnet"), stringsAsFactors = FALSE)
+#algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
+#    res = algo_mbo(instance = instance, lrn = lrn)
+#    return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
+#}
+
+
 
 
 # obsolete
