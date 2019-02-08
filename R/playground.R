@@ -45,6 +45,7 @@ run_cluster = function() {
   regname = "../output/reg_all_jan31"
   regname = "../output/reg_feb2"
   regname = "../output/reg_feb3_rebalnce"
+  regname = "../output/reg_feb5_add_randso"
   DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo)
   source("bt_conf.R")
   source("bt_main.R")
