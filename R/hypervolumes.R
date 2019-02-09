@@ -3,16 +3,20 @@ library(hrbrthemes)
 library(ggplot2)
 context = "testcombine"
 context = "geo"
-context = "oml14966_pca1"
-context = "oml10101_stratif"
-context = "oml14966_stratif"
-context = "oml3608_pca1"
-context = "oml_combined_stratif"
+#context = "oml14966_pca1"
+#context = "oml10101_stratif"
+#context = "oml14966_stratif"
+#context = "oml3608_pca1"
+#context = "oml_combined_stratif"
 context = "oml_3891_pca1"
 context = "oml_3891_stratif"
+
 context = "oml_combined_pca_3sets"
 context = "oml_combined_stratif_3sets"
-context = "debug"
+
+kickout = c("fso_ladder")
+#kickout = c("fso_ladder", "fso_th")
+
 
 
 
@@ -65,9 +69,6 @@ genhv = function(dat) {
   if (!"dataset" %in% colnames(dat)) dat$dataset = "unknown"
   unique_ids_algo4job = c("algo", "openbox_name", "lockbox_name", "lrn", "repl", "dataset")
   unique_ids_job = c("openbox_name", "lockbox_name", "lrn", "repl", "dataset")
-  kickout = c("fso_ladder")
-  #kickout = c("fso_ladder", "fso_th")
-
   dat = dat[with(dat, !(algo %in% kickout)), ]
 
   ns = dat[, .N, by = unique_ids_algo4job]
