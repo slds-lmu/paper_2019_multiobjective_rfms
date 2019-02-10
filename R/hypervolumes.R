@@ -14,8 +14,8 @@ context = "oml_3891_stratif"
 context = "oml_combined_pca_3sets"
 context = "oml_combined_stratif_3sets"
 
-kickout = c("fso_ladder")
-#kickout = c("fso_ladder", "fso_th")
+#kickout = c("fso_ladder")
+kickout = c("fso_ladder", "fso_th")
 
 
 
