@@ -34,8 +34,7 @@ algo_rand_so = function(instance, lrn, list_measures, gperf_env, context) {
 # getModelFromTask = function(major_task, lrn.id, pvs) {
 #   lrn_basis = GET_LRN(lrn.id)
 #   lrn_basis = setWraperHyperPars(lrn_obj = lrn_basis, pvs = pvs)
-#   model = mlr::train(learner = lrn_basis, task = major_task)
-#   model
+#   model = mlr::train(learner = lrn_basis, task = major_task) #   model
 # }
 
 
@@ -71,6 +70,18 @@ algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context)
   ctrl_pr$mbo.design = mbo_design  # use the same design
   res = mlr::tuneParamsMultiCrit(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_pr, show.info = TRUE)
   cat(sprintf("\n %s finished  \n", context))
+  res
+}
+
+algo_mo_5 = function(instance, lrn = "classif.rpart", mbo_design, gperf_env,gperf_env, context, n_objs = 4) {
+  mo5measlist = mkMultimeasuresList(instance$subset_inds, instance$ns, instance$major_level, instance$test_level)
+  cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
+  gperf_env$context =  context
+  gperf_env$index = 1
+  mgconf = getGconf()
+  ctrl_5 = getTuneMethod(method.str = "mbo5critdefault", mgconf = mgconf, n.objs = n_objs)  # only 1 dataset left for testing
+  ctrl_5$mbo.design = mbo_design  # use the same design
+  res = tuneParamsMultiCrit(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = mo5measlist, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_5, show.info = TRUE)
   res
 }
 
@@ -219,20 +230,6 @@ algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, threshold, sigm
 #    return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
 #}
 
-
-
-
-# obsolete
-algo_proposal_5 = function(instance, lrn = "classif.rpart", mbo_design) {
-  ctrl_5 = getTuneMethod(method.str = "mbo5critdefault", mgconf = mgconf, n.objs = 4L)  # only 1 dataset left for testing
-  ctrl_5$mbo.design = mbo_design  # use the same design
-  res = tuneParamsMultiCrit(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = mkMultimeasuresList(instance$subset_inds, instance$ns, instance$major_level, instance$test_level), par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_5, show.info = TRUE)
-  testperf = getTestSetPerf(instance = instance, lrn.id = lrn, pvs = res$x[[1L]])
-  res$y
-  tuneperf  = apply(res$y, 1, mean)
-  tuneperf  = mean(tuneperf)
-  return(list(tuneRes = res, testperf = testperf, tuneperf = tuneperf))
-}
 
 agg_genTable_onejob = function(res) {
   aggonejob = function(res) {

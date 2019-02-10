@@ -14,28 +14,19 @@ mk_measure = function(name, extra.args, obj_fun = fun_measure_obj_curator) {
     )
 }
 
-# major_level is the same from problem generator function, test_level is also from problem generator, it refers to the relative index of all the datasets other than the major datasets
-# for each problem, there is a 5 objective  measure list
-mkMultimeasuresList = function(subset_inds, dsnames, major_level, test_level) {
-  non_major = setdiff(dsnames, dsnames[major_level])
-  test_ds_na = non_major[test_level]
-  tune_ds_nas = c(non_major[-test_level], major_level)
+
+# for each problem, there is a multi(more than 2) objective  measure list
+mkMultimeasuresList = function(extra.args) {
+  extra.args$instance$dataset_index_inbag
   list.measures = lapply(tune_ds_nas, function(dsname) {
-      makeMeasure(
-        id = paste0("mmce_ds", dsname),
-        name = paste0("My Mean Misclassification Error on side auxilliary dataset", dsname),
-        properties = c("classif", "classif.multi", "req.pred", "req.truth"),
-        minimize = TRUE,
-        aggr = getGconf()$meas_aggr,
-        best = 0,
-        worst = 1,
-        fun = mkSingleDsMeasure(subset_inds[dsname]),
-        extra.args = list()
+      mk_measure(name = paste0("mmce_ds", dsname),
+        extra.args = extra.args,
+        obj_fun = singleDsPerf(dsname)
         )
   })
   return(list.measures)
 }
 
+singleDsPerf = function(task, model, pred, feats, extra.args) {
 
-
-
+}
