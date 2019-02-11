@@ -18,15 +18,21 @@ mk_measure = function(name, extra.args, obj_fun = fun_measure_obj_curator) {
 # for each problem, there is a multi(more than 2) objective  measure list
 mkMultimeasuresList = function(extra.args) {
   extra.args$instance$dataset_index_inbag
+  tune_ds_nas = names(extra.args$instance$dataset_index_inbag)
+  tune_ds_nas = setdiff(tune_ds_nas, extra.args$instance$openbox_name)
   list.measures = lapply(tune_ds_nas, function(dsname) {
       mk_measure(name = paste0("mmce_ds", dsname),
         extra.args = extra.args,
-        obj_fun = singleDsPerf(dsname)
+        obj_fun = mkSingleDsPerf(dsname)
         )
   })
   return(list.measures)
 }
 
-singleDsPerf = function(task, model, pred, feats, extra.args) {
-
+mkSingleDsPerf = function(dsname) {
+  singleDsPerf = function(task, model, pred, feats, extra.args) {
+    list.perf = getPerf4DataSites_Oracle(task, model, extra.args)
+    list.perf[[dsname]][extra.args$perf_name2tune]
+}
+  singleDsPerf
 }

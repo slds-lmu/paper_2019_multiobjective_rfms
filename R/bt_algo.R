@@ -73,8 +73,9 @@ algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context)
   res
 }
 
-algo_mo_5 = function(instance, lrn = "classif.rpart", mbo_design, gperf_env,gperf_env, context, n_objs = 4) {
-  mo5measlist = mkMultimeasuresList(instance$subset_inds, instance$ns, instance$major_level, instance$test_level)
+algo_mo_5 = function(instance, lrn = "classif.rpart", mbo_design, gperf_env, context, n_objs = 4) {
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune)
+  mo5measlist = mkMultimeasuresList(extra.args)
   cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
   gperf_env$index = 1
@@ -217,19 +218,27 @@ algoaggs[[algo_names[1L]]] = function(res) {
   list()
 }
 
-algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet"), stringsAsFactors = FALSE, threshold = seq(from = 0.001, to = 0.1, length.out = 3), sigma = seq(from =0.01, to = 0.1, length.out= 3 ))
+algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.glmnet"), stringsAsFactors = FALSE)
 
 algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, threshold, sigma) {
-    res = algo_th_family(instance = instance, lrn = lrn, threshold, sigma)
-    return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
+  gperf_env = new.env()   # gperf_env is only being modified in side measure function!
+  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
+  res = algo_mo_5(instance = instance, lrn = lrn, mbo_design = mbo_design, gperf_env = gperf_env, context = "mo5")
+  return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
 }
+
+# algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet"), stringsAsFactors = FALSE, threshold = seq(from = 0.001, to = 0.1, length.out = 3), sigma = seq(from =0.01, to = 0.1, length.out= 3 ))
+# 
+# algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, threshold, sigma) {
+#     res = algo_th_family(instance = instance, lrn = lrn, threshold, sigma)
+#     return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
+# }
 
 #algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.ksvm", "classif.ranger", "classif.glmnet"), stringsAsFactors = FALSE)
 #algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
 #    res = algo_mbo(instance = instance, lrn = lrn)
 #    return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
 #}
-
 
 agg_genTable_onejob = function(res) {
   aggonejob = function(res) {
