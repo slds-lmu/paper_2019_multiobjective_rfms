@@ -1,12 +1,12 @@
 source("bt_bootstrap.R")
 #' source("bt_conf.R"); funGenProb_geo(data = prob_inputs, job = NULL, openbox_ind = 1, lockbox_ind = 1)
-funGenProb_geo = function(data, job, openbox_ind, lockbox_ind) {
+funGenProb_geo = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   tuple = prepareDataSite(path = data$path[["geo"]])
   funGenProb(tuple, job, openbox_ind, lockbox_ind)
 }
 
 #' funGenProb_oml_cluster(data = NULL, job = NULL, openbox_ind = 1, lockbox_ind = 1, task_id = 14966, pca_var_ratio = 0.1)
-funGenProb_oml_cluster = function(data, job, openbox_ind, lockbox_ind, task_id, pca_var_ratio) {
+funGenProb_oml_cluster = function(data, job, openbox_ind, lockbox_ind, task_id, pca_var_ratio, dataset_name) {
   task_mlr = loadDiskOMLMlrTask(task_id)
   list_dataset_index = clusterMlrTask(task_mlr, n_datasets = 5L, balanced = T, pca_var_ratio = pca_var_ratio)
   names(list_dataset_index) = paste0("ds", 1L:5L)  # names got lost during return
@@ -22,7 +22,7 @@ funGenProb_oml_cluster = function(data, job, openbox_ind, lockbox_ind, task_id, 
 }
 
 #' funGenProb_oml_stratif(data = NULL, job = NULL, openbox_ind = 1, lockbox_ind = 1, task_id = 14966)
-funGenProb_oml_stratif = function(data, job, openbox_ind, lockbox_ind, task_id) {
+funGenProb_oml_stratif = function(data, job, openbox_ind, lockbox_ind, task_id, dataset_name) {
   task_mlr = loadDiskOMLMlrTask(task_id)
   tuple = createRandomStratifPartition(task_mlr)
   funGenProb(tuple, job, openbox_ind, lockbox_ind)

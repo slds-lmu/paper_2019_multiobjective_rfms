@@ -70,6 +70,11 @@ selModelPareto = function(tune_res, instance, alpha = 0.5) {
     which.min(vec)
 }
 
+getAlpha = function(tune_res, alphas, instance) {
+  res = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
+  res
+}
+
 agg_mo = function(res_mbo_all, meas_name = "mmce", algo_name) {
   res = res_mbo_all$tune_res
   best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
@@ -93,12 +98,12 @@ agg_mo = function(res_mbo_all, meas_name = "mmce", algo_name) {
   dt
 }
 
-algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
+algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context, mombomethod = "parego") {
   cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
   gperf_env$index = 1
   mgconf = getGconf()
-  ctrl_pr = getTuneMethod("mbomulticritdefault", mgconf = mgconf)
+  ctrl_pr = getTuneMethod("mbomulticritdefault", mgconf = mgconf, mombomethod = mombomethod)
   ctrl_pr$mbo.design = mbo_design  # use the same design
   res = mlr::tuneParamsMultiCrit(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_pr, show.info = TRUE)
   cat(sprintf("\n %s finished  \n", context))
@@ -130,14 +135,14 @@ agg_mo_5 = function(res, meas_name = "mmce", algo_name = "mo5") {
   dt
 }
 
-algo_mo_5 = function(instance, lrn = "classif.rpart", mbo_design, gperf_env, context, n_objs = 4) {
+algo_mo_5 = function(instance, lrn = "classif.rpart", mbo_design, gperf_env, context, mombomethod, n_objs = 4) {
   extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune)
   mo5measlist = mkMultimeasuresList(extra.args)
   cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
   gperf_env$index = 1
   mgconf = getGconf()
-  ctrl_5 = getTuneMethod(method.str = "mbo5critdefault", mgconf = mgconf, n.objs = n_objs)  # only 1 dataset left for testing
+  ctrl_5 = getTuneMethod(method.str = "mbo5critdefault", mgconf = mgconf, n.objs = n_objs, mombomethod = mombomethod)  # only 1 dataset left for testing
   ctrl_5$mbo.design = mbo_design  # use the same design
   tune_res = tuneParamsMultiCrit(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = mo5measlist, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_5, show.info = TRUE)
   tune_res
@@ -190,9 +195,9 @@ algo_so = function(instance, lrn, mbo_design, list_measures, gperf_env, context,
 }
 
 
-agg_th_family = function(res, meas_name = "mmce", algo_name) {
-  res = res$tune_res_all
-  best_ind = res[[algo_name]]$mbo.result$best.ind  # get the dob of the pareto optimal
+agg_th_family = function(res, meas_name = "mmce", algo_name = "fso_th") {
+  tune_res = res$tune_res_all
+  best_ind = tune_res[[algo_name]]$mbo.result$best.ind  # get the dob of the pareto optimal
   so_inbag = res$gperf_env[[algo_name]][[best_ind]][["inbag"]]
   best.list_inbag = lapply(so_inbag, function(x) x[meas_name])
   sodt_inbag = data.table::as.data.table(best.list_inbag)
@@ -241,8 +246,8 @@ agg_mbo = function(res) {
   names(list_res_onejob) = names(res$tune_res)
   rbindlist(list_res_onejob, use.names = TRUE)
 }
-
 algo_mbo = function(instance, lrn) {
+  alphas = seq(from = 0.1, to = 0.9, by = 0.1)
   res = list()
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
@@ -263,20 +268,14 @@ algo_mbo = function(instance, lrn) {
   ### MultiObj
   ## extract best learner from pareto front
   res$pareto = list()
-  alphas = seq(from = 0.1, to = 0.9, by = 0.1)
-
-  getAlpha = function(tune_res, alphas, context) {
-   res = sapply(alphas, function(alpha) selModelPareto(tune_res, instance, alpha))
-   res
-  }
 
   context = "fmo"
   res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
-  res$pareto[[context]] = getAlpha(res[[context]], alphas, context)
+  res$pareto[[context]] = getAlpha(res[[context]], alphas, instance)
 
   context = "rand_mo"
   res[[context]] = algo_rand_mo(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context)
-  res$pareto[[context]] = getAlpha(res[[context]], alphas, context)
+  res$pareto[[context]] = getAlpha(res[[context]], alphas, instance)
 
   ## differential privacy
   context = "fso_ladder"
@@ -313,14 +312,50 @@ algo_mbo = function(instance, lrn) {
   #context = "rso_curator"
   # res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_curator), gperf_env = gperf_env, context = context) ## very likely to meet t.default(T) argument is not a matrix, but since rso is aspecial case of fso but lso is not a special case of fso
   #print(proc.time() - ptmi)
-
- 
   print("algorithm finished")
   print(proc.time() - ptmi)
-  res = list(tune_res = res, gperf_env = gperf_env, instance = instance)
-  return(res)
+  res_all = list(tune_res = res, gperf_env = gperf_env, instance = instance)
+  return(res_all)
 }
 
+
+agg_onlymo = function(res) {
+  list_res_onejob = lapply(names(res$tune_res), function(algo_name) {
+    cat(sprintf("\n algorithm name: %s \n", algo_name))
+    if (stringi::stri_detect(algo_name, regex = "mo")) return(agg_mo(res, algo_name = algo_name))
+    if (stringi::stri_detect(algo_name, regex = "pareto")) return(list())
+    stop("algorithm names wrong!")
+  })
+  names(list_res_onejob) = names(res$tune_res)
+  rbindlist(list_res_onejob, use.names = TRUE)
+}
+
+algo_onlymo = function(instance, lrn, mombomethod) {
+  alphas = seq(from = 0.1, to = 0.9, by = 0.1)
+  res = list()
+  gperf_env = new.env()   # gperf_env is only being modified in side measure function!
+  ptmi = proc.time()
+  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
+  extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune)
+
+  meas_openbox_cv = mk_measure(name = "meas_openbox_cv", extra.args = extra.args, obj_fun = fun_measure_obj_openbox)
+  measure_curator = mk_measure(name = "meas_curator", extra.args = extra.args, obj_fun = fun_measure_obj_curator)
+
+  context = "fmo"
+  res[[context]] = algo_mo(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_openbox_cv, measure_curator), gperf_env = gperf_env, context = context, mombomethod = mombomethod)
+  res$pareto[[context]] = getAlpha(res[[context]], alphas, instance)
+
+  context = "mo5"
+  res[[context]] = algo_mo_5(instance = instance, lrn = lrn, mbo_design = mbo_design, gperf_env = gperf_env, context = context, mombomethod = mombomethod)
+  res$pareto[[context]] = getAlpha(res[[context]], alphas, instance)
+
+  print("algorithm finished")
+  print(proc.time() - ptmi)
+  res_all = list(tune_res = res, gperf_env = gperf_env, instance = instance)
+  return(res_all)
+}
+
+ 
 
 
 
@@ -335,37 +370,38 @@ algoaggs = list()  # list of functions for aggregation of result
 #' To make the result analysis easy, the aggregation function for each algorithm must return a consistent result. For some algorithms, some field does not make sense, in this case, they are NA. The final data table would look like: algo_name(char), runtime(numeric), perf(numeric)[resample or simple train test], feat.subset(char)
 algo_funs = list()
 
-algo_names = c("mbo", algo_names)
-algoaggs[[algo_names[1L]]] = function(res) {
-  list()
+#######
+
+
+algo_names = c("only_mo", algo_names)
+algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet", "classif.ksvm", "classif.ranger"), mombomethod = c("dib", "parego"), stringsAsFactors = FALSE)
+algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, mombomethod) {
+  res = algo_onlymo(instance = instance, lrn = lrn, mombomethod = mombomethod)
+  return(list(res = res, agg_fun = agg_mo))
+  #res = list()
+  #gperf_env = new.env()   # gperf_env is only being modified in side measure function!
+  #mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
+  #context = "mo5"
+  #tune_res = algo_mo_5(instance = instance, lrn = lrn, mbo_design = mbo_design, gperf_env = gperf_env, context = context, mombomethod = mombomethod)
+  #res_tune_gperf_ins = list(tune_res = tune_res, gperf_env = gperf_env, instance = instance)
+  #return(list(res = res_tune_gperf_ins, agg_fun = agg_mo_5))
 }
 
-algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.glmnet"), stringsAsFactors = FALSE)
-
-algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
-  res = list()
-  gperf_env = new.env()   # gperf_env is only being modified in side measure function!
-  mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
-  context = "mo5"
-  tune_res = algo_mo_5(instance = instance, lrn = lrn, mbo_design = mbo_design, gperf_env = gperf_env, context = context)
-  res_tune_gperf_ins = list(tune_res = tune_res, gperf_env = gperf_env, instance = instance)
-  return(list(res = res_tune_gperf_ins, agg_fun = algoaggs[[algo_names[1L]]]))
-}
-
-# algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet"), stringsAsFactors = FALSE, threshold = seq(from = 0.001, to = 0.1, length.out = 3), sigma = seq(from =0.01, to = 0.1, length.out= 3 ))
-# 
+# algo_names = c("th", algo_names)
+# algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet"), stringsAsFactors = FALSE, threshold = seq(from = 0.001, to = 0.1, length.out = 3), sigma = seq(from = 0.01, to = 0.1, length.out = 3 ))
 # algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, threshold, sigma) {
-#     res = algo_th_family(instance = instance, lrn = lrn, threshold, sigma)
-#     return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
+#   res = algo_th_family(instance = instance, lrn = lrn, threshold, sigma)
+#   return(list(res = res, agg_fun = agg_th_family))
 # }
-
+# 
+# algo_names = c("mbo", algo_names)
 #algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.ksvm", "classif.ranger", "classif.glmnet"), stringsAsFactors = FALSE)
 #algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
 #    res = algo_mbo(instance = instance, lrn = lrn)
-#    return(list(res = res, agg_fun = algoaggs[[algo_names[3L]]]))
+#    return(list(res = res, agg_fun = agg_mo))
 #}
 
-agg_onejob = function(res, fun = agg_mbo) {
+agg_onejob = function(res, fun = NULL) {
   dt = fun(res)
   instance = res$instance
   dt$openbox_name = instance$openbox_name
@@ -381,14 +417,18 @@ agg_onejob = function(res, fun = agg_mbo) {
 }
 
 #' library("batchtools"); reg = loadRegistry("../output/georesponse", conf.file = NA, writeable = T); dt_res_geo_response = reduceResult(); saveRDS(dt_res_geo_response, file = "dt_res_geo_response.rds")
-reduceResult = function(ids = findDone(), fun = agg_mbo) {
+reduceResult = function(ids = findDone(), agg_fun = NULL) {
   reslist = reduceResultsList(ids = ids, fun = function(job, res) {
     # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
-    dt = agg_onejob(res$res, fun = fun)
+    if (is.null(agg_fun)) agg_fun = res$agg_fun
+    dt = agg_onejob(res$res, fun = agg_fun)
     dt$job_id = job$job.id
     dt$repl = job$repl
     dt$dsna = job$prob.pars$dataset_name
     dt$lrn = job$algo.pars$lrn
+    dt$prob = job$problem$name
+    dt$general_algo_name = job$algo.name
+    dt$algo.pars = rep(list(job$algo.pars), nrow(dt))
     return(dt)
   })
   rbindlist(reslist)
