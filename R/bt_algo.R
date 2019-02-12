@@ -377,7 +377,7 @@ algo_names = c("only_mo", algo_names)
 algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet", "classif.ksvm", "classif.ranger"), mombomethod = c("dib", "parego"), stringsAsFactors = FALSE)
 algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, mombomethod) {
   res = algo_onlymo(instance = instance, lrn = lrn, mombomethod = mombomethod)
-  return(list(res = res, agg_fun = agg_mo))
+  return(list(res = res, agg_fun = agg_onlymo))
   #res = list()
   #gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   #mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
