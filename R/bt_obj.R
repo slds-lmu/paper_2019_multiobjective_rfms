@@ -99,7 +99,9 @@ fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
     cat(sprintf("current best meas %f", gperf_env$current_best_meas))
     return(gperf_env$current_best_meas)
   }
-  rn = rnorm(1, sd = getGconf()$ladder_noise)
+  cat(sprintf("\n current best from ladder: %s \n", gperf_env$current_best_meas))
+  rn = 0
+  if (extra.args$ladder_with_noise) rn = rnorm(1, sd = getGconf()$ladder_noise)
   return(gperf_env$current_best_meas + rn)
 }
 
@@ -163,7 +165,7 @@ fun_measure_alpha_ladder = function(task, model, pred, feats, extra.args) {
   obj1 = fun_measure_obj_openbox(task, model, pred, feats, extra.args)  # no need for extra.args
   cat(sprintf("\nopenbox cv: %s\n", obj1))
   obj2 = fun_ladder_parafree(task, model, pred, feats, extra.args)
-  cat(sprintf("\ncurator ladder: %s\n", obj2))
+  cat(sprintf("\nladder output: %s\n", obj2))
   return(extra.args$alpha * obj1 + (1 - extra.args$alpha) * obj2)
 }
 
