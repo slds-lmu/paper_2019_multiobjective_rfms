@@ -105,6 +105,7 @@ funGenProb = function(data, job, openbox_ind, lockbox_ind) {
 ###
 prob_designs = list()
 prob_funs = list()
+prob_names = c()
 #
 # prob_names = c("prob_geo")
 # prob_funs[[prob_names[[1L]]]] = funGenProb_geo
