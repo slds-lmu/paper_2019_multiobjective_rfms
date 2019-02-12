@@ -6,6 +6,29 @@ library(ggplot2)
 source("bt_measures.R")
 source("bt_helpers.R")
 
+agg_rand_mo = function(res_all, meas_name = "mmce", algo_name) {
+  res = res_all$tune_res
+  best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
+  pareto.list = res_all$gperf_env[[algo_name]][best_inds]
+
+  pareto.list_inbag = lapply(pareto.list, function(res_iter) {
+    hh = res_iter[["inbag"]]
+    lapply(hh, function(x) x[[meas_name]])})
+  dt_inbag = data.table::rbindlist(pareto.list_inbag)
+  dt_inbag$bag = "inbag"
+  dt_inbag$best_ind = best_inds
+
+  pareto.list_outbag = lapply(pareto.list, function(res_iter) {
+    hh = res_iter[["outbag"]]
+    lapply(hh, function(x) x[[meas_name]])})
+  dt_outbag = data.table::rbindlist(pareto.list_outbag)
+  dt_outbag$bag = "outbag"
+  dt_outbag$best_ind = best_inds
+  dt = rbindlist(list(dt_inbag, dt_outbag))
+  dt$algo = algo_name
+  dt
+}
+
 algo_rand_mo = function(instance, lrn, list_measures, gperf_env, context) {
   cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
@@ -16,20 +39,6 @@ algo_rand_mo = function(instance, lrn, list_measures, gperf_env, context) {
   cat(sprintf("\n %s finished  \n", context))
   res
 }
-
-algo_rand_so = function(instance, lrn, list_measures, gperf_env, context) {
-  cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
-  gperf_env$context =  context
-  gperf_env$index = 1
-  mgconf = getGconf()
-  ctrl_rand = mlr::makeTuneControlRandom(maxit = mgconf$MBO_ITERS + mgconf$INIT_DES)
-  res = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_rand, show.info = TRUE)
-  cat(sprintf("\n %s finished  \n", context))
-  res
-}
-
-
-
 
 # getModelFromTask = function(major_task, lrn.id, pvs) {
 #   lrn_basis = GET_LRN(lrn.id)
@@ -61,6 +70,29 @@ selModelPareto = function(tune_res, instance, alpha = 0.5) {
     which.min(vec)
 }
 
+agg_mo = function(res_all, meas_name = "mmce", algo_name) {
+  res = res_all$tune_res
+  best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
+  pareto.list = res_all$gperf_env[[algo_name]][best_inds]
+
+  pareto.list_inbag = lapply(pareto.list, function(res_iter) {
+    hh = res_iter[["inbag"]]
+    lapply(hh, function(x) x[[meas_name]])})
+  dt_inbag = data.table::rbindlist(pareto.list_inbag)
+  dt_inbag$bag = "inbag"
+  dt_inbag$best_ind = best_inds
+
+  pareto.list_outbag = lapply(pareto.list, function(res_iter) {
+    hh = res_iter[["outbag"]]
+    lapply(hh, function(x) x[[meas_name]])})
+  dt_outbag = data.table::rbindlist(pareto.list_outbag)
+  dt_outbag$bag = "outbag"
+  dt_outbag$best_ind = best_inds
+  dt = rbindlist(list(dt_inbag, dt_outbag))
+  dt$algo = algo_name
+  dt
+}
+
 algo_mo = function(instance, lrn, mbo_design, list_measures, gperf_env, context) {
   cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
   gperf_env$context =  context
@@ -82,7 +114,39 @@ algo_mo_5 = function(instance, lrn = "classif.rpart", mbo_design, gperf_env, con
   mgconf = getGconf()
   ctrl_5 = getTuneMethod(method.str = "mbo5critdefault", mgconf = mgconf, n.objs = n_objs)  # only 1 dataset left for testing
   ctrl_5$mbo.design = mbo_design  # use the same design
-  res = tuneParamsMultiCrit(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = mo5measlist, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_5, show.info = TRUE)
+  tune_res = tuneParamsMultiCrit(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = mo5measlist, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_5, show.info = TRUE)
+  tune_res
+}
+
+
+agg_so = function(res_all, meas_name = "mmce", algo_name) {
+  res = res_all$tune_res
+  best_ind = res[[algo_name]]$mbo.result$best.ind  # get the dob of the pareto optimal
+
+  so_inbag = res_all$gperf_env[[algo_name]][[best_ind]][["inbag"]]
+  best.list_inbag = lapply(so_inbag, function(x) x[meas_name])
+  sodt_inbag = data.table::as.data.table(best.list_inbag)
+  sodt_inbag$bag = "inbag"
+
+  so_outbag = res_all$gperf_env[[algo_name]][[best_ind]][["outbag"]]
+  best.list_outbag = lapply(so_outbag, function(x) x[meas_name])
+  sodt_outbag = data.table::as.data.table(best.list_outbag)
+  sodt_outbag$bag = "outbag"
+
+  sodt = rbindlist(list(sodt_inbag, sodt_outbag))
+  sodt$best_ind = best_ind
+  sodt$algo = algo_name
+  return(sodt)
+}
+
+algo_rand_so = function(instance, lrn, list_measures, gperf_env, context) {
+  cat(sprintf("\n\n\n %s beginned  \n\n\n", context))
+  gperf_env$context =  context
+  gperf_env$index = 1
+  mgconf = getGconf()
+  ctrl_rand = mlr::makeTuneControlRandom(maxit = mgconf$MBO_ITERS + mgconf$INIT_DES)
+  res = mlr::tuneParams(learner = GET_LRN(lrn), task = instance$task, resampling = instance$rins, measures = list_measures, par.set = GET_PARSET_CLASSIF(lrn), control = ctrl_rand, show.info = TRUE)
+  cat(sprintf("\n %s finished  \n", context))
   res
 }
 
@@ -116,13 +180,27 @@ algo_th_family = function(instance, lrn, threshold, sigma) {
   })
 }
 
+
+
+agg_mbo = function(res) {
+  agglistonejob = lapply(names(res$tune_res), function(algo_name) {
+    cat(sprintf("\n algorithm name: %s \n", algo_name))
+    if (stringi::stri_detect(algo_name, regex = "mo")) return(agg_mo(res, algo_name = algo_name))
+    if (stringi::stri_detect(algo_name, regex = "so")) return(agg_so(res, algo_name = algo_name))
+    if (stringi::stri_detect(algo_name, regex = "rand_mo")) return(agg_rand_mo(res, algo_name = algo_name))
+    if (stringi::stri_detect(algo_name, regex = "rand")) return(agg_rand_mo(res, algo_name = algo_name))
+    if (stringi::stri_detect(algo_name, regex = "pareto")) return(list())
+    stop("algorithm names wrong!")
+  })
+  names(agglistonejob) = names(res$tune_res)
+  rbindlist(agglistonejob, use.names = TRUE)
+}
+
 algo_mbo = function(instance, lrn) {
   res = list()
-
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   ptmi = proc.time()
   mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
-
   gperf_env$current_best_loss_vec = rep(getGconf()$ladder_worst_vec_ele, instance$curator_inbag_len)
   gperf_env$current_best_meas = getGconf()$ladder_worst_vec_ele
   extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune, calMeasVec = getGconf()$fun_cal_ladder_vec)
@@ -136,9 +214,7 @@ algo_mbo = function(instance, lrn) {
   context = "rand_so"
   res[[context]] = algo_rand_so(instance = instance, lrn = lrn, list_measures = list(meas_openbox_cv), gperf_env = gperf_env, context = context)
 
-
-
- ### MultiObj
+  ### MultiObj
   ## extract best learner from pareto front
   res$pareto = list()
   alphas = seq(from = 0.1, to = 0.9, by = 0.1)
@@ -221,9 +297,12 @@ algoaggs[[algo_names[1L]]] = function(res) {
 algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.glmnet"), stringsAsFactors = FALSE)
 
 algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, threshold, sigma) {
+  res = list()
   gperf_env = new.env()   # gperf_env is only being modified in side measure function!
   mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
-  res = algo_mo_5(instance = instance, lrn = lrn, mbo_design = mbo_design, gperf_env = gperf_env, context = "mo5")
+  tune_res = algo_mo_5(instance = instance, lrn = lrn, mbo_design = mbo_design, gperf_env = gperf_env, context = "mo5")
+  res = list(tune_res = tune_res, gperf_env = gperf_env, instance = instance)
+  tune_res = list(mo5 = res)
   return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
 }
 
@@ -237,24 +316,11 @@ algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, threshold, sigm
 #algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.ksvm", "classif.ranger", "classif.glmnet"), stringsAsFactors = FALSE)
 #algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
 #    res = algo_mbo(instance = instance, lrn = lrn)
-#    return(list(res = res, agg_fun = algoaggs[[algo_names[1L]]]))
+#    return(list(res = res, agg_fun = algoaggs[[algo_names[3L]]]))
 #}
 
-agg_genTable_onejob = function(res) {
-  aggonejob = function(res) {
-    agglistonejob = lapply(names(res$tune_res), function(algo_name) {
-      cat(sprintf("\n algorithm name: %s \n", algo_name))
-      if (stringi::stri_detect(algo_name, regex = "mo")) return(agg_mo(res, algo_name = algo_name))
-      if (stringi::stri_detect(algo_name, regex = "so")) return(agg_so(res, algo_name = algo_name))
-      if (stringi::stri_detect(algo_name, regex = "rand")) return(agg_rand(res, algo_name = algo_name))
-      if (stringi::stri_detect(algo_name, regex = "pareto")) return(list())
-      stop("algorithm names wrong!")
-    })
-    names(agglistonejob) = names(res$tune_res)
-    rbindlist(agglistonejob, use.names = TRUE)
-  }
-  lrn.id = res$tune_res[[names(res$tune_res)[1L]]]$learner$id
-  dt = aggonejob(res)
+agg_onejob = function(res, fun = agg_mbo) {
+  dt = fun(res)
   instance = res$instance
   dt$openbox_name = instance$openbox_name
   dt$lockbox_name = instance$lockbox_name
@@ -262,88 +328,22 @@ agg_genTable_onejob = function(res) {
   dt$openbox = df[, instance$openbox_name]
   dt$lockbox = df[, instance$lockbox_name]
   dt$curator = apply(df[, instance$curator_names], 1, FUN = mean)
-  dt$lrn = lrn.id
-  dt
+  #lrn.id = res$tune_res[[names(res$tune_res)[1L]]]$learner$id
+  #dt$lrn = lrn.id
+  return(dt)
 #  listofrow = apply(dt,1,as.list)
 }
 
-agg_rand = function(res_all, meas_name = "mmce", algo_name) {
-  res = res_all$tune_res
-  best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
-  pareto.list = res_all$gperf_env[[algo_name]][best_inds]
-
-  pareto.list_inbag = lapply(pareto.list, function(res_iter) {
-    hh = res_iter[["inbag"]]
-    lapply(hh, function(x) x[[meas_name]])})
-  dt_inbag = data.table::rbindlist(pareto.list_inbag)
-  dt_inbag$bag = "inbag"
-  dt_inbag$best_ind = best_inds
-
-  pareto.list_outbag = lapply(pareto.list, function(res_iter) {
-    hh = res_iter[["outbag"]]
-    lapply(hh, function(x) x[[meas_name]])})
-  dt_outbag = data.table::rbindlist(pareto.list_outbag)
-  dt_outbag$bag = "outbag"
-  dt_outbag$best_ind = best_inds
-  dt = rbindlist(list(dt_inbag, dt_outbag))
-  dt$algo = algo_name
-  dt
-}
-
-
-
-
-agg_so = function(res_all, meas_name = "mmce", algo_name) {
-  res = res_all$tune_res
-  best_ind = res[[algo_name]]$mbo.result$best.ind  # get the dob of the pareto optimal
-
-  so_inbag = res_all$gperf_env[[algo_name]][[best_ind]][["inbag"]]
-  best.list_inbag = lapply(so_inbag, function(x) x[meas_name])
-  sodt_inbag = data.table::as.data.table(best.list_inbag)
-  sodt_inbag$bag = "inbag"
-
-  so_outbag = res_all$gperf_env[[algo_name]][[best_ind]][["outbag"]]
-  best.list_outbag = lapply(so_outbag, function(x) x[meas_name])
-  sodt_outbag = data.table::as.data.table(best.list_outbag)
-  sodt_outbag$bag = "outbag"
-
-  sodt = rbindlist(list(sodt_inbag, sodt_outbag))
-  sodt$best_ind = best_ind
-  sodt$algo = algo_name
-  return(sodt)
-}
-
-agg_mo = function(res_all, meas_name = "mmce", algo_name) {
-  res = res_all$tune_res
-  best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
-  pareto.list = res_all$gperf_env[[algo_name]][best_inds]
-
-  pareto.list_inbag = lapply(pareto.list, function(res_iter) {
-    hh = res_iter[["inbag"]]
-    lapply(hh, function(x) x[[meas_name]])})
-  dt_inbag = data.table::rbindlist(pareto.list_inbag)
-  dt_inbag$bag = "inbag"
-  dt_inbag$best_ind = best_inds
-
-  pareto.list_outbag = lapply(pareto.list, function(res_iter) {
-    hh = res_iter[["outbag"]]
-    lapply(hh, function(x) x[[meas_name]])})
-  dt_outbag = data.table::rbindlist(pareto.list_outbag)
-  dt_outbag$bag = "outbag"
-  dt_outbag$best_ind = best_inds
-  dt = rbindlist(list(dt_inbag, dt_outbag))
-  dt$algo = algo_name
-  dt
-}
 #' library("batchtools"); reg = loadRegistry("../output/georesponse", conf.file = NA, writeable = T); dt_res_geo_response = reduceResult(); saveRDS(dt_res_geo_response, file = "dt_res_geo_response.rds")
-reduceResult = function(ids = findDone()) {
+reduceResult = function(ids = findDone(), fun = agg_mbo) {
   reslist = reduceResultsList(ids = ids, fun = function(job, res) {
     # the replication does not help us aggregate the pareto front!!, it only make sense to aggregate the baseline model
-    dt = agg_genTable_onejob(res$res)
+    dt = agg_onejob(res$res, fun = fun)
     dt$job_id = job$job.id
     dt$repl = job$repl
     dt$dsna = job$prob.pars$dataset_name
     dt$lrn = job$algo.pars$lrn
-    return(dt)})
+    return(dt)
+  })
   rbindlist(reslist)
 }
