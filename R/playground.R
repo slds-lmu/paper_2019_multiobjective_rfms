@@ -29,7 +29,7 @@ debug_cluster = function() {
   source("bt_conf.R")
   source("bt_main.R")
   REG_FILE_DIR = "../output/debug"
-  btDelInit(local = F)  # type "yEs" here
+  btDelInit(path = REG_FILE_DIR, local = F, force = T)  # type "yEs" here
   ######################################
   mgconf = getGconf()
   reg_input = batchtools::getDefaultRegistry()

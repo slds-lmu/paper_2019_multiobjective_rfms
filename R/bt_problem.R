@@ -108,12 +108,12 @@ prob_funs = list()
 #
 prob_names = c("prob_geo")
 prob_funs[[prob_names[[1L]]]] = funGenProb_geo
-prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, stringsAsFactors = FALSE)
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, dataset_name = "geo", stringsAsFactors = FALSE)
 #
 prob_names = c("prob_oml_cluster", prob_names)
 prob_funs[[prob_names[[1L]]]] = funGenProb_oml_cluster
-prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, task_id = getGconf()$task.ids, pca_var_ratio = c(0.1, 0.5), stringsAsFactors = FALSE)
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, task_id = getGconf()$task.ids, dataset_name = paste0("oml_t_", getGconf()$task.ids), pca_var_ratio = c(0.1, 0.5), stringsAsFactors = FALSE)
 #
 prob_names = c("prob_oml_stratif", prob_names)
 prob_funs[[prob_names[[1L]]]] = funGenProb_oml_stratif
-prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, task_id = getGconf()$task.ids, stringsAsFactors = FALSE)
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, task_id = getGconf()$task.ids, dataset_name = paste0("oml_t_", getGconf()$task.ids), stringsAsFactors = FALSE)
