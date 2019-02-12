@@ -82,6 +82,7 @@ fun_measure_obj_cso = function(task, model, pred, feats, extra.args) {
 
 
 fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
+  browser()
   nothing = getPerf4DataSites_Oracle(task, model, extra.args)  # only for log
   gperf_env = extra.args$gperf_env
   pred = predict(model, extra.args$instance$task_curator_inbag)
@@ -156,6 +157,14 @@ fun_measure_obj_openbox_tr_curator_tune = function(task, model, pred, feats, ext
   obj2 = fun_measure_obj_curator(task, model, pred, feats, extra.args)  # the performance for the current model is computed in this measure
   return(extra.args$alpha * obj1 + (1 - extra.args$alpha) * obj2)
 }
+
+fun_measure_alpha_ladder = function(task, model, pred, feats, extra.args) {
+  obj1 = fun_measure_obj_openbox(task, model, pred, feats, extra.args)  # no need for extra.args
+  obj2 = fun_ladder_parafree(task, model, pred, feats, extra.args)
+  return(extra.args$alpha * obj1 + (1 - extra.args$alpha) * obj2)
+}
+
+
 
 getBaseLrnNameFromModel = function(model) {
   lrn.id = model$learner$id

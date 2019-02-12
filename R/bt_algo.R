@@ -221,8 +221,23 @@ algo_th_family = function(instance, lrn, threshold, sigma) {
   mbo_design = getMBODesign(lrn, getGconf())   # design is regenerated each time to avoid bias
   #thresholdout_para = list("threshold" = 0.02, sigma = 0.03, noise_distribution = "norm", gamma = 0)
   thresholdout_para = list("threshold" = threshold, sigma = sigma, noise_distribution = "norm", gamma = 0)
+  ###
+  gperf_env$current_best_loss_vec = rep(getGconf()$ladder_worst_vec_ele, instance$curator_inbag_len)
+  gperf_env$current_best_meas = getGconf()$ladder_worst_vec_ele
+  ##
   extra.args = list(instance = instance, gperf_env = gperf_env, perf_name2tune = getGconf()$perf_name2tune, measures2tune = getGconf()$meas2tune, calMeasVec = getGconf()$fun_cal_ladder_vec, th_para = thresholdout_para)
   measure_th = mk_measure(name = "thresholdout", extra.args = extra.args, obj_fun = fun_obj_thresholdout)
+
+  context = "alpha5_ladder"
+  extra.args$alpha = 0.5
+  meas_alpha5_ladder = mk_measure(name = "meas_alpha_5_ladder", extra.args = extra.args, obj_fun = fun_measure_alpha_ladder)
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha5_ladder), gperf_env = gperf_env, context = context)
+
+  context = "alpha2_ladder"
+  extra.args$alpha = 0.2
+  meas_alpha5_ladder = mk_measure(name = "meas_alpha_2_ladder", extra.args = extra.args, obj_fun = fun_measure_alpha_ladder)
+  res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha5_ladder), gperf_env = gperf_env, context = context)
+
   context = "fso_th"
   try({
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = context)
@@ -387,13 +402,13 @@ algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, mombomethod) {
   #return(list(res = res_tune_gperf_ins, agg_fun = agg_mo_5))
 }
 
-# algo_names = c("th", algo_names)
-# algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet"), stringsAsFactors = FALSE, threshold = seq(from = 0.001, to = 0.1, length.out = 3), sigma = seq(from = 0.01, to = 0.1, length.out = 3 ))
-# algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, threshold, sigma) {
-#   res = algo_th_family(instance = instance, lrn = lrn, threshold, sigma)
-#   return(list(res = res, agg_fun = agg_th_family))
-# }
-# 
+algo_names = c("th", algo_names)
+algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.ksvm"), stringsAsFactors = FALSE, threshold = seq(from = 0.001, to = 0.1, length.out = 3), sigma = seq(from = 0.01, to = 0.1, length.out = 3 ))
+algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn, threshold, sigma) {
+  res = algo_th_family(instance = instance, lrn = lrn, threshold, sigma)
+  return(list(res = res, agg_fun = agg_th_family))
+}
+
 # algo_names = c("mbo", algo_names)
 #algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.ksvm", "classif.ranger", "classif.glmnet"), stringsAsFactors = FALSE)
 #algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
