@@ -26,20 +26,22 @@ debug_getPerf4DATAsITES_ORCAL = function() {
 getPerf4DataSites_Oracle = function(task, model, extra.args) {
   pvs = model$learner$par.vals
   cat(sprintf("\n openbox:%d,%s, lockbox:%d,%s \n", extra.args$instance$openbox_ind, extra.args$instance$openbox_name, extra.args$instance$lockbox_ind, extra.args$instance$lockbox_name))
-  cat(sprintf("\n inbag: %s\n", names(extra.args$instance$dataset_index_inbag)))
+  cat(paste0("\n inbag: ", collapse(names(extra.args$instance$dataset_index_inbag)), "\n"))
   list_perf_inbag = lapply(extra.args$instance$dataset_index_inbag, function(subset_ind) {
     subtask = subsetTask(task, subset_ind)
     getSingleDatasetPerf(model, subtask)
   })
   names(list_perf_inbag) = names(extra.args$instance$dataset_index_inbag)
-
-  cat(sprintf("\n outbag: %s\n", names(extra.args$instance$dataset_index_outbag)))
+  #cat(unlist(list_perf_inbag))
+  print(rbindlist(lapply(list_perf_inbag, as.data.frame.list)))
+  cat(paste0("\n outbag: ", collapse(names(extra.args$instance$dataset_index_outbag)), "\n"))
   list_perf_outbag = lapply(extra.args$instance$dataset_index_outbag, function(subset_ind) {
     subtask = subsetTask(task, subset_ind)
     getSingleDatasetPerf(model, subtask)
   })
-
   names(list_perf_outbag) = names(extra.args$instance$dataset_index_outbag)
+  print(rbindlist(lapply(list_perf_outbag, as.data.frame.list)))
+  #cat(unlist(list_perf_outbag))
   list_perf_mixbag  = NULL
   funLogPerf2extra.argsEnv(list_perf_inbag, list_perf_outbag, list_perf_mixbag, extra.args)
   return(list_perf_inbag)  ## only need to return in-bag performance
@@ -97,7 +99,9 @@ fun_ladder_parafree = function(task, model, pred, feats, extra.args) {
     cat(sprintf("current best meas %f", gperf_env$current_best_meas))
     return(gperf_env$current_best_meas)
   }
-  rn = rnorm(1, sd = getGconf()$ladder_noise)
+  cat(sprintf("\n current best from ladder: %s \n", gperf_env$current_best_meas))
+  rn = 0
+  if (extra.args$ladder_with_noise) rn = rnorm(1, sd = getGconf()$ladder_noise)
   return(gperf_env$current_best_meas + rn)
 }
 
@@ -156,6 +160,16 @@ fun_measure_obj_openbox_tr_curator_tune = function(task, model, pred, feats, ext
   obj2 = fun_measure_obj_curator(task, model, pred, feats, extra.args)  # the performance for the current model is computed in this measure
   return(extra.args$alpha * obj1 + (1 - extra.args$alpha) * obj2)
 }
+
+fun_measure_alpha_ladder = function(task, model, pred, feats, extra.args) {
+  obj1 = fun_measure_obj_openbox(task, model, pred, feats, extra.args)  # no need for extra.args
+  cat(sprintf("\nopenbox cv: %s\n", obj1))
+  obj2 = fun_ladder_parafree(task, model, pred, feats, extra.args)
+  cat(sprintf("\nladder output: %s\n", obj2))
+  return(extra.args$alpha * obj1 + (1 - extra.args$alpha) * obj2)
+}
+
+
 
 getBaseLrnNameFromModel = function(model) {
   lrn.id = model$learner$id
@@ -230,10 +244,10 @@ getSingleDatasetPerf = function(model, subtask, verbose = T) {
   list_meas = getGconf()$list_meas
   perf = mlr::performance(pred = pred, measures = list_meas)
   # brier.scaled sometimes is negative
-  if (verbose) {
-    cat("\n")
-    print(perf)
-    cat("\n")
-  }
+  #if (verbose) {
+  #  cat("\n")
+  #  print(perf)
+  #  cat("\n")
+  #}
   return(perf)
 }
