@@ -47,7 +47,7 @@ run_cluster = function() {
   regname = "../output/reg_feb3_rebalnce"
   regname = "../output/reg_feb5_add_randso"
   regname = "../output/reg_feb9_only_th_"
-  regname = "../output/reg_feb11_5obj_"
+  regname = "../output/reg_feb12_only_mo"
   DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo)
   source("bt_conf.R")
   source("bt_main.R")
@@ -60,6 +60,9 @@ run_cluster = function() {
   init(prob_names, prob_inputs_conf, prob_funs, algo_names, algo_funs, reg_input, algo_designs, repls = mgconf$REPLS)
   submitJobs(597)
 }
+
+
+
 
 
 subm = function(probname = "prob_oml_stratif", task_id = 31) {
