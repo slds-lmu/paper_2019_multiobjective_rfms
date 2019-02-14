@@ -1,18 +1,16 @@
 library(data.table)
 
+dat = as.data.table(readRDS(file = "dt_3608_pca1.rds"))
+dtin = as.data.table(readRDS(file = "dt_3891_pca1.rds"))
 dtin = readRDS("dt_res_geo_response.rds")
 
+dtin = readRDS("dt_lambdaJan31.rds")
 
 #' dtin[bag =="inbag", alpha_mix(openbox, curator, 0.5)]
 alpha_mix = function(f1, f2, alpha) {
- alpha * f1 + (1-alpha)  * f2
+ alpha * f1 + (1 - alpha)  * f2
 }
 alphas = seq(from = 0.1, to = 0.9, by = 0.1)
-
-
-
-
-
 
 #dt2plot = dtin[(openbox_name=="GSE16446") & (lockbox_name=="GSE20194"),]
 dt2plot = dtin
@@ -24,6 +22,7 @@ dt2plot$cid
 dt_obcu = dt2plot[, c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, curator, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dt2plot))] # the benefit is get a unique identifier
 
 dt_oblb = dt2plot[, c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, lockbox, x)), paste0("alpha", 1:9))), by = seq_len(nrow(dt2plot))]
+
 dt_oblb_og = dt2plot[bag!="inbag", c(.SD, setNames(lapply(alphas, function(x) alpha_mix(openbox, lockbox, x)), paste0("alpha", 1:9)))]
 
 dt_obcu_ig = dt_obcu[bag=="inbag"]
@@ -31,15 +30,24 @@ dt_obcu_og = dt_obcu[bag=="outbag"]
 
 library(ggplot2)
 
-dtl = tidyr::gather(dt_obcu_og, key = alpha, value = mmce, alpha1:alpha9)
+dtl_og = tidyr::gather(dt_obcu_og, key = alpha, value = mmce, alpha1:alpha9)
+dtl_ig = tidyr::gather(dt_obcu_ig, key = alpha, value = mmce, alpha1:alpha9)
 
-ggplot2::ggplot(dtl, aes(x = alpha, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
-ggplot2::ggplot(dtl, aes(x = algo, y = mmce)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
+ggplot2::ggplot(dtl_ig, aes(x = alpha, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator-inbag")
+
+
+
+ggplot2::ggplot(dtl_og, aes(x = alpha, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator-outbag")
+
+ggplot2::ggplot(dtl_og, aes(x = algo, y = mmce)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator-outbag")
 ggsave(file = "openbox-curator-alpha.pdf")
 
 dtl2 = tidyr::gather(dt_oblb_og, key = alpha, value = mmce, alpha1:alpha9)
 ggplot2::ggplot(dtl2, aes(x = alpha, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-lockbox")
 ggsave(file = "openbox-lockbox-alpha.pdf")
+ggplot2::ggplot(dtl2, aes(x = alpha, y = mmce)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(algo)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-lockbox")
+
+
 
 
 takeind = function(x) {
@@ -68,7 +76,7 @@ fun = function(x) {
   lre = lapply(1:9, function(i) {
     col = paste0("sel_ind", i)
     ind = x[, col, with = F][[col]][1]
-    x[ind, paste0("alpha", i), with = F] 
+    x[ind, paste0("alpha", i), with = F]
   })
   #names(lre) = paste0("alphan", 1:9)
   if (any(is.na(unlist(lre)))) browser()

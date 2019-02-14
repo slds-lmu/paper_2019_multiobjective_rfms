@@ -49,3 +49,4 @@ genBox2 = function(dt, task_id = NULL, dname, resample_name, kickout = NULL) {
 
 
 genBox2(dt, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_th", "fso_ladder") )
+genBox2(dt, task_id = 31, dname = "oml", resample_name = "stratif", kickout = c("fso_ladder"))
