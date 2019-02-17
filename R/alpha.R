@@ -62,11 +62,11 @@ takeind2bag = function(dt2bag) {
 takeind = function(x) {
   y = x[, paste0("alpha", 1:9)]
   best_ind_pareto = apply(y, 2, which.min)
-  checkmate::assert(best_ind_pareto <= nrow(x))
+  checkmate::assert(all(best_ind_pareto <= nrow(x)))
   as.list(best_ind_pareto)
 }
 
-dt_obcu[1:40, takeind2bag(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+#dt_obcu[1:40, takeind2bag(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
 #dt_obcu_ig[1:40, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
 
 
@@ -84,38 +84,39 @@ unids_merge = c("algo", "best_ind", "openbox_name", "lockbox_name", "lrn", "repl
 #dtm = merge(obcu_sub, dt_obcu_og, by = unids_merge, all.y = all)
 
 dt_merge = merge(dt_obcu_ig, dt_obcu_og, by = unids_merge, all = T)
-assert(nrow(dt_merge) == nrow(dt_obcu_ig))
+checkmate::assert(nrow(dt_merge) == nrow(dt_obcu_ig))
 
 
 #dtm = merge(obcu_sub, dt_obcu_og)
 #dtmlb = merge(obcu_sub, dt_oblb_og)
 
-fun = function(x) {
-  browser()
+fun_selPareto = function(x) {
   lre = lapply(1:9, function(i) {
     col = paste0("sel_ind", i)
     ind = x[, col, with = F][[col]][1]
-    x[ind, paste0("alpha", i), with = F]
+    checkmate::assert(ind <= nrow(x))
+    x[ind, paste0("alpha", i, ".y"), with = F]
   })
-  #names(lre) = paste0("alphan", 1:9)
-  if (any(is.na(unlist(lre)))) browser()
+  if (any(is.na(unlist(lre)))) stop("fun_selPareto")
   as.data.table(lre)
 }
 
-dtmr_fmo = dt_merge[algo == "fmo", fun(.SD), by = unids_merge]
+dtmr_fmo = dt_merge[algo == "fmo", fun_selPareto(.SD), by = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")]
+dtmr = dt_merge[, fun_selPareto(.SD), by = c("algo", "openbox_name", "lockbox_name", "lrn", "repl")]
 
-dtmr_fmo = dtm[algo == "fmo", fun(.SD), by = unids2]
-dtm[, .N, by = unids2]
-dtm[algo == "fmo", .N, by = unids2]
-dtmr = dtm[, fun(.SD), by = unids2]
-dtmr_lb = dtmlb[, fun(.SD), by = unids2]
-dtmr
-dtmr[, .N, by = unids2][,N]
+# dtmr_fmo = dtm[algo == "fmo", fun(.SD), by = unids2]
+# dtm[, .N, by = unids2]
+# dtm[algo == "fmo", .N, by = unids2]
+# dtmr = dtm[, fun(.SD), by = unids2]
+# dtmr_lb = dtmlb[, fun(.SD), by = unids2]
+# dtmr
+# dtmr[, .N, by = unids2][,N]
+# 
+dtmrl = tidyr::gather(dtmr, key = alpha, value = mmce, alpha1.y:alpha9.y)
+#dtmrl_lb = tidyr::gather(dtmr_lb, key = alpha, value = mmce, alpha1:alpha9)
 
-dtmrl = tidyr::gather(dtmr, key = alpha, value = mmce, alpha1:alpha9)
-dtmrl_lb = tidyr::gather(dtmr_lb, key = alpha, value = mmce, alpha1:alpha9)
-
-ggplot2::ggplot(dtmrl, aes(x = algo, y = mmce, fill = algo)) + geom_violin() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
+library(ggplot2)
+ggplot2::ggplot(dtmrl, aes(x = algo, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-curator")
 ggsave(file = "openbox-curator-alpha.pdf")
 
 ggplot2::ggplot(dtmrl_lb, aes(x = algo, y = mmce, fill = algo)) + geom_boxplot() + facet_grid(rows = vars(lrn), cols = vars(alpha)) +  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("alpha plot: openbox-lockbox")
