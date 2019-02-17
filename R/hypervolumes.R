@@ -13,8 +13,8 @@ context = "oml_3891_stratif"
 
 context = "oml_combined_pca_3sets"
 context = "oml_combined_stratif_3sets"
-
-#kickout = c("fso_ladder")
+context = "onlymo"
+#kickout = c("fso_ladder")#
 kickout = c("fso_ladder", "fso_th")
 
 
@@ -27,6 +27,7 @@ dat = as.data.table(readRDS(file = "dt_lambdaJan31.rds"))
 dat = as.data.table(readRDS(file = "dt_3608_pca1.rds"))
 dat = as.data.table(readRDS(file = "dt_3891_pca1.rds"))
 dat = as.data.table(readRDS(file = "dt_3891_stratif.rds"))
+dat = as.data.table(readRDS(file = "dt_only_mo.rds"))
 }
 
 pcacluster = function() {
