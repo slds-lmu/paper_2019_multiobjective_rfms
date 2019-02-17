@@ -47,7 +47,17 @@ ggplot2::ggplot(dtl2, aes(x = alpha, y = mmce)) + geom_boxplot() + facet_grid(ro
 ### end of plotting
 
 
-
+takeind2bag = function(dt2bag) {
+  x = dt2bag[bag=="inbag"]
+  xobag = dt2bag[bag=="outbag"]
+  browser()
+  y = x[, paste0("alpha", 1:9)]
+  best_ind_pareto = apply(y, 2, which.min)
+  checkmate::assert(all(best_ind_pareto <= nrow(x)))
+  as.list(best_ind_pareto)
+  unids_merge = c("algo", "best_ind", "openbox_name", "lockbox_name", "lrn", "repl")
+}
+#
 
 takeind = function(x) {
   y = x[, paste0("alpha", 1:9)]
@@ -56,7 +66,7 @@ takeind = function(x) {
   as.list(best_ind_pareto)
 }
 
-#dt_obcu[1:40, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
+dt_obcu[1:40, takeind2bag(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
 #dt_obcu_ig[1:40, takeind(.SD), by = .(algo, openbox_name, lockbox_name, lrn, repl)]
 
 
