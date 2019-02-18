@@ -238,7 +238,7 @@ algo_th_family = function(instance, lrn, threshold, sigma) {
   meas_alpha5_ladder = mk_measure(name = "meas_alpha_2_ladder", extra.args = extra.args, obj_fun = fun_measure_alpha_ladder)
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(meas_alpha5_ladder), gperf_env = gperf_env, context = context)
 
-  context = "fso_th"
+  context = "fso_th_infamily"
   try({
   res[[context]] = algo_so(instance = instance, lrn = lrn, mbo_design = mbo_design, list_measures = list(measure_th), gperf_env = gperf_env, context = context)
   print(proc.time() - ptmi)

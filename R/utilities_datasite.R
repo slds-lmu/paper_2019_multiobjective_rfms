@@ -3,7 +3,7 @@ if (!dir.exists("../Data/temp")) dir.create("../Data/temp")
 selDataOML = function() {
   library(data.table)
   library(OpenML)
-  df = listOMLTasks(task.type = "Supervised Classification", number.of.instances = c(500, 1000), number.of.features = c(100, 500), number.of.missing.values = 0, number.of.classes = 2)
+  df = listOMLTasks(task.type = "Supervised Classification", number.of.instances = c(200, 1000), number.of.features = c(100, 500), number.of.missing.values = 0, number.of.classes = 2)
   dt = as.data.table(df)
   c2 = dt[, number.of.features/number.of.instances] > 0.19
   c1 = dt[, minority.class.size / majority.class.size] > 0.5

@@ -55,7 +55,8 @@ gconf = list(
   CV_ITER_OUTER = 5L, # make it consistent with our 5 split 
   MBO_ITERS = 40L, # 16d
   INIT_DES = 20L,  # default 8d
-  task.ids = c(10101, 31) # input
+  task.ids = c(3716, 146193, 14966) # input
+  #task.ids = c(10101, 31) # input
   #task.ids = c(3608, 3891, 14966) # input
   # 14966 bioresponse
   # 3891 gina-agnostic
