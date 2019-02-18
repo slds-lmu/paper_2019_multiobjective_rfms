@@ -4,10 +4,13 @@ library(tidyr)
 dt = readRDS("dt_res_oml_jan29.rds")
 dt = readRDS("dt_lambdaJan31.rds")
 dt = readRDS("dt_10101_stratif.rds")
+
 dt = readRDS("dt_res_geo_response.rds")
 dt = readRDS("dt_3891_stratif.rds")
 dt = readRDS("dt_3608_stratif.rds")
 dt = readRDS("dt_3608_pca1.rds")
+
+dtladder = readRDS("dt_alpha_ladder_feb18_lowdim.rds")
 
 dtladder = readRDS("dt_alpha_ladder_feb14.rds")
 colnames(dtladder)
@@ -16,7 +19,8 @@ dtladder = dtladder[dtladder$prob == "prob_oml_stratif"]
 dtladder = dtladder[dtladder$prob == "prob_oml_cluster"]
 dtladder = dtladder[dtladder$dsna == "oml_t_3891"]
 dtladder = dtladder[dtladder$prob == "prob_oml_stratif"]
-
+dtladder = dtladder[dtladder$dsna == "oml_t_10101"]
+dtladder = dtladder[dtladder$prob == "prob_oml_stratif"]
 
 
 
