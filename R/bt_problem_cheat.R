@@ -36,8 +36,7 @@ funGenProbCheat = function(data, job, lockbox_ind) {
     inbag = inds[inbag_inds_rel]
     outbag = inds[-inbag_inds_rel]
     list(inbag = inbag, outbag = outbag, len = len)
-  })
-
+  }) 
   obcu_inbags_oracle_inds = Reduce(c, lapply(obcu_list, function(x) x$inbag))
   lockbox_oracle_inds = which(tuple$df_dataset_accn == lockbox_name)
 

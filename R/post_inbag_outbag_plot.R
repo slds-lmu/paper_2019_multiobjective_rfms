@@ -1,32 +1,7 @@
 library(data.table)
 library(ggplot2)
 library(tidyr)
-dt = readRDS("dt_res_oml_jan29.rds")
-dt = readRDS("dt_lambdaJan31.rds")
-dt = readRDS("dt_10101_stratif.rds")
 
-dt = readRDS("dt_res_geo_response.rds")
-dt = readRDS("dt_3891_stratif.rds")
-dt = readRDS("dt_3608_stratif.rds")
-dt = readRDS("dt_3608_pca1.rds")
-
-dtladder = readRDS("dt_alpha_ladder_feb18_lowdim.rds")
-
-dtladder = readRDS("dt_alpha_ladder_feb14.rds")
-colnames(dtladder)
-dtladder = dtladder[dtladder$dsna == "oml_t_3608"]
-dtladder = dtladder[dtladder$prob == "prob_oml_stratif"]
-dtladder = dtladder[dtladder$prob == "prob_oml_cluster"]
-dtladder = dtladder[dtladder$dsna == "oml_t_3891"]
-dtladder = dtladder[dtladder$prob == "prob_oml_stratif"]
-dtladder = dtladder[dtladder$dsna == "oml_t_10101"]
-dtladder = dtladder[dtladder$prob == "prob_oml_stratif"]
-
-
-
-dtc = rbindlist(list(dt, dtladder), use.names = T, fill = T)
-
-#dt2 = dt[(openbox_name=="GSE16446") & (lockbox_name=="GSE20194"),]
 genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL, fsave = F) {
   library(hrbrthemes)
   library(ggplot2)
@@ -43,6 +18,41 @@ genBox = function(dt, task_id = NULL, dname, resample_name, kickout = NULL, fsav
   fig
 }
 
+  # 14966 bioresponse
+  # 3891 gina-agnostic
+  # 9950 micro-mass  (20 classes)
+  # 3608: fri_c4_500_100
+  # 9981 cnae-9 (9 class to 2 class)
+ 
+
+
+dt = readRDS("dt_res_oml_jan29.rds")
+dt = readRDS("dt_lambdaJan31.rds")
+dt = readRDS("dt_res_geo_response.rds")
+dt = readRDS("dt_3608_pca1.rds")
+dtladder = readRDS("dt_alpha_ladder_feb18_lowdim.rds")
+dtladder = readRDS("dt_alpha_ladder_feb14.rds")
+colnames(dtladder)
+
+
+dt = readRDS("dt_3608_stratif.rds")
+dtladder = dtladder[dtladder$prob == "prob_oml_stratif"]
+dtladder = dtladder[dtladder$dsna == "oml_t_3608"]
+
+
+dt = readRDS("dt_3891_stratif.rds")
+dtladder = dtladder[dtladder$dsna == "oml_t_3891"]
+dtladder = dtladder[dtladder$prob == "prob_oml_stratif"]
+
+dt = readRDS("dt_10101_stratif.rds")
+dtladder = dtladder[dtladder$dsna == "oml_t_10101"]
+dtladder = dtladder[dtladder$prob == "prob_oml_stratif"]
+
+
+
+dtc = rbindlist(list(dt, dtladder), use.names = T, fill = T)
+
+#dt2 = dt[(openbox_name=="GSE16446") & (lockbox_name=="GSE20194"),]
 
 
 genBox(dtc, task_id = "", dname = "geo", resample_name = "")

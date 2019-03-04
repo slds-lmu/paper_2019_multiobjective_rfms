@@ -440,14 +440,14 @@ algo_funs = list()
 #  #return(list(res = res_tune_gperf_ins, agg_fun = agg_mo_5))
 #}
 
-algo_names = c("alpha_ladder", algo_names)
-algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.glmnet", "classif.ranger", "classif.ksvm"), stringsAsFactors = FALSE)
-algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
-  res = algo_alpha_ladder(instance = instance, lrn = lrn)
-  return(list(res = res, agg_fun = agg_alpha_ladder))
-}
-
-
+# algo_names = c("alpha_ladder", algo_names)
+# algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.glmnet", "classif.ranger", "classif.ksvm"), stringsAsFactors = FALSE)
+# algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
+#   res = algo_alpha_ladder(instance = instance, lrn = lrn)
+#   return(list(res = res, agg_fun = agg_alpha_ladder))
+# }
+# 
+source("bt_algo_thauc.R")
 
 # algo_names = c("th", algo_names)
 # algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet", "classif.ranger", "classif.ksvm"), stringsAsFactors = FALSE, threshold = seq(from = 0.001, to = 0.1, length.out = 3), sigma = seq(from = 0.01, to = 0.1, length.out = 3 ))

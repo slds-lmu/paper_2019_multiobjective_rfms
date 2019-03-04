@@ -1,5 +1,5 @@
 source("bt_bootstrap.R")
-#' source("bt_conf.R"); funGenProb_geo(data = prob_inputs, job = NULL, openbox_ind = 1, lockbox_ind = 1)
+#' source("bt_conf.R"); funGenProb_geo(data = prob_inputs_conf, job = NULL, openbox_ind = 1, lockbox_ind = 1)
 funGenProb_geo = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   tuple = prepareDataSite(path = data$path[["geo"]])
   funGenProb(tuple, job, openbox_ind, lockbox_ind)
@@ -114,6 +114,8 @@ prob_names = c()
 prob_names = c("prob_oml_cluster", prob_names)
 prob_funs[[prob_names[[1L]]]] = funGenProb_oml_cluster
 prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, task_id = getGconf()$task.ids, dataset_name = paste0("oml_t_", getGconf()$task.ids), pca_var_ratio = c(0.1), stringsAsFactors = FALSE)
+#
+#addProblem(name = prob_names[[1L]],  data = prob_inputs_conf, fun = prob_funs[[prob_names[[1L]]]], seed = 1L, reg = reg_input)
 #
 prob_names = c("prob_oml_stratif", prob_names)
 prob_funs[[prob_names[[1L]]]] = funGenProb_oml_stratif
