@@ -11,9 +11,7 @@ agg_rand_mo = function(res_mbo_all, meas_name = "mmce", algo_name) {
   best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
   pareto.list = res_mbo_all$gperf_env[[algo_name]][best_inds]
 
-  pareto.list_inbag = lapply(pareto.list, function(res_iter) {
-    hh = res_iter[["inbag"]]
-    lapply(hh, function(x) x[[meas_name]])})
+  pareto.list_inbag = lapply(pareto.list, function(res_iter) { hh = res_iter[["inbag"]] lapply(hh, function(x) x[[meas_name]])})
   dt_inbag = data.table::rbindlist(pareto.list_inbag)
   dt_inbag$bag = "inbag"
   dt_inbag$best_ind = best_inds
