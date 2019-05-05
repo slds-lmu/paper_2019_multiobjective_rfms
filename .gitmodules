@@ -1,0 +1,3 @@
+[submodule "tex_2018_intellisys2019_fmoboms"]
+	path = tex_2018_intellisys2019_fmoboms
+	url = git@github.com:smilesun/tex_2018_intellisys2019_fmoboms.git
