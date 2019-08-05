@@ -1,6 +1,3 @@
-# Most important
-- pay attention to those issues labeled with "HelpWanted" and "Urgent and Important"
-
 # Terminology
 - **open-box, lock-box and curator-box**: openbox is data you can use as you want for training, lock-box is left over independent dataset for testing,  curator-box is the data you can send your model to it to query how good it is but can not carry out training on it. 
 
