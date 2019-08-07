@@ -16,3 +16,6 @@
 
 ## Problem with experiments
 - if error like ("not a matrix") in Kriging occur, that means mbo always see a constant value, which is not yet effectively resolved.
+
+## results
+- https://drive.google.com/open?id=1NQ99DNIh6vY5Z9bte5d-SKFH4ZYc5L7N
