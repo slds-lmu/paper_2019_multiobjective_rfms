@@ -2,6 +2,8 @@
 
 ## Publication
 
+https://arxiv.org/abs/1902.08999
+
 @article{DBLP:journals/corr/abs-1902-08999,
   author    = {Xudong Sun and
                Andrea Bommert and
