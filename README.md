@@ -4,7 +4,7 @@
 
 https://arxiv.org/abs/1902.08999
 
-@article{DBLP:journals/corr/abs-1902-08999,
+@article{morfms,
   author    = {Xudong Sun and
                Andrea Bommert and
                Florian Pfisterer and
@@ -13,15 +13,11 @@ https://arxiv.org/abs/1902.08999
                Bernd Bischl},
   title     = {High Dimensional Restrictive Federated Model Selection with multi-objective
                Bayesian Optimization over shifted distributions},
-  journal   = {CoRR},
   volume    = {abs/1902.08999},
   year      = {2019},
   url       = {http://arxiv.org/abs/1902.08999},
   archivePrefix = {arXiv},
-  eprint    = {1902.08999},
-  timestamp = {Wed, 10 Jul 2019 10:15:59 +0200},
-  biburl    = {https://dblp.org/rec/bib/journals/corr/abs-1902-08999},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
+  eprint    = {1902.08999}
 }
 
 ## Terminology
