@@ -1,0 +1,6 @@
+#library(rPython)
+library(jsonlite)
+list_dataset_accn = fromJSON("data.json", flatten=TRUE)
+list_dataset_accn = lapply(list_dataset_accn, function(x) x + 1L)
+names(list_dataset_accn) = paste0("ds", 1:5)
+save(list_dataset_accn, file = "gina_agnostic_data_accn.RData")
