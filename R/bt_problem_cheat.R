@@ -106,7 +106,7 @@ algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
 CHEAT_LOCAL = T
 source("bt_pre.R")
 source("bt_conf.R")
-source("bt_main.R")
+source("bt_utils.R")
 #btInit(path = "registrydebuagsg", local = T)   # set local=T to allow on local PC running
 DEBUG_FLAG = F # if true: use low budget (only 7 iterations of mbo) set to F
 reg = mkReg("reg_cheat_feb4", replace = T, local = T) 
