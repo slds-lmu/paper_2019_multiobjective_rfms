@@ -1,5 +1,27 @@
 # High Dimensional Restrictive Federated Model Selection with multi-objective Bayesian Optimization over shifted distributions
 
+## Publication
+
+@article{DBLP:journals/corr/abs-1902-08999,
+  author    = {Xudong Sun and
+               Andrea Bommert and
+               Florian Pfisterer and
+               J{\"{o}}rg Rahnenf{\"{u}}hrer and
+               Michel Lang and
+               Bernd Bischl},
+  title     = {High Dimensional Restrictive Federated Model Selection with multi-objective
+               Bayesian Optimization over shifted distributions},
+  journal   = {CoRR},
+  volume    = {abs/1902.08999},
+  year      = {2019},
+  url       = {http://arxiv.org/abs/1902.08999},
+  archivePrefix = {arXiv},
+  eprint    = {1902.08999},
+  timestamp = {Wed, 10 Jul 2019 10:15:59 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/corr/abs-1902-08999},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
 ## Terminology
 - **open-box, lock-box and curator-box**: openbox is data you can use as you want for training, lock-box is left over independent dataset for testing,  curator-box is the data you can send your model to it to query how good it is but can not carry out training on it. 
 
