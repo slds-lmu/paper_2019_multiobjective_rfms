@@ -22,3 +22,6 @@
 ## Problem with experiments
 - Errors like "Error in t.default(T) : argument is not a matrix" occurs, that means in Kriging, the Bayesian Optimization always see a constant target value, which is normal for machine learning predicative performance
 - In this case, to ensure fairness (some algorithms might fail by chance), all algorithms are run sequentially on the same computing node as one job, which means if one algorithm fails, there **won't** be result for this job, in which case we could only 
+
+## Further experimental result
+https://drive.google.com/drive/u/0/folders/1NQ99DNIh6vY5Z9bte5d-SKFH4ZYc5L7N
