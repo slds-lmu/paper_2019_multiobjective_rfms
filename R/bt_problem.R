@@ -1,5 +1,5 @@
 source("bt_bootstrap.R")
-#' source("bt_conf.R"); funGenProb_geo(data = prob_inputs_conf, job = NULL, openbox_ind = 1, lockbox_ind = 1)
+#' source("bt_conf.R"); res = funGenProb_geo(data = prob_inputs_conf, job = NULL, openbox_ind = 1, lockbox_ind = 1); res
 funGenProb_geo = function(data, job, openbox_ind, lockbox_ind, dataset_name) {
   tuple = prepareDataSite(path = data$path[["geo"]])
   funGenProb(tuple, job, openbox_ind, lockbox_ind)
@@ -107,9 +107,9 @@ prob_designs = list()
 prob_funs = list()
 prob_names = c()
 #
-# prob_names = c("prob_geo")
-# prob_funs[[prob_names[[1L]]]] = funGenProb_geo
-# prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, dataset_name = "geo", stringsAsFactors = FALSE)
+prob_names = c("prob_geo")
+prob_funs[[prob_names[[1L]]]] = funGenProb_geo
+prob_designs[[prob_names[1L]]] = expand.grid(openbox_ind = 1:5, lockbox_ind = 1:4, dataset_name = "geo", stringsAsFactors = FALSE)
 #
 prob_names = c("prob_oml_cluster", prob_names)
 prob_funs[[prob_names[[1L]]]] = funGenProb_oml_cluster

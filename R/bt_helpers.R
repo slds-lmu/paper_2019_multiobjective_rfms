@@ -2,7 +2,7 @@ require("mlrMBO")
 init_mbo_ctrl_so = function(iters) {
   control = makeMBOControl()
   control = setMBOControlTermination(control, iters = iters)
-  control = setMBOControlInfill(control, crit = makeMBOInfillCritEI())  # opt = "focussearch"
+  control = setMBOControlInfill(control, crit = makeMBOInfillCritEI())
   control
 }
 
@@ -31,10 +31,10 @@ getMlrTuneCtrlSO = function(iters, nugget = 1e-6, jitter = TRUE) {
 
 # this makes MBO_ITERS MACRO reconfigurable
 getTuneMethod = function(method.str, mgconf, n.objs = 2, nugget = 1e-6, jitter = T, mombomethod ="parego") {
-  TUNE_METHODS = switch(EXPR = method.str, 
+  TUNE_METHODS = switch(EXPR = method.str,
     mbodefault = getMlrTuneCtrlSO(iters = mgconf$MBO_ITERS, nugget = nugget, jitter = jitter),
     mbomulticritdefault = getMlrTuneCtrlMO(iters = mgconf$MBO_ITERS, n.obj = 2L, nugget = nugget, jitter = jitter, mombomethod = mombomethod),
-    mbo5critdefault = getMlrTuneCtrlMO(iters = mgconf$MBO_ITERS, n.obj = n.objs, nugget = nugget, jitter = jitter,mombomethod = mombomethod)
+    mbo5critdefault = getMlrTuneCtrlMO(iters = mgconf$MBO_ITERS, n.obj = n.objs, nugget = nugget, jitter = jitter, mombomethod = mombomethod)
     )
   return(TUNE_METHODS)
 }

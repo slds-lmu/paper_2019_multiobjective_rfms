@@ -1,4 +1,5 @@
 #' require variable: context, list_res
+if (!exists(c("context", "list_res"))) stop("require definition of variable 'context' and 'list_res', mean_hypervolumes and win-loss plot could not be executed alone!")
 pdf(sprintf("wins_and_losses_%s.pdf", context), width = 8, height = 6)
 n.exp = list_res$n.exp
 print(ggplot(data = list_res$dat4a, mapping = aes(x = algo1, y = algo2)) + geom_tile(aes(fill = wins)) + geom_text(aes(label = wins, color = abs(wins - n.exp / 2) >= 125), size = 5) +

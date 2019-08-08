@@ -17,7 +17,7 @@ getNCVPerf = function(major_task, lrn.id, meas = mlr::brier) {
 
 test = function(){
   source("bt_conf.R")
-  source("utilities_datasite.R")
+  source("bt_utilities_datasite.R")
   prob_inputs_data = list()  # used for addProblem
   prob_inputs_data$geo = prepareDataSite(path = "../Data/data_cohorts_nonGerman.RData")  # this data comes with repository
   dataset_names_input = c("geo")

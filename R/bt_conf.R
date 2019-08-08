@@ -55,9 +55,9 @@ gconf = list(
   CV_ITER_OUTER = 5L, # make it consistent with our 5 split 
   MBO_ITERS = 40L, # 16d
   INIT_DES = 20L,  # default 8d
-  task.ids = c(3716, 146193, 14966) # input
+  task.ids = c(3608, 3891, 14966) # input
+  #task.ids = c(3716, 146193, 14966) # input
   #task.ids = c(10101, 31) # input
-  #task.ids = c(3608, 3891, 14966) # input
   # 14966 bioresponse
   # 3891 gina-agnostic
   # 9950 micro-mass  (20 classes)
@@ -96,9 +96,8 @@ getGconf = function(variables) {
  return(gconf)
 }
 
-
 ### dependencies
-pre.source = c("utilities_datasite.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures.R", "bt_helpers.R", "bt_obj.R")  # order of the sequence being sourced can not be changed!
+pre.source = c("bt_utilities_datasite.R", "bt_algo.R", "bt_problem.R", "bt_learner_parsets.R", "bt_measures.R", "bt_helpers.R", "bt_obj.R")  # order of files being sourced can not be changed!
 kick_source = c("bt_algo.R", "bt_problem.R")
 if (exists("CHEAT_LOCAL")) pre.source = setdiff(pre.source, kick_source)
 lapply(pre.source, function(x) source(x))

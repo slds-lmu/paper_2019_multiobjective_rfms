@@ -11,14 +11,18 @@ agg_rand_mo = function(res_mbo_all, meas_name = "mmce", algo_name) {
   best_inds = res[[algo_name]]$ind  # get the dob of the pareto optimal
   pareto.list = res_mbo_all$gperf_env[[algo_name]][best_inds]
 
-  pareto.list_inbag = lapply(pareto.list, function(res_iter) { hh = res_iter[["inbag"]] lapply(hh, function(x) x[[meas_name]])})
+  pareto.list_inbag = lapply(pareto.list, function(res_iter) {
+    hh = res_iter[["inbag"]]
+    lapply(hh, function(x) x[[meas_name]])
+  })
   dt_inbag = data.table::rbindlist(pareto.list_inbag)
   dt_inbag$bag = "inbag"
   dt_inbag$best_ind = best_inds
 
   pareto.list_outbag = lapply(pareto.list, function(res_iter) {
     hh = res_iter[["outbag"]]
-    lapply(hh, function(x) x[[meas_name]])})
+    lapply(hh, function(x) x[[meas_name]])
+  })
   dt_outbag = data.table::rbindlist(pareto.list_outbag)
   dt_outbag$bag = "outbag"
   dt_outbag$best_ind = best_inds
@@ -284,6 +288,8 @@ algo_alpha_ladder = function(instance, lrn) {
   return(list(tune_res_all = res, gperf_env = gperf_env, instance = instance))
 }
 
+
+
 agg_mbo = function(res) {
   list_res_onejob = lapply(names(res$tune_res), function(algo_name) {
     cat(sprintf("\n algorithm name: %s \n", algo_name))
@@ -297,6 +303,7 @@ agg_mbo = function(res) {
   names(list_res_onejob) = names(res$tune_res)
   rbindlist(list_res_onejob, use.names = TRUE)
 }
+
 algo_mbo = function(instance, lrn) {
   alphas = seq(from = 0.1, to = 0.9, by = 0.1)
   res = list()
@@ -445,7 +452,7 @@ algo_funs = list()
 #   return(list(res = res, agg_fun = agg_alpha_ladder))
 # }
 # 
-source("bt_algo_thauc.R")
+#source("bt_algo_thauc.R")
 
 # algo_names = c("th", algo_names)
 # algo_designs[[algo_names[1L]]] = expand.grid(lrn = c("classif.glmnet", "classif.ranger", "classif.ksvm"), stringsAsFactors = FALSE, threshold = seq(from = 0.001, to = 0.1, length.out = 3), sigma = seq(from = 0.01, to = 0.1, length.out = 3 ))
@@ -454,12 +461,12 @@ source("bt_algo_thauc.R")
 #   return(list(res = res, agg_fun = agg_th_family))
 # }
 # 
-# algo_names = c("mbo", algo_names)
-#algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.ksvm", "classif.ranger", "classif.glmnet"), stringsAsFactors = FALSE)
-#algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
-#    res = algo_mbo(instance = instance, lrn = lrn)
-#    return(list(res = res, agg_fun = agg_mo))
-#}
+algo_names = c("mbo", algo_names)
+algo_designs[[algo_names[1L]]] = data.frame(lrn = c("classif.ksvm", "classif.ranger", "classif.glmnet"), stringsAsFactors = FALSE)
+algo_funs[[algo_names[1L]]] = function(job, data, instance, lrn) {
+    res = algo_mbo(instance = instance, lrn = lrn)
+    return(list(res = res, agg_fun = agg_mo))
+}
 
 agg_onejob = function(res, fun = NULL) {
   dt = fun(res)
