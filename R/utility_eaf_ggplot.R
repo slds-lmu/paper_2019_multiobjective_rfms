@@ -7,16 +7,24 @@
 #' @param data.name dataset name
 #' @param percentiles value
 #' @return returndes
-#' @examples 
+#' @examples
 #' library(eaf)
 #' eaf.path <- system.file(package="eaf")
 #' x <- read.data.sets(file.path(eaf.path, "extdata","example1_dat"))
+#' colnames(x) = c("obj1", "obj2", "set")
+#' x$obj1 = x$obj1 /1e6
+#' x$obj2 = x$obj2 /1e6
 #' eafs(points = x[,1:2], sets = x[,3])
-#' df = rbind(x, x)
+#' y = x
+#' y$obj1 = y$obj1 + rnorm(n = nrow(y), sd = 0.1)
+#' y$obj2 = y$obj2 + rnorm(n = nrow(y), sd = 0.1)
+#' df = rbind(x, y)
 #' df$ds = "ds1"
 #' df[(nrow(x) +1) : nrow(df),"ds"] = "ds2"
-#' df$group = "group1"
-#' eafGGPlot(data = df, var.names = c("V1", "V2"), group.name = "group", replication.name = "set", data.name = "ds")
+#' df$algorithm = "algo1"
+#' df[sample(nrow(df), nrow(df)/2), "algorithm"] = "algo2"
+#' eafGGPlot(data = df, var.names = c("obj1", "obj2"), group.name = "algorithm", replication.name = "set", data.name = "ds", percentiles = c(10, 50, 90))
+#' ggsave("eaf_comparision.pdf")
 eafGGPlot = function(data, var.names, group.name, replication.name, data.name, percentiles = 50){
    require(ggplot2)
    d = do.call(rbind, lapply(split(data, data[, data.name]), function(d) {
@@ -51,7 +59,7 @@ eafGGPlot = function(data, var.names, group.name, replication.name, data.name, p
 
    p = ggplot(data = d2, ggplot2::aes_string(var.names[1L], var.names[2L],
      colour = group.name, linetype = "percentiles")) +
-     geom_line() + facet_wrap("dataset") + scale_linetype_manual(values=c("solid", "longdash", "dotted"))
+     geom_line(size = 3) + facet_wrap("dataset") + scale_linetype_manual(values=c("solid", "longdash", "dotted")) + theme(axis.title.x = element_text(size = 28), axis.title.y = element_text(size = 28), strip.text.x = element_text(size = 28, colour = "black", angle = 0), legend.text = element_text(size = 28), legend.title = element_text(size = 28))
    p
 }
 
